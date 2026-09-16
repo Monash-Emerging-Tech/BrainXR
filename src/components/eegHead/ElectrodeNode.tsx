@@ -116,16 +116,9 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
 
   return (
     <group position={position} rotation={rotation}>
-      {/* 1. Base Electrode Sensor LED Hemisphere */}
-      <mesh
-        geometry={geometry}
-        scale={2.1}
-        ref={onRef}
-        onClick={handleClick}
-        onPointerDown={handleClick}
-        onPointerEnter={handlePointerEnter}
-        onPointerLeave={handlePointerLeave}
-      >
+      {/* 1. Base Electrode Sensor LED Hemisphere (purely visual — see the
+          invisible hit-sphere below for why it doesn't carry pointer handlers) */}
+      <mesh geometry={geometry} scale={2.1} ref={onRef} raycast={() => null}>
         <meshStandardMaterial
           color="#1e293b"
           roughness={0.15}
@@ -135,6 +128,25 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
           transparent
           opacity={0.8}
         />
+      </mesh>
+
+      {/* Invisible, generously-sized hit target. The visible LED dome above
+          is tiny (a few cm across at world scale) and sits flush on the
+          headset shell's curved surface, so an XR controller ray aimed at
+          it can land on the shell mesh instead — this sphere, sized well
+          past the dome and the selection ring's outer edge, is what
+          actually receives pointer events, making the node much easier to
+          hit precisely without changing how it looks. */}
+      <mesh
+        visible={false}
+        scale={2.1}
+        onClick={handleClick}
+        onPointerDown={handleClick}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
+      >
+        <sphereGeometry args={[baseRadius * 3, 12, 12]} />
+        <meshBasicMaterial />
       </mesh>
 
       {/* 2. Concentric Highlight Ring (Active Selection / Hover Preview) outside the LED.
