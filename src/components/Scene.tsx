@@ -5,7 +5,7 @@
 // playback tick updates the HUD via state without re-rendering (and having
 // three.js reconcile) this whole subtree. The head animates off its own
 // useFrame loop reading frameRef.current.
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { XR } from "@react-three/xr";
@@ -13,6 +13,17 @@ import HeadWrapper from "./HeadWrapper";
 import { xrStore } from "../utils/xrStore";
 import type { ElectrodeName, Frame } from "../utils/signalSource";
 import type { HistorySample } from "../hooks/usePlaybackEngine";
+
+// OrbitControls is a sibling of <XR>, not nested inside it, so the
+// context-based useXR() hook isn't reachable here — read presentation
+// state straight off the store instead.
+function useIsXRPresenting(): boolean {
+  return useSyncExternalStore(
+    xrStore.subscribe,
+    () => xrStore.getState().session != null,
+    () => false
+  );
+}
 
 interface SceneProps {
   frameRef: React.RefObject<Frame>;
@@ -46,50 +57,56 @@ const Scene: React.FC<SceneProps> = ({
   speed,
   isPaused,
   audioError = false,
-}) => (
-  <Canvas
-    shadows
-    camera={{ position: [0, 0, 7.5], fov: 45 }}
-    style={{ background: "transparent" }}
-    gl={{ alpha: true }}
-  >
-    <ambientLight intensity={Math.PI / 1.5} />
-    <directionalLight
-      position={[5, 10, 5]}
-      intensity={Math.PI}
-      castShadow
-      shadow-mapSize={[1024, 1024]}
-    />
-    <pointLight position={[-10, 10, -5]} intensity={Math.PI / 2} />
-    <pointLight position={[0, -10, 0]} intensity={Math.PI / 2} />
+}) => {
+  const isXRPresenting = useIsXRPresenting();
 
-    <XR store={xrStore}>
-      <HeadWrapper
-        frameRef={frameRef}
-        historiesRef={historiesRef}
-        selectedChannel={selectedChannel}
-        hoveredChannel={hoveredChannel}
-        onChannelSelect={onChannelSelect}
-        onChannelHover={onChannelHover}
-        onStartDemo={onStartDemo}
-        onStartLive={onStartLive}
-        onTrialSelect={onTrialSelect}
-        onTogglePlayPause={onTogglePlayPause}
-        onSetSpeed={onSetSpeed}
-        speed={speed}
-        isPaused={isPaused}
-        audioError={audioError}
+  return (
+    <Canvas
+      shadows
+      camera={{ position: [0, 0, 7.5], fov: 45 }}
+      style={{ background: "transparent" }}
+      gl={{ alpha: true }}
+    >
+      <ambientLight intensity={Math.PI / 1.5} />
+      <directionalLight
+        position={[5, 10, 5]}
+        intensity={Math.PI}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
       />
-    </XR>
+      <pointLight position={[-10, 10, -5]} intensity={Math.PI / 2} />
+      <pointLight position={[0, -10, 0]} intensity={Math.PI / 2} />
 
-    <OrbitControls
-      enableDamping
-      dampingFactor={0.05}
-      minDistance={3}
-      maxDistance={20}
-      makeDefault
-    />
-  </Canvas>
-);
+      <XR store={xrStore}>
+        <HeadWrapper
+          frameRef={frameRef}
+          historiesRef={historiesRef}
+          selectedChannel={selectedChannel}
+          hoveredChannel={hoveredChannel}
+          onChannelSelect={onChannelSelect}
+          onChannelHover={onChannelHover}
+          onStartDemo={onStartDemo}
+          onStartLive={onStartLive}
+          onTrialSelect={onTrialSelect}
+          onTogglePlayPause={onTogglePlayPause}
+          onSetSpeed={onSetSpeed}
+          speed={speed}
+          isPaused={isPaused}
+          audioError={audioError}
+        />
+      </XR>
+
+      {!isXRPresenting && (
+        <OrbitControls
+          enableDamping
+          dampingFactor={0.05}
+          minDistance={3}
+          maxDistance={20}
+          makeDefault
+        />
+      )}
+    </Canvas>
+  );
+};
 
 export default React.memo(Scene);

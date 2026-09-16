@@ -110,8 +110,6 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
     <group position={position} rotation={rotation}>
       {/* 1. Base Electrode Sensor LED Hemisphere */}
       <mesh
-        castShadow
-        receiveShadow
         geometry={geometry}
         scale={2.1}
         ref={onRef}
