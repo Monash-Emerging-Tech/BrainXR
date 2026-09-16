@@ -90,10 +90,7 @@ export function useXRDragInteraction({
   });
 
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
-    // "grab" is the grip/squeeze channel's near-field proximity pointer —
-    // scoping to it keeps the trigger ("ray") free for node selection
-    // instead of also starting a drag when it merely sweeps over the head.
-    if (!gl.xr.isPresenting || e.pointerType !== "grab") return;
+    if (!gl.xr.isPresenting) return;
     e.stopPropagation();
     capturePointer(e);
 

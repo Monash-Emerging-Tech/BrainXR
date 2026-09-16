@@ -89,27 +89,19 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
     }
   });
 
-  // XR's grip/squeeze channel reports pointerType "grab" (a near-field
-  // proximity pointer — see useXRDragInteraction, now bound to grip for
-  // repositioning). Ignore it here so brushing a grabbing hand near a node
-  // never selects/hovers it; only the trigger ray ("ray") and desktop mouse
-  // ("mouse") drive selection.
   const handleClick = (e: ThreeEvent<PointerEvent>) => {
-    if (e.pointerType === "grab") return;
     e.stopPropagation();
     triggerXRHaptic(e, 0.5, 25);
     onSelect?.(name);
   };
 
   const handlePointerEnter = (e: ThreeEvent<PointerEvent>) => {
-    if (e.pointerType === "grab") return;
     e.stopPropagation();
     triggerXRHaptic(e, 0.2, 10);
     onHover?.(name);
   };
 
   const handlePointerLeave = (e: ThreeEvent<PointerEvent>) => {
-    if (e.pointerType === "grab") return;
     e.stopPropagation();
     onHover?.(null);
   };
@@ -137,25 +129,24 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
         />
       </mesh>
 
-      {/* 2. Concentric Highlight Ring (Active Selection / Hover Preview) outside the LED.
-          Always mounted (visibility toggled) rather than conditionally rendered — an XR
-          controller ray can fire dozens of hover transitions per second sweeping across
-          nodes, and mounting/unmounting would reallocate the ring geometry/material each time. */}
-      <group position={ringOffset} rotation={ringRotation} scale={2.1}>
-        <group ref={ringGroupRef} visible={isSelected || isHovered}>
-          {/* Glowing halo disc aura extending onto headset surface */}
-          <mesh raycast={() => null}>
-            <ringGeometry args={[baseRadius * 1.25, baseRadius * 2.2, 32]} />
-            <meshBasicMaterial
-              color={ringColor}
-              side={THREE.DoubleSide}
-              transparent
-              opacity={isSelected ? 0.5 : 0.25}
-              depthWrite={false}
-            />
-          </mesh>
+      {/* 2. Concentric Highlight Ring (Active Selection / Hover Preview) outside the LED */}
+      {(isSelected || isHovered) && (
+        <group position={ringOffset} rotation={ringRotation} scale={2.1}>
+          <group ref={ringGroupRef}>
+            {/* Glowing halo disc aura extending onto headset surface */}
+            <mesh raycast={() => null}>
+              <ringGeometry args={[baseRadius * 1.25, baseRadius * 2.2, 32]} />
+              <meshBasicMaterial
+                color={ringColor}
+                side={THREE.DoubleSide}
+                transparent
+                opacity={isSelected ? 0.5 : 0.25}
+                depthWrite={false}
+              />
+            </mesh>
+          </group>
         </group>
-      </group>
+      )}
     </group>
   );
 };
