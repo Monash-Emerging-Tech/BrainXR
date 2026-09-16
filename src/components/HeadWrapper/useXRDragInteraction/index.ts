@@ -2,7 +2,9 @@ import * as THREE from "three";
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
-import { capturePointer, releasePointer } from "./pointerCapture";
+import { capturePointer, releasePointer } from "../pointerCapture";
+import { useSqueezeHeld } from "./useSqueezeHeld";
+import { toVector3, toQuaternion } from "./pose";
 
 export interface XRDragInteractionParams {
   gl: THREE.WebGLRenderer;
@@ -12,8 +14,8 @@ export interface XRDragInteractionParams {
   positionRef?: React.RefObject<THREE.Vector3>;
   rotationRef?: React.RefObject<THREE.Quaternion>;
   constrainPosition?: (targetPos: THREE.Vector3, targetQuat: THREE.Quaternion) => void;
-  onDragStart?: (e: ThreeEvent<PointerEvent>) => void;
-  onDragEnd?: (e: ThreeEvent<PointerEvent>) => void;
+  onDragStart?: (inputSource: XRInputSource | undefined) => void;
+  onDragEnd?: (inputSource: XRInputSource | undefined) => void;
 }
 
 const _qDiff = new THREE.Quaternion();
@@ -22,26 +24,15 @@ const _newPos = new THREE.Vector3();
 const _newQuat = new THREE.Quaternion();
 const _initialRayPoint = new THREE.Vector3();
 
-function toVector3(
-  pos?: THREE.Vector3 | [number, number, number],
-  fallback: THREE.Vector3 = new THREE.Vector3(0, 1.3, -1.1)
-): THREE.Vector3 {
-  if (!pos) return fallback.clone();
-  if (pos instanceof THREE.Vector3) return pos.clone();
-  return new THREE.Vector3(pos[0], pos[1], pos[2]);
-}
-
-function toQuaternion(
-  rot?: THREE.Quaternion | THREE.Euler | [number, number, number],
-  fallback: THREE.Quaternion = new THREE.Quaternion()
-): THREE.Quaternion {
-  if (!rot) return fallback.clone();
-  if (rot instanceof THREE.Quaternion) return rot.clone();
-  if (rot instanceof THREE.Euler) return new THREE.Quaternion().setFromEuler(rot);
-  return new THREE.Quaternion().setFromEuler(new THREE.Euler(rot[0], rot[1], rot[2]));
-}
-
-// WebXR drag-to-rotate and drag-to-position interaction for spatial groups.
+// WebXR grip-to-reposition and grip-to-rotate interaction for spatial groups.
+// Repositioning is driven by the grip/squeeze button (see useSqueezeHeld)
+// rather than the ray pointer's own down/up cycle, which is bound to the
+// trigger and needed elsewhere for node selection. The ray pointer's
+// continuous hover/move events (which fire regardless of button state —
+// they drive the XR cursor model) still supply the pointing direction: a
+// move event reaching this handler proves the ray currently intersects
+// something in this group's subtree, which is what starts the drag once
+// the grip is also held.
 export function useXRDragInteraction({
   gl,
   groupRef,
@@ -58,6 +49,7 @@ export function useXRDragInteraction({
 
   const isDraggingRef = useRef(false);
   const pointerIdRef = useRef<number | null>(null);
+  const capturedTargetRef = useRef<unknown>(null);
   const dragStartRayDirRef = useRef(new THREE.Vector3());
   const dragStartQuatRef = useRef(new THREE.Quaternion());
   const dragOffsetRef = useRef(new THREE.Vector3());
@@ -69,10 +61,27 @@ export function useXRDragInteraction({
   const xrRotationRef = rotationRef ?? internalRotationRef;
   const wasPresentingRef = useRef(false);
 
+  const squeeze = useSqueezeHeld();
+
+  const endDrag = () => {
+    if (capturedTargetRef.current != null && pointerIdRef.current != null) {
+      releasePointer({ target: capturedTargetRef.current, pointerId: pointerIdRef.current });
+    }
+    isDraggingRef.current = false;
+    pointerIdRef.current = null;
+    capturedTargetRef.current = null;
+    if (groupRef.current) {
+      xrPositionRef.current.copy(groupRef.current.position);
+      xrRotationRef.current.copy(groupRef.current.quaternion);
+    }
+    onDragEnd?.(squeeze.activeInputSource());
+  };
+
   useFrame((state) => {
     const isPresenting = state.gl.xr.isPresenting;
     if (!isPresenting) {
       wasPresentingRef.current = false;
+      if (isDraggingRef.current) endDrag();
       return;
     }
 
@@ -82,6 +91,10 @@ export function useXRDragInteraction({
       wasPresentingRef.current = true;
     }
 
+    if (isDraggingRef.current && !squeeze.isHeld()) {
+      endDrag();
+    }
+
     if (groupRef.current && !isDraggingRef.current) {
       constrainPosition?.(xrPositionRef.current, xrRotationRef.current);
       groupRef.current.position.copy(xrPositionRef.current);
@@ -89,35 +102,31 @@ export function useXRDragInteraction({
     }
   });
 
-  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
-    // "grab" is the grip/squeeze channel's near-field proximity pointer —
-    // scoping to it keeps the trigger ("ray") free for node selection
-    // instead of also starting a drag when it merely sweeps over the head.
-    if (!gl.xr.isPresenting || e.pointerType !== "grab") return;
-    e.stopPropagation();
-    capturePointer(e);
+  const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
+    if (!gl.xr.isPresenting || e.pointerType !== "ray") return;
 
-    isDraggingRef.current = true;
-    pointerIdRef.current = e.pointerId;
-    dragStartRayDirRef.current.copy(e.ray.direction);
+    if (!isDraggingRef.current) {
+      if (!squeeze.isHeld() || !groupRef.current) return;
 
-    if (groupRef.current) {
+      e.stopPropagation();
+      capturePointer(e);
+      capturedTargetRef.current = e.target;
+      isDraggingRef.current = true;
+      pointerIdRef.current = e.pointerId;
+      dragStartRayDirRef.current.copy(e.ray.direction);
       dragStartQuatRef.current.copy(groupRef.current.quaternion);
 
       // Grab distance/offset, so the drag doesn't snap the group onto the ray.
       const grabDistance = e.ray.origin.distanceTo(groupRef.current.position);
       dragDistanceRef.current = grabDistance;
-      _initialRayPoint
-        .copy(e.ray.origin)
-        .addScaledVector(e.ray.direction, grabDistance);
+      _initialRayPoint.copy(e.ray.origin).addScaledVector(e.ray.direction, grabDistance);
       dragOffsetRef.current.subVectors(groupRef.current.position, _initialRayPoint);
+
+      onDragStart?.(squeeze.activeInputSource());
+      return;
     }
 
-    onDragStart?.(e);
-  };
-
-  const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
-    if (!isDraggingRef.current || e.pointerId !== pointerIdRef.current) return;
+    if (e.pointerId !== pointerIdRef.current) return;
     e.stopPropagation();
     if (!groupRef.current) return;
 
@@ -145,28 +154,10 @@ export function useXRDragInteraction({
     }
   };
 
-  const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
-    if (e.pointerId !== pointerIdRef.current) return;
-    e.stopPropagation();
-    releasePointer(e);
-
-    isDraggingRef.current = false;
-    pointerIdRef.current = null;
-
-    if (groupRef.current) {
-      xrPositionRef.current.copy(groupRef.current.position);
-      xrRotationRef.current.copy(groupRef.current.quaternion);
-    }
-
-    onDragEnd?.(e);
-  };
-
   return {
     isDraggingRef,
     xrPositionRef,
     xrRotationRef,
-    handlePointerDown,
     handlePointerMove,
-    handlePointerUp,
   };
 }

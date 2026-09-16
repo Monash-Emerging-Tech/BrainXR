@@ -51,28 +51,27 @@ export const XRControlBar: React.FC<XRControlBarProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
-  const { handlePointerDown, handlePointerMove, handlePointerUp } =
-    useXRDragInteraction({
-      gl,
-      groupRef,
-      initialPosition: [0, 0.82, -1.05],
-      initialRotation: [-Math.PI / 6, 0, 0],
-      positionRef: panelPositionRef,
-      rotationRef: panelRotationRef,
-      constrainPosition: (targetPos, targetQuat) => {
-        if (headPositionRef?.current) {
-          resolvePanelPosition(targetPos, targetQuat, headPositionRef.current);
-        }
-      },
-      onDragStart: (e) => {
-        setIsDragging(true);
-        triggerXRHaptic(e, 0.45, 20);
-      },
-      onDragEnd: (e) => {
-        setIsDragging(false);
-        triggerXRHaptic(e, 0.25, 12);
-      },
-    });
+  const { handlePointerMove } = useXRDragInteraction({
+    gl,
+    groupRef,
+    initialPosition: [0, 0.82, -1.05],
+    initialRotation: [-Math.PI / 6, 0, 0],
+    positionRef: panelPositionRef,
+    rotationRef: panelRotationRef,
+    constrainPosition: (targetPos, targetQuat) => {
+      if (headPositionRef?.current) {
+        resolvePanelPosition(targetPos, targetQuat, headPositionRef.current);
+      }
+    },
+    onDragStart: (inputSource) => {
+      setIsDragging(true);
+      triggerXRHaptic({ inputSource }, 0.45, 20);
+    },
+    onDragEnd: (inputSource) => {
+      setIsDragging(false);
+      triggerXRHaptic({ inputSource }, 0.25, 12);
+    },
+  });
 
   const frame = frameRef.current;
   const currentTrial = frame?.trialIndex ?? 0;
@@ -121,12 +120,7 @@ export const XRControlBar: React.FC<XRControlBarProps> = ({
   const barHeight = 0.008;
 
   return (
-    <group
-      ref={groupRef}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-    >
+    <group ref={groupRef} onPointerMove={handlePointerMove}>
       {/* 1. Frosted Translucent Backing Card for High Contrast & Drag Interaction */}
       <mesh
         position={[0, 0, -0.006]}

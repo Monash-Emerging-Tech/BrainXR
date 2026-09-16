@@ -52,7 +52,7 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
     new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 6, 0, 0))
   );
 
-  const { isDraggingRef, xrPositionRef, xrRotationRef, handlePointerDown, handlePointerMove, handlePointerUp } =
+  const { isDraggingRef, xrPositionRef, xrRotationRef, handlePointerMove } =
     useXRDragInteraction({
       gl,
       groupRef,
@@ -78,11 +78,7 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
 
   return (
     <group>
-      <group
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-      >
+      <group onPointerMove={handlePointerMove}>
         <EEGHead
           ref={groupRef}
           frameRef={frameRef}
