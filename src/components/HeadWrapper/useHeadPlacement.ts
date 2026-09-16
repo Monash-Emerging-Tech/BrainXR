@@ -19,6 +19,7 @@ interface Params {
 const tempVec = new THREE.Vector3();
 const tempCamPos = new THREE.Vector3();
 const tempWorldUp = new THREE.Vector3(0, 1, 0);
+const tempFocusQuat = new THREE.Quaternion();
 
 // Per-frame placement of the headset group: a fixed physical-scale pose in
 // front of the user in WebXR (draggable via useXRDragInteraction), or an
@@ -51,7 +52,7 @@ export function useHeadPlacement({
       tempVec.subVectors(tempCamPos, xrPositionRef.current).normalize();
 
       const targetQuat = selectedChannel
-        ? getElectrodeFocusQuaternion(selectedChannel, tempVec, tempWorldUp)
+        ? getElectrodeFocusQuaternion(selectedChannel, tempVec, tempWorldUp, tempFocusQuat)
         : DEFAULT_HEADSET_QUATERNION;
 
       if (!wasPresentingRef.current) {
@@ -92,7 +93,7 @@ export function useHeadPlacement({
         tempVec.subVectors(tempCamPos, group.position).normalize();
 
         const targetQuat = selectedChannel
-          ? getElectrodeFocusQuaternion(selectedChannel, tempVec, state.camera.up)
+          ? getElectrodeFocusQuaternion(selectedChannel, tempVec, state.camera.up, tempFocusQuat)
           : DEFAULT_HEADSET_QUATERNION;
 
         group.quaternion.slerp(targetQuat, slerpFactor);

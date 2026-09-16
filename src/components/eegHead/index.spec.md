@@ -2,7 +2,11 @@
 
 Loads `/digitalTwin.glb` and renders the 21 electrode LEDs plus the headset
 shell mesh, `forwardRef`'d so [[../HeadWrapper/index|HeadWrapper]] can attach
-its own placement/rotation to the returned `THREE.Group`.
+its own placement/rotation to the returned `THREE.Group`. Wrapped in
+`React.memo`, and delegates electrode mesh-ref bookkeeping to
+[[useElectrodeMeshRefs]] so each `ElectrodeNode`'s `onRef` callback keeps a
+stable identity across renders — without this, [[ElectrodeNode]]'s own
+`React.memo` would be defeated for all 21 nodes on every hover/select change.
 
 **Props**: `frameRef`, `selectedChannel?`, `hoveredChannel?`, `onChannelSelect?`, `onChannelHover?`, plus any
 `<group>` props (spread through, e.g. `rotation`).

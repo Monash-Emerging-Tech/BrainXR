@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import React, { useRef, useEffect, forwardRef } from "react";
+import React, { useEffect, forwardRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { ElectrodeName, Frame } from "../../utils/signalSource";
@@ -7,6 +7,7 @@ import { computeElectrodeVisualState } from "../../utils/electrodeVisualState";
 import type { GLTFResult } from "./gltfTypes";
 import { ELECTRODE_NODE_PLACEMENTS, updateElectrodeGeometry } from "./electrodeNodes";
 import ElectrodeNode from "./ElectrodeNode";
+import { useElectrodeMeshRefs } from "./useElectrodeMeshRefs";
 
 interface EEGHeadProps extends React.ComponentPropsWithoutRef<"group"> {
   frameRef: React.RefObject<Frame>;
@@ -21,7 +22,7 @@ const BLACK_COLOR = new THREE.Color(0x000000);
 const EEGHead = forwardRef<THREE.Group, EEGHeadProps>(
   ({ frameRef, selectedChannel, hoveredChannel, onChannelSelect, onChannelHover, ...props }, ref) => {
     const { nodes, materials } = useGLTF("/digitalTwin.glb") as unknown as GLTFResult;
-    const meshRefs = useRef<Record<string, THREE.Mesh>>({});
+    const { meshRefs, getRefCallback } = useElectrodeMeshRefs();
 
     useEffect(() => {
       if (!nodes) return;
@@ -74,9 +75,7 @@ const EEGHead = forwardRef<THREE.Group, EEGHeadProps>(
               rotation={rotation}
               isSelected={name === selectedChannel}
               isHovered={name === hoveredChannel}
-              onRef={(chName, mesh) => {
-                if (mesh) meshRefs.current[chName] = mesh;
-              }}
+              onRef={getRefCallback(name)}
               onSelect={onChannelSelect}
               onHover={onChannelHover}
             />
@@ -101,4 +100,4 @@ EEGHead.displayName = "EEGHead";
 
 useGLTF.preload("/digitalTwin.glb");
 
-export default EEGHead;
+export default React.memo(EEGHead);

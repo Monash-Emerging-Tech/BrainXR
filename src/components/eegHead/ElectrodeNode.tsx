@@ -13,10 +13,12 @@ interface ElectrodeNodeProps {
   rotation: [number, number, number];
   isSelected?: boolean;
   isHovered?: boolean;
-  onRef: (name: ElectrodeName, mesh: THREE.Mesh | null) => void;
+  onRef: (mesh: THREE.Mesh | null) => void;
   onSelect?: (name: ElectrodeName) => void;
   onHover?: (name: ElectrodeName | null) => void;
 }
+
+const BLACK_COLOR = new THREE.Color(0x000000);
 
 // Interactive LED sensor mesh on the digital twin. Its material's
 // color/intensity/opacity are animated externally (see EEGHead's useFrame),
@@ -112,7 +114,7 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
         receiveShadow
         geometry={geometry}
         scale={2.1}
-        ref={(el) => onRef(name, el)}
+        ref={onRef}
         onClick={handleClick}
         onPointerDown={handleClick}
         onPointerEnter={handlePointerEnter}
@@ -122,7 +124,7 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
           color="#1e293b"
           roughness={0.15}
           metalness={0.1}
-          emissive={new THREE.Color("#000000")}
+          emissive={BLACK_COLOR}
           emissiveIntensity={0.0}
           transparent
           opacity={0.8}

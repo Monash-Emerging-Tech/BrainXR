@@ -91,59 +91,74 @@ export function computeElectrodeRingNormal(
   return normal.normalize();
 }
 
+// Scratch objects reused by computeFocusQuaternion — pure intermediate work,
+// never returned or stored by reference, so safe to share across calls
+// (the function is synchronous and non-reentrant).
+const _fLocal = new THREE.Vector3();
+const _fWorld = new THREE.Vector3();
+const _upRef = new THREE.Vector3();
+const _headUpLocal = new THREE.Vector3(0, 1, 0);
+const _headForwardLocal = new THREE.Vector3(0, 0, 1);
+const _worldForward = new THREE.Vector3(0, 0, -1);
+const _rLocal = new THREE.Vector3();
+const _uLocal = new THREE.Vector3();
+const _rWorld = new THREE.Vector3();
+const _uWorld = new THREE.Vector3();
+const _mLocal = new THREE.Matrix4();
+const _mWorld = new THREE.Matrix4();
+const _mLocalInv = new THREE.Matrix4();
+const _rMat = new THREE.Matrix4();
+
 /**
  * Computes the orientation quaternion for the headset such that the electrode ring's
  * outward normal aligns directly with targetDirection (orthogonally facing camera)
  * with zero/minimal roll relative to upReference (maintaining an upright head posture).
+ *
+ * Pass `out` to write into a caller-owned Quaternion (e.g. a per-frame scratch
+ * object) and avoid allocating — otherwise a fresh Quaternion is returned.
  */
 export function computeFocusQuaternion(
   ringNormal: THREE.Vector3,
   targetDirection: THREE.Vector3 = new THREE.Vector3(0, 0, 1),
-  upReference: THREE.Vector3 = new THREE.Vector3(0, 1, 0)
+  upReference: THREE.Vector3 = new THREE.Vector3(0, 1, 0),
+  out?: THREE.Quaternion
 ): THREE.Quaternion {
-  const fLocal = ringNormal.clone().normalize();
-  const fWorld = targetDirection.clone().normalize();
-  const upRef = upReference.clone().normalize();
-
-  // Head local "up" natural axis
-  const headUpLocal = new THREE.Vector3(0, 1, 0);
+  _fLocal.copy(ringNormal).normalize();
+  _fWorld.copy(targetDirection).normalize();
+  _upRef.copy(upReference).normalize();
 
   // Construct local orthonormal basis [rLocal, uLocal, fLocal]
-  let rLocal: THREE.Vector3;
-  if (Math.abs(fLocal.dot(headUpLocal)) > 0.95) {
+  if (Math.abs(_fLocal.dot(_headUpLocal)) > 0.95) {
     // For electrodes near top/bottom pole (e.g. Cz), use head forward (0,0,1)
     // as reference so the face points forward/downward with level ears
-    const headForwardLocal = new THREE.Vector3(0, 0, 1);
-    rLocal = new THREE.Vector3().crossVectors(headUpLocal, headForwardLocal);
-    if (fLocal.y < 0) {
-      rLocal.negate();
+    _rLocal.crossVectors(_headUpLocal, _headForwardLocal);
+    if (_fLocal.y < 0) {
+      _rLocal.negate();
     }
   } else {
-    rLocal = new THREE.Vector3().crossVectors(headUpLocal, fLocal);
+    _rLocal.crossVectors(_headUpLocal, _fLocal);
   }
-  rLocal.normalize();
-  const uLocal = new THREE.Vector3().crossVectors(fLocal, rLocal).normalize();
+  _rLocal.normalize();
+  _uLocal.crossVectors(_fLocal, _rLocal).normalize();
 
   // Construct world orthonormal basis [rWorld, uWorld, fWorld]
-  let rWorld: THREE.Vector3;
-  if (Math.abs(fWorld.dot(upRef)) > 0.95) {
-    const worldForward = new THREE.Vector3(0, 0, -1);
-    rWorld = new THREE.Vector3().crossVectors(upRef, worldForward);
+  if (Math.abs(_fWorld.dot(_upRef)) > 0.95) {
+    _rWorld.crossVectors(_upRef, _worldForward);
   } else {
-    rWorld = new THREE.Vector3().crossVectors(upRef, fWorld);
+    _rWorld.crossVectors(_upRef, _fWorld);
   }
-  rWorld.normalize();
-  const uWorld = new THREE.Vector3().crossVectors(fWorld, rWorld).normalize();
+  _rWorld.normalize();
+  _uWorld.crossVectors(_fWorld, _rWorld).normalize();
 
   // Basis matrices: M = [right, up, forward]
-  const mLocal = new THREE.Matrix4().makeBasis(rLocal, uLocal, fLocal);
-  const mWorld = new THREE.Matrix4().makeBasis(rWorld, uWorld, fWorld);
+  _mLocal.makeBasis(_rLocal, _uLocal, _fLocal);
+  _mWorld.makeBasis(_rWorld, _uWorld, _fWorld);
 
   // R = M_world * M_local^T
-  const mLocalInv = mLocal.clone().transpose();
-  const rMat = new THREE.Matrix4().multiplyMatrices(mWorld, mLocalInv);
+  _mLocalInv.copy(_mLocal).transpose();
+  _rMat.multiplyMatrices(_mWorld, _mLocalInv);
 
-  return new THREE.Quaternion().setFromRotationMatrix(rMat);
+  return (out ?? new THREE.Quaternion()).setFromRotationMatrix(_rMat);
 }
 
 const DEFAULT_CAMERA_DIR = new THREE.Vector3(
@@ -204,11 +219,12 @@ export function updateElectrodeGeometry(
 export function getElectrodeFocusQuaternion(
   name: ElectrodeName,
   targetDirection: THREE.Vector3 = DEFAULT_CAMERA_DIR,
-  upReference: THREE.Vector3 = new THREE.Vector3(0, 1, 0)
+  upReference: THREE.Vector3 = new THREE.Vector3(0, 1, 0),
+  out?: THREE.Quaternion
 ): THREE.Quaternion {
   const normal = ELECTRODE_RING_NORMALS[name];
   if (!normal) return DEFAULT_HEADSET_QUATERNION;
-  return computeFocusQuaternion(normal, targetDirection, upReference);
+  return computeFocusQuaternion(normal, targetDirection, upReference, out);
 }
 
 export const DEFAULT_HEADSET_QUATERNION = new THREE.Quaternion().setFromEuler(

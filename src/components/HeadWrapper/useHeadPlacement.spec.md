@@ -14,3 +14,11 @@ three.js frame.
   viewport height. In the idle phase it adds a slow showcase spin and a
   bobbing motion; otherwise it smoothly auto-rotates (slerps) the headset to focus on the `selectedChannel` so its ring faces the camera orthogonally with zero roll.
 
+**Non-obvious**: while a channel is selected, the focus-quaternion
+computation runs every frame (not just once on select) via
+[[../eegHead/electrodeNodes|getElectrodeFocusQuaternion]], writing into an
+owned `tempFocusQuat` module-scratch Quaternion instead of allocating a new
+one each frame — safe because the XR and desktop branches are mutually
+exclusive per frame and the result is only ever read (copied/slerped) the
+same frame it's computed, never stored by reference.
+
