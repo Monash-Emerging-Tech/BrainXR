@@ -17,7 +17,7 @@ const ConsolePanel: React.FC<ConsolePanelProps> = ({ snapshot, selectedChannel, 
 
   return (
     <group position={[0, 0.78, -1.05]} rotation={[-Math.PI / 6, 0, 0]}>
-      <mesh>
+      <mesh castShadow receiveShadow>
         <boxGeometry args={[0.5, 0.44, 0.02]} />
         <meshStandardMaterial color="#ffffff" roughness={0.15} metalness={0.1} />
       </mesh>

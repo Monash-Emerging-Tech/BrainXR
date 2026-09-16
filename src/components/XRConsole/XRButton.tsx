@@ -49,7 +49,7 @@ export const XRButton: React.FC<XRButtonProps> = ({
         setHovered(false);
       }}
     >
-      <mesh position={[0, 0, hovered ? 0.003 : 0]}>
+      <mesh castShadow receiveShadow position={[0, 0, hovered ? 0.003 : 0]}>
         <boxGeometry args={[width, height, depth]} />
         <meshStandardMaterial
           color={bgColor}
