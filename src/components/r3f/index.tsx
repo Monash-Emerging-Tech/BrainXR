@@ -1,22 +1,55 @@
 // Composition root: wires the playback engine to the mode-derived layout and
 // renders whichever panels/overlays that layout calls for.
-import React, { useState, Suspense, lazy } from "react";
+import React, { useState, Suspense, lazy, useCallback, useSyncExternalStore } from "react";
 import { usePlaybackEngine } from "../../hooks/usePlaybackEngine";
 import type { ElectrodeName } from "../../utils/signalSource";
 import { IdleHeadline, IdleActions } from "../IdleSplash";
+import NodeExplorer from "../NodeExplorer";
 import BackgroundOscilloscopes from "../BackgroundOscilloscopes";
 import { useSpacebarToggle } from "./useSpacebarToggle";
 import AudioErrorToast from "./AudioErrorToast";
 import TopHudBar from "./TopHudBar";
 import LoadingOverlay from "./LoadingOverlay";
 import DemoBottomControls from "./DemoBottomControls";
+import { xrStore } from "../../utils/xrStore";
+import { headsetPresentation } from "../../utils/headsetPresentation";
 
 const Scene = lazy(() => import("../Scene"));
+
+function useIsXRPresenting(): boolean {
+  return useSyncExternalStore(
+    xrStore.subscribe,
+    () => xrStore.getState().session != null,
+    () => false
+  );
+}
 
 const R3F: React.FC = () => {
   const engine = usePlaybackEngine();
   const [hoveredChannel, setHoveredChannel] = useState<ElectrodeName | null>(null);
+  const [highlightPrefrontal, setHighlightPrefrontal] = useState(false);
   const isIdle = engine.mode.kind === "idle";
+  const isXRPresenting = useIsXRPresenting();
+  const storyStage = useSyncExternalStore(
+    headsetPresentation.subscribe,
+    headsetPresentation.getSnapshot,
+    headsetPresentation.getServerSnapshot
+  );
+  const presentationStage = isIdle ? storyStage : "interactive";
+
+  const selectChannel = useCallback((channel: ElectrodeName) => {
+    // A guided group highlight is only context for that guided step. Once the
+    // visitor chooses any individual node, the inspection follows that node.
+    setHighlightPrefrontal(false);
+    if (isIdle) engine.startDemo();
+    engine.selectChannel(channel);
+  }, [engine.selectChannel, engine.startDemo, isIdle]);
+
+  const startDemo = useCallback(() => {
+    setHighlightPrefrontal(false);
+    engine.selectChannel(null);
+    engine.startDemo();
+  }, [engine.selectChannel, engine.startDemo]);
 
   useSpacebarToggle(engine.togglePlayPause);
 
@@ -47,9 +80,11 @@ const R3F: React.FC = () => {
               historiesRef={engine.historiesRef}
               selectedChannel={engine.selectedChannel}
               hoveredChannel={hoveredChannel}
-              onChannelSelect={engine.selectChannel}
+              highlightPrefrontal={highlightPrefrontal}
+              presentationStage={presentationStage}
+              onChannelSelect={selectChannel}
               onChannelHover={setHoveredChannel}
-              onStartDemo={engine.startDemo}
+              onStartDemo={startDemo}
               onStartLive={engine.startLive}
               onTrialSelect={engine.selectTrial}
               onTogglePlayPause={engine.togglePlayPause}
@@ -63,13 +98,23 @@ const R3F: React.FC = () => {
 
         {engine.isLoading && <LoadingOverlay />}
 
+        {!isXRPresenting && <NodeExplorer
+          isIdle={isIdle}
+          selectedChannel={engine.selectedChannel}
+          hoveredChannel={hoveredChannel}
+          frame={engine.frame}
+          onSelectChannel={engine.selectChannel}
+          highlightPrefrontal={highlightPrefrontal}
+          onHighlightPrefrontal={setHighlightPrefrontal}
+        />}
+
         {/* Layer 3: Outline Text In Front of the Headset */}
         {isIdle && <IdleHeadline variant="outline" />}
 
         {/* ======================================================== */}
         {/* HOMEPAGE IDLE INTERFACE                                  */}
         {/* ======================================================== */}
-        {isIdle && <IdleActions onStartDemo={engine.startDemo} onStartLive={engine.startLive} />}
+        {isIdle && <IdleActions onStartDemo={startDemo} onStartLive={engine.startLive} />}
 
         {engine.mode.kind === "demo" && (
           <DemoBottomControls frame={engine.frame} onTrialSelect={engine.selectTrial} />

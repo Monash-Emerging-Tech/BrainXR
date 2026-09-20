@@ -13,7 +13,7 @@ export interface PlaybackEngine {
   isLoading: boolean;
   togglePlayPause: () => void;
   selectedChannel: ElectrodeName | null;
-  selectChannel: (name: ElectrodeName) => void;
+  selectChannel: (name: ElectrodeName | null) => void;
   setSpeed: (speed: number) => void;
   startDemo: () => void;
   startLive: () => void;

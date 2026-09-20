@@ -8,12 +8,15 @@ import type { HistorySample } from "../../hooks/usePlaybackEngine";
 import { useXRDragInteraction } from "./useXRDragInteraction";
 import { useHeadPlacement } from "./useHeadPlacement";
 import { resolveHeadPosition } from "./spatialCollision";
+import type { HeadsetPresentationStage } from "../../utils/headsetPresentation";
 
 interface HeadWrapperProps {
   frameRef: React.RefObject<Frame>;
   historiesRef?: React.RefObject<Record<ElectrodeName, HistorySample[]>>;
   selectedChannel: ElectrodeName | null;
   hoveredChannel?: ElectrodeName | null;
+  highlightPrefrontal?: boolean;
+  presentationStage?: HeadsetPresentationStage;
   onChannelSelect: (name: ElectrodeName) => void;
   onChannelHover?: (name: ElectrodeName | null) => void;
   onStartDemo?: () => void;
@@ -32,6 +35,8 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
   historiesRef,
   selectedChannel,
   hoveredChannel,
+  highlightPrefrontal = false,
+  presentationStage = "interactive",
   onChannelSelect,
   onChannelHover,
   onStartDemo,
@@ -70,6 +75,7 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
     xrPositionRef,
     xrRotationRef,
     selectedChannel,
+    presentationStage,
   });
 
   const handleExitXR = () => {
@@ -84,6 +90,8 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
           frameRef={frameRef}
           selectedChannel={selectedChannel}
           hoveredChannel={hoveredChannel}
+          highlightPrefrontal={highlightPrefrontal || presentationStage === "prefrontal"}
+          highlightAllElectrodes={presentationStage === "electrodes"}
           onChannelSelect={onChannelSelect}
           onChannelHover={onChannelHover}
         />
