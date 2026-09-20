@@ -14,7 +14,9 @@ export function resizeCanvasToDisplaySize(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D
 ): { width: number; height: number } {
-  const dpr = window.devicePixelRatio || 1;
+  // Full-screen 2D canvases get disproportionately expensive on 2x/3x DPR
+  // displays. 1.5 keeps labels and traces crisp while cutting pixel work.
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
   const rect = canvas.getBoundingClientRect();
   const width = rect.width;
   const height = rect.height;

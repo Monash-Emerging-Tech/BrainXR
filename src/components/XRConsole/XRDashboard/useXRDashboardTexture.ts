@@ -53,7 +53,7 @@ export function useXRDashboardTexture({
 
   useFrame((threeState) => {
     const isPresenting = threeState.gl.xr.isPresenting;
-    if (!isPresenting && process.env.NODE_ENV !== "development") return;
+    if (!isPresenting && import.meta.env.PROD) return;
 
     const canvas = canvasRef.current;
     const texture = textureRef.current;
