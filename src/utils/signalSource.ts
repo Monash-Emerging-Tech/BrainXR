@@ -16,7 +16,7 @@ export const ELECTRODE_NAMES = [
 export type ElectrodeName = (typeof ELECTRODE_NAMES)[number];
 
 // Shared contract for the guided "focus" story and the 3D view.
-export const PREFRONTAL_ELECTRODES = ["Fp1", "FpZ", "Fp2"] as const satisfies readonly ElectrodeName[];
+export const PREFRONTAL_ELECTRODES = ["Fp1", "FpZ", "Fp2", "Fz"] as const satisfies readonly ElectrodeName[];
 
 export type SignalPhase = "idle" | "baseline" | "stimulus" | "quality-check";
 

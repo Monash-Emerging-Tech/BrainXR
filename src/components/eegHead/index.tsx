@@ -2,7 +2,7 @@ import * as THREE from "three";
 import React, { useEffect, forwardRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import type { ElectrodeName, Frame } from "../../utils/signalSource";
+import { PREFRONTAL_ELECTRODES, type ElectrodeName, type Frame } from "../../utils/signalSource";
 import { computeElectrodeVisualState } from "../../utils/electrodeVisualState";
 import type { GLTFResult } from "./gltfTypes";
 import { ELECTRODE_NODE_PLACEMENTS, updateElectrodeGeometry } from "./electrodeNodes";
@@ -77,7 +77,7 @@ const EEGHead = forwardRef<THREE.Group, EEGHeadProps>(
               rotation={rotation}
               isSelected={name === selectedChannel}
               isHovered={name === hoveredChannel}
-              isContextHighlighted={highlightAllElectrodes || (highlightPrefrontal && (name === "Fp1" || name === "FpZ" || name === "Fp2"))}
+              isContextHighlighted={highlightAllElectrodes || (highlightPrefrontal && PREFRONTAL_ELECTRODES.includes(name as typeof PREFRONTAL_ELECTRODES[number]))}
               onRef={getRefCallback(name)}
               onSelect={onChannelSelect}
               onHover={onChannelHover}

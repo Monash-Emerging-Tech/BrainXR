@@ -2,7 +2,7 @@
 // renders whichever panels/overlays that layout calls for.
 import React, { useState, Suspense, lazy, useCallback, useRef, useSyncExternalStore } from "react";
 import { usePlaybackEngine } from "../../hooks/usePlaybackEngine";
-import type { ElectrodeName } from "../../utils/signalSource";
+import { PREFRONTAL_ELECTRODES, type ElectrodeName } from "../../utils/signalSource";
 import { IdleHeadline, IdleActions } from "../IdleSplash";
 import NodeExplorer from "../NodeExplorer";
 import BackgroundOscilloscopes from "../BackgroundOscilloscopes";
@@ -78,8 +78,9 @@ const R3F: React.FC = () => {
   }, [engine.frame.totalTrials, engine.frame.trialIndex, engine.selectTrial]);
 
   const showPrefrontal = useCallback(() => {
+    setHoveredChannel(null);
+    engine.selectChannel(null);
     setHighlightPrefrontal(true);
-    engine.selectChannel("FpZ");
   }, [engine.selectChannel]);
 
   useSpacebarToggle(engine.togglePlayPause);
@@ -90,6 +91,7 @@ const R3F: React.FC = () => {
         historiesRef={engine.historiesRef}
         frameRef={engine.frameRef}
         selectedChannel={engine.selectedChannel}
+        highlightedChannels={highlightPrefrontal ? PREFRONTAL_ELECTRODES : []}
         hoveredChannel={hoveredChannel}
       />
 
@@ -98,7 +100,7 @@ const R3F: React.FC = () => {
       {/* ======================================================== */}
       <div className="flex-1 flex flex-col relative bg-transparent">
         {engine.audioError && <AudioErrorToast />}
-        {!isIdle && <TopHudBar engine={engine} onBack={disconnect} showExplorerActions={engine.selectedChannel == null} onShowPrefrontal={showPrefrontal} />}
+        {!isIdle && <TopHudBar engine={engine} onBack={disconnect} focusSensorsActive={highlightPrefrontal} onShowPrefrontal={showPrefrontal} />}
 
         {/* Layer 1: Solid Text Behind the Headset */}
         {isIdle && <IdleHeadline variant="solid" />}
@@ -135,8 +137,8 @@ const R3F: React.FC = () => {
           selectedChannel={engine.selectedChannel}
           hoveredChannel={hoveredChannel}
           frame={engine.frame}
-          onSelectChannel={engine.selectChannel}
           highlightPrefrontal={highlightPrefrontal}
+          onSelectChannel={engine.selectChannel}
           onHighlightPrefrontal={setHighlightPrefrontal}
         />}
 

@@ -9,7 +9,7 @@ manipulating Three.js objects:
 - `hidden`: eases the headset down to zero scale while the brain-only story is shown.
 - `showcase`: reveals the headset and runs the slow landing-page showcase motion.
 - `electrodes`: settles into a closer front pose and highlights all electrode nodes.
-- `prefrontal`: rotates to FpZ and highlights Fp1, FpZ, and Fp2.
+- `prefrontal`: rotates to FpZ and highlights Fp1, FpZ, Fp2, and Fz.
 - `interactive`: returns to the normal free exploration pose.
 
 Entering Demo or Live mode forces the effective stage to `interactive`, so a

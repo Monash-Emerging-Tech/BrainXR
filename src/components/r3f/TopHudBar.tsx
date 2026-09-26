@@ -7,25 +7,27 @@ import { xrStore } from "../../utils/xrStore";
 interface TopHudBarProps {
   engine: PlaybackEngine;
   onBack: () => void;
-  showExplorerActions: boolean;
+  focusSensorsActive: boolean;
   onShowPrefrontal: () => void;
 }
 
 // Top HUD nav bar: exit button (left), phase pill (center), playback
 // controls (right). Hidden entirely in idle mode by the caller.
-const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, showExplorerActions, onShowPrefrontal }) => (
+const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, focusSensorsActive, onShowPrefrontal }) => (
   <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between gap-4 pointer-events-none">
     <BackButton onClick={onBack} />
     <PhaseIndicator isDemo={engine.mode.kind === "demo"} phase={engine.frame.phase} />
     <div className="flex items-center gap-3 pointer-events-auto">
-      {showExplorerActions && (
-        <button onClick={onShowPrefrontal} className="rounded-full bg-slate-900/90 px-4 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-white shadow-lg backdrop-blur-md transition hover:bg-indigo-600" title="Highlight the prefrontal electrodes associated with the focus story">
-          Focus sensors
-        </button>
-      )}
-      <div className={`flex h-9 min-w-9 items-center justify-center rounded-full border bg-slate-900/90 px-2 font-mono text-xs font-black shadow-lg ${engine.frame.phase === "baseline" ? "border-indigo-400/40 text-indigo-400" : "border-emerald-400/40 text-emerald-400"}`} title={`Focus level: ${engine.frame.focus == null ? "unavailable" : `${Math.round(engine.frame.focus * 100)} percent`}`} aria-label={`Focus level: ${engine.frame.focus == null ? "unavailable" : `${Math.round(engine.frame.focus * 100)} percent`}`}>
-        {engine.frame.focus == null ? "--" : `${Math.round(engine.frame.focus * 100)}%`}
-      </div>
+      <button
+        onClick={onShowPrefrontal}
+        className={`flex h-9 cursor-pointer items-center overflow-hidden rounded-full border bg-slate-900/90 shadow-lg backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-xl active:translate-y-0 active:scale-95 ${focusSensorsActive ? "ring-2 ring-slate-400/35" : ""} ${engine.frame.phase === "baseline" ? "border-indigo-400/40" : "border-emerald-400/40"}`}
+        title="Highlight the four focus-related sensors"
+        aria-label="Highlight the four focus-related sensors"
+        aria-pressed={focusSensorsActive}
+      >
+        <span className="px-3 text-[9px] font-black uppercase tracking-[0.12em] text-white">Focus sensors</span>
+        <span className={`flex h-full min-w-11 items-center justify-center border-l border-white/10 px-2 font-mono text-xs font-black ${engine.frame.phase === "baseline" ? "text-indigo-400" : "text-emerald-400"}`}>{engine.frame.focus == null ? "--" : `${Math.round(engine.frame.focus * 100)}%`}</span>
+      </button>
       <button
         onClick={() => xrStore.enterVR()}
         className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-lg hover:shadow-indigo-500/30 active:scale-95 transition-all cursor-pointer border border-indigo-400/40"

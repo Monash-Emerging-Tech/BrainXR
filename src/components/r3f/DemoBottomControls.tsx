@@ -16,8 +16,13 @@ interface DemoBottomControlsProps {
 const DemoBottomControls: React.FC<DemoBottomControlsProps> = ({ frame, onTrialSelect, isPaused, onTogglePlayPause, onPrevious, onNext }) => (
   <>
     <div className="absolute inset-x-0 bottom-5 z-30 flex flex-col items-center justify-center px-4 pointer-events-none">
-      <div className="flex w-full max-w-4xl items-center gap-3 pointer-events-auto">
-        <div className="flex shrink-0 items-center gap-1 rounded-full bg-slate-900/95 p-1 shadow-xl">
+      <div className="w-full max-w-[52rem] pointer-events-auto">
+        <TrialProgressBar
+          trialElapsed={frame.trialElapsed ?? 0}
+          phase={frame.phase}
+          trialIndex={frame.trialIndex ?? 0}
+          onTrialSelect={onTrialSelect}
+          controls={<div className="flex items-center gap-1 rounded-full bg-slate-900/95 p-1 shadow-xl">
           <button onClick={onPrevious} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-300 transition hover:bg-slate-700 hover:text-white" title="Restart track; press again for previous" aria-label="Restart track or go to previous track">
             <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M11 8V5l-7 5 7 5v-3c4 0 6.5 1.3 8 4-1-5-4-8-8-8z" /></svg>
           </button>
@@ -31,15 +36,8 @@ const DemoBottomControls: React.FC<DemoBottomControlsProps> = ({ frame, onTrialS
           <button onClick={onNext} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-300 transition hover:bg-slate-700 hover:text-white" title="Next track" aria-label="Next track">
             <svg className="h-4 w-4 fill-current -scale-x-100" viewBox="0 0 24 24"><path d="M11 8V5l-7 5 7 5v-3c4 0 6.5 1.3 8 4-1-5-4-8-8-8z" /></svg>
           </button>
-        </div>
-        <div className="min-w-0 flex-1">
-        <TrialProgressBar
-          trialElapsed={frame.trialElapsed ?? 0}
-          phase={frame.phase}
-          trialIndex={frame.trialIndex ?? 0}
-          onTrialSelect={onTrialSelect}
+          </div>}
         />
-        </div>
       </div>
     </div>
   </>
