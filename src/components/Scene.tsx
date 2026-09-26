@@ -35,6 +35,7 @@ interface SceneProps {
   presentationStage?: HeadsetPresentationStage;
   onChannelSelect: (name: ElectrodeName) => void;
   onChannelHover?: (name: ElectrodeName | null) => void;
+  onClearSelection?: () => void;
   onStartDemo?: () => void;
   onStartLive?: () => void;
   onTrialSelect?: (index: number, startOffset?: number) => void;
@@ -54,6 +55,7 @@ const Scene: React.FC<SceneProps> = ({
   presentationStage = "interactive",
   onChannelSelect,
   onChannelHover,
+  onClearSelection,
   onStartDemo,
   onStartLive,
   onTrialSelect,
@@ -68,8 +70,9 @@ const Scene: React.FC<SceneProps> = ({
   return (
     <Canvas
       dpr={[1, 1.5]}
+      onPointerMissed={onClearSelection}
       camera={{ position: [0, 0, 7.5], fov: 45 }}
-      style={{ background: "transparent" }}
+      style={{ background: "transparent", cursor: hoveredChannel ? "pointer" : "grab" }}
       gl={{ alpha: true, powerPreference: "high-performance" }}
     >
       <ambientLight intensity={Math.PI / 1.5} />

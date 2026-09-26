@@ -1,6 +1,6 @@
 // Composition root: wires the playback engine to the mode-derived layout and
 // renders whichever panels/overlays that layout calls for.
-import React, { useState, Suspense, lazy, useCallback, useSyncExternalStore } from "react";
+import React, { useState, Suspense, lazy, useCallback, useRef, useSyncExternalStore } from "react";
 import { usePlaybackEngine } from "../../hooks/usePlaybackEngine";
 import type { ElectrodeName } from "../../utils/signalSource";
 import { IdleHeadline, IdleActions } from "../IdleSplash";
@@ -28,6 +28,7 @@ const R3F: React.FC = () => {
   const engine = usePlaybackEngine();
   const [hoveredChannel, setHoveredChannel] = useState<ElectrodeName | null>(null);
   const [highlightPrefrontal, setHighlightPrefrontal] = useState(false);
+  const lastRewindRef = useRef<{ trial: number; time: number } | null>(null);
   const isIdle = engine.mode.kind === "idle";
   const isXRPresenting = useIsXRPresenting();
   const storyStage = useSyncExternalStore(
@@ -51,6 +52,36 @@ const R3F: React.FC = () => {
     engine.startDemo();
   }, [engine.selectChannel, engine.startDemo]);
 
+  const clearSelection = useCallback(() => {
+    setHighlightPrefrontal(false);
+    setHoveredChannel(null);
+    engine.selectChannel(null);
+  }, [engine.selectChannel]);
+
+  const disconnect = useCallback(() => {
+    clearSelection();
+    engine.disconnect();
+  }, [clearSelection, engine.disconnect]);
+
+  const previousTrack = useCallback(() => {
+    const trialIndex = engine.frame.trialIndex ?? 0;
+    const now = performance.now();
+    const previous = lastRewindRef.current;
+    const isSecondPress = previous?.trial === trialIndex && now - previous.time < 1400;
+    engine.selectTrial(isSecondPress ? Math.max(0, trialIndex - 1) : trialIndex, 0);
+    lastRewindRef.current = isSecondPress ? null : { trial: trialIndex, time: now };
+  }, [engine.frame.trialIndex, engine.selectTrial]);
+
+  const nextTrack = useCallback(() => {
+    lastRewindRef.current = null;
+    engine.selectTrial(Math.min((engine.frame.totalTrials ?? 40) - 1, (engine.frame.trialIndex ?? 0) + 1), 0);
+  }, [engine.frame.totalTrials, engine.frame.trialIndex, engine.selectTrial]);
+
+  const showPrefrontal = useCallback(() => {
+    setHighlightPrefrontal(true);
+    engine.selectChannel("FpZ");
+  }, [engine.selectChannel]);
+
   useSpacebarToggle(engine.togglePlayPause);
 
   return (
@@ -67,7 +98,7 @@ const R3F: React.FC = () => {
       {/* ======================================================== */}
       <div className="flex-1 flex flex-col relative bg-transparent">
         {engine.audioError && <AudioErrorToast />}
-        {!isIdle && <TopHudBar engine={engine} />}
+        {!isIdle && <TopHudBar engine={engine} onBack={disconnect} showExplorerActions={engine.selectedChannel == null} onShowPrefrontal={showPrefrontal} />}
 
         {/* Layer 1: Solid Text Behind the Headset */}
         {isIdle && <IdleHeadline variant="solid" />}
@@ -84,6 +115,7 @@ const R3F: React.FC = () => {
               presentationStage={presentationStage}
               onChannelSelect={selectChannel}
               onChannelHover={setHoveredChannel}
+              onClearSelection={clearSelection}
               onStartDemo={startDemo}
               onStartLive={engine.startLive}
               onTrialSelect={engine.selectTrial}
@@ -117,7 +149,14 @@ const R3F: React.FC = () => {
         {isIdle && <IdleActions onStartDemo={startDemo} onStartLive={engine.startLive} />}
 
         {engine.mode.kind === "demo" && (
-          <DemoBottomControls frame={engine.frame} onTrialSelect={engine.selectTrial} />
+          <DemoBottomControls
+            frame={engine.frame}
+            onTrialSelect={engine.selectTrial}
+            isPaused={engine.isPaused}
+            onTogglePlayPause={engine.togglePlayPause}
+            onPrevious={previousTrack}
+            onNext={nextTrack}
+          />
         )}
       </div>
     </div>

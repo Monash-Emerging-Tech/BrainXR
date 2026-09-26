@@ -91,7 +91,7 @@ export function useHeadPlacement({
         group.position.lerp(tempTargetPosition, slerpFactor);
         group.scale.lerp(tempTargetScale, slerpFactor);
         group.quaternion.slerp(DEFAULT_HEADSET_QUATERNION, slerpFactor);
-      } else if ((presentationStage === "showcase" || presentationStage === "interactive") && isIdleShowcase && !selectedChannel) {
+      } else if ((presentationStage === "showcase" || (presentationStage === "interactive" && isIdleShowcase)) && !selectedChannel) {
         // Slow showcase spin plus a subtle bobbing motion when no channel is selected.
         group.rotation.y = time * 0.15;
         group.rotation.x = Math.sin(time * 0.4) * 0.05 + Math.PI / 32;
