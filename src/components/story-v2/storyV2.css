@@ -1,0 +1,251 @@
+/* ==================================================================== */
+/* STORY V2 (src/components/story-v2) -- scroll triggers scenes.        */
+/* v1's rules above are untouched and still drive ?story=v1.            */
+/* ==================================================================== */
+
+/* v2 locks body scrolling, so the gutter v1 reserves would show as a
+   permanent blank strip. Only suppressed while v2 is mounted. */
+html.storyv2-active {
+  scrollbar-gutter: auto;
+}
+
+.storyv2-root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background-color: #f2f2f2;
+  /* Scene 2's white -> glossy black. A flat full-screen colour lerp done
+     by the compositor: smooth, no banding, no per-frame React renders. */
+  transition: background-color var(--v2-black-ms, 4000ms) cubic-bezier(0.4, 0, 0.3, 1);
+}
+
+.storyv2-root.is-black {
+  background-color: #050505;
+}
+
+.storyv2-layer {
+  position: absolute;
+  inset: 0;
+  transition: opacity 600ms ease;
+}
+
+/* The opening text as it leaves: blurs out while the background darkens. */
+.storyv2-leaving {
+  opacity: 0;
+  filter: blur(var(--v2-text-blur, 28px));
+  transition:
+    opacity var(--v2-black-ms, 4000ms) ease,
+    filter var(--v2-black-ms, 4000ms) ease;
+  pointer-events: none;
+}
+
+.storyv2-scene {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---- scene 0 / 1 ---- */
+
+.storyv2-wordmark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  /* Scaled toward the middle of the viewport during the swallow. The
+     element spans the viewport, so the default 50% 50% origin IS the exact
+     screen centre. */
+  transform-origin: 50% 50%;
+  will-change: transform, opacity, filter;
+}
+
+/* IdleSplash pins its headline near the top of the page, which is right
+   for the idle screen and wrong here. These overrides are CSS-only and
+   scoped to v2, so IdleSplash itself is untouched and the type -- font,
+   weight, size, letter spacing -- stays exactly as it is there. */
+.storyv2-wordmark > div {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  width: 100%;
+}
+
+/* Full-screen shader canvas for the smoke burst. */
+.storyv2-smoke {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.storyv2-opening {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Line 1 and FOCUS?? centre as ONE group, vertically and horizontally.
+   Each child is sized to its own tight ink box, so `align-items: center`
+   centres each line on its real width rather than on a sampling canvas. */
+.storyv2-question {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6rem;
+  padding: 0 1.5rem;
+  max-width: 100%;
+}
+
+.storyv2-line,
+.storyv2-focus {
+  max-width: 100%;
+}
+
+/* ---- the glossy black glass, faded in during scene 2 ---- */
+
+.storyv2-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--v2-black-ms, 4000ms) ease;
+}
+
+.storyv2-root.is-black .storyv2-glass {
+  opacity: 1;
+}
+
+/* ---- the brain ---- */
+
+.storyv2-brain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transform: scale(var(--v2-brain-scale, 0.86));
+  filter: blur(var(--v2-brain-blur, 16px));
+  transition:
+    opacity var(--v2-brain-ms, 4000ms) ease,
+    transform var(--v2-brain-ms, 4000ms) cubic-bezier(0.22, 1, 0.36, 1),
+    filter var(--v2-brain-ms, 4000ms) ease;
+}
+
+.storyv2-brain.is-revealed {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+/* Until the black hold has elapsed the brain is not merely faint: the
+   compositor paints nothing at all for it. It stays mounted so the WebGL
+   context and the model are warm by the time it appears. */
+.storyv2-brain.is-hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: none;
+}
+
+/* ---- dev HUD (off unless DEBUG_HUD or ?v2debug=1) ---- */
+
+.storyv2-hud {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 120;
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre;
+  color: #7dffb0;
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(125, 255, 176, 0.3);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---- the "scroll" pill that trails the cursor ---- */
+
+.storyv2-cursor-tag {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 95;
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  font-family: 'OffBit', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(10, 10, 10, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 260ms ease;
+  will-change: transform;
+}
+
+.storyv2-cursor-tag.is-visible {
+  opacity: 1;
+}
+
+/* ---- touch devices get a static hint instead ---- */
+
+.storyv2-swipe-hint {
+  position: fixed;
+  z-index: 95;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: 'OffBit', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.storyv2-swipe-hint.is-visible {
+  opacity: 1;
+}
+
+.storyv2-swipe-caret {
+  width: 1px;
+  height: 1.8rem;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.55));
+  animation: storyHintBob 2.4s ease-in-out infinite;
+}
+
+@media (max-width: 767px) {
+  .storyv2-question {
+    gap: 1.1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storyv2-swipe-caret {
+    animation: none !important;
+  }
+}

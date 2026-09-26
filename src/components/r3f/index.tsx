@@ -12,6 +12,8 @@ import LoadingOverlay from "./LoadingOverlay";
 import DemoBottomControls from "./DemoBottomControls";
 import StoryIntro from "../story/StoryIntro";
 
+const StoryIntroV2 = lazy(() => import("../story-v2/StoryIntroV2"));
+
 const Scene = lazy(() => import("../Scene"));
 
 // sessionStorage flag so the story only plays once per browser session --
@@ -20,10 +22,22 @@ const Scene = lazy(() => import("../Scene"));
 // see it again.
 const STORY_SEEN_KEY = "brainxr:story-seen";
 
+// Which cut of the intro plays. v1 is the long scroll-driven version; v2
+// plays one scene per scroll gesture. Override per-load with ?story=v1 or
+// ?story=v2 to compare the two without editing this file.
+const STORY_VERSION: "v1" | "v2" = "v2";
+
+function resolveStoryVersion(): "v1" | "v2" {
+  if (typeof window === "undefined") return STORY_VERSION;
+  const asked = new URLSearchParams(window.location.search).get("story");
+  return asked === "v1" || asked === "v2" ? asked : STORY_VERSION;
+}
+
 const R3F: React.FC = () => {
   const engine = usePlaybackEngine();
   const [hoveredChannel, setHoveredChannel] = useState<ElectrodeName | null>(null);
   const isIdle = engine.mode.kind === "idle";
+  const [storyVersion] = useState(resolveStoryVersion);
   const [showStory, setShowStory] = useState(() => {
     if (typeof window === "undefined") return false;
     return sessionStorage.getItem(STORY_SEEN_KEY) !== "1";
@@ -32,13 +46,16 @@ const R3F: React.FC = () => {
   useSpacebarToggle(engine.togglePlayPause);
 
   if (showStory) {
-    return (
-      <StoryIntro
-        onComplete={() => {
-          sessionStorage.setItem(STORY_SEEN_KEY, "1");
-          setShowStory(false);
-        }}
-      />
+    const done = () => {
+      sessionStorage.setItem(STORY_SEEN_KEY, "1");
+      setShowStory(false);
+    };
+    return storyVersion === "v2" ? (
+      <Suspense fallback={<div className="w-full h-full bg-black" />}>
+        <StoryIntroV2 onComplete={done} />
+      </Suspense>
+    ) : (
+      <StoryIntro onComplete={done} />
     );
   }
 
