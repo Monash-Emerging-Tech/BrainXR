@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+/* Checkpoint locking clamps the scroll position, so the page must not bounce
+   past its own ends and the scrollbar must not appear and disappear -- either
+   would make the clamp visibly fight the browser. */
+html {
+  overscroll-behavior: none;
+  scrollbar-gutter: stable;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+/* While a checkpoint holds the reader, suppress touch panning at the CSS
+   level too. The JS listeners are what actually block it; this stops mobile
+   browsers starting a gesture they will then have to cancel. */
+.story-locked {
+  touch-action: none;
+}
+
 @font-face {
   font-family: 'OffBit';
   src: url('../assets/OffBit Regular.ttf') format('truetype');
@@ -41,4 +60,566 @@
 
 .animate-fade-in {
   animation: fadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ---- story intro: Act 1 (src/components/story/Act1.tsx) ---- */
+
+.story-act1-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #f2f2f2;
+  overflow: hidden;
+}
+
+/* White glossy glass: near-white base, soft sheen, faint vignette. */
+.story-glass-white {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 16%, #ffffff 0%, #f5f5f5 54%, #e9e9e9 100%),
+    #f2f2f2;
+  overflow: hidden;
+}
+
+/* The zooming scene. No transforms and no will-change: the viewBox does the
+   work, so every pixel square stays a real vector edge at any DPR. */
+.story-hook-svg {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Particles in flight only; the SVG takes over the moment they land. The
+   canvas is sized and placed to just the text in flight, not the viewport:
+   the swell filter runs over this surface every frame and its cost scales
+   with area. left/top are set from JS. */
+.story-swarm-canvas {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Holds the swell filter definitions. Takes no space and paints nothing. */
+.story-filter-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Black smoke gathering where the highlight block will resolve. */
+.story-block-smoke {
+  position: absolute;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(7, 7, 7, 0.85),
+    rgba(7, 7, 7, 0.45) 52%,
+    rgba(7, 7, 7, 0) 82%
+  );
+  filter: blur(22px);
+}
+
+/* Screen-space gloss over the zooming scene, so the specular never scales
+   with the rectangle and cannot smear into a blur. */
+.story-hook-gloss {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* (a) white hold -- the scroll nudge */
+
+.story-scroll-hint {
+  position: absolute;
+  bottom: 9%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'OffBit', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(20, 20, 20, 0.4);
+  pointer-events: none;
+  transition: opacity 400ms ease;
+}
+
+.story-scroll-caret {
+  width: 1px;
+  height: 2.1rem;
+  background: linear-gradient(to bottom, rgba(20, 20, 20, 0.38), rgba(20, 20, 20, 0));
+}
+
+@keyframes storyHintBob {
+  0%, 100% { transform: translateY(0); opacity: 0.85; }
+  50% { transform: translateY(0.45rem); opacity: 0.35; }
+}
+.story-scroll-caret.is-bobbing {
+  animation: storyHintBob 2.4s ease-in-out infinite;
+}
+
+/* (b) mist -- three blurred radial gradients on separate clocks, so the
+   fog never reads as a single looping shape */
+
+.story-mist {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: multiply;
+}
+
+/* Slot carries the parting translation; the layer inside keeps its own
+   drift animation, so the two transforms never fight. */
+.story-mist-slot {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.story-mist-layer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: block;
+  border-radius: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  will-change: transform;
+}
+
+.story-mist-a {
+  width: 88vw;
+  height: 62vh;
+  background: radial-gradient(
+    closest-side,
+    rgba(160, 160, 160, 0.5),
+    rgba(160, 160, 160, 0.18) 55%,
+    rgba(160, 160, 160, 0) 78%
+  );
+  filter: blur(42px);
+}
+
+.story-mist-b {
+  width: 62vw;
+  height: 74vh;
+  background: radial-gradient(
+    closest-side,
+    rgba(120, 120, 120, 0.42),
+    rgba(120, 120, 120, 0) 72%
+  );
+  filter: blur(58px);
+}
+
+.story-mist-c {
+  width: 104vw;
+  height: 48vh;
+  background: radial-gradient(
+    closest-side,
+    rgba(208, 208, 208, 0.62),
+    rgba(208, 208, 208, 0) 70%
+  );
+  filter: blur(34px);
+}
+
+@keyframes storyMistDriftA {
+  0%, 100% { transform: translate3d(-53%, -48%, 0) scale(1.04); }
+  50% { transform: translate3d(-46%, -53%, 0) scale(1.19); }
+}
+@keyframes storyMistDriftB {
+  0%, 100% { transform: translate3d(-47%, -52%, 0) scale(1.12); }
+  50% { transform: translate3d(-55%, -46%, 0) scale(0.97); }
+}
+@keyframes storyMistDriftC {
+  0%, 100% { transform: translate3d(-50%, -50%, 0) scale(1); }
+  50% { transform: translate3d(-51%, -49%, 0) scale(1.26); }
+}
+
+.story-mist-a.is-drifting { animation: storyMistDriftA 19s ease-in-out infinite; }
+.story-mist-b.is-drifting { animation: storyMistDriftB 23s ease-in-out infinite; }
+.story-mist-c.is-drifting { animation: storyMistDriftC 29s ease-in-out infinite; }
+
+/* Reduced motion: keep the scrubbed crossfades, drop everything involuntary. */
+@media (prefers-reduced-motion: reduce) {
+  .story-scroll-caret.is-bobbing,
+  .story-mist-layer.is-drifting {
+    animation: none !important;
+  }
+
+  .story-block-smoke,
+  .story-swarm-canvas {
+    display: none !important;
+  }
+}
+
+/* Shown when a checkpoint releases; fades out again on the next scroll. */
+.story-continue-hint {
+  position: fixed;
+  bottom: 7%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: 'OffBit', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+
+.story-continue-hint.is-visible {
+  opacity: 1;
+}
+
+/* ---- story intro: Act 2 (src/components/story/Act2.tsx) ---- */
+
+.story-act2-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* Act 2 is black start to finish -- reveal, every region, and the
+     closing line. The glossy glass layer below paints the actual surface. */
+  background-color: #000;
+  overflow: hidden;
+}
+
+/* ---- glossy black glass ---- */
+
+/* Glossy black glass, split in two so Act 1 can ramp the screen-space
+   GLOSS in during the zoom and the opaque BASE only at the very end. The
+   final frame of the dive is then literally this same panel, which is what
+   makes the handoff into Act 2 seamless.
+
+   Neutral black throughout -- any blue in the base reads as navy. */
+.story-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 18%, #141414 0%, #0a0a0a 52%, #050505 100%),
+    #050505;
+  overflow: hidden;
+}
+
+/* vignette + specular band, transparent: usable on its own over the zoom */
+.story-glass-gloss {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(
+    115% 85% at 50% 45%,
+    rgba(0, 0, 0, 0) 52%,
+    rgba(0, 0, 0, 0.4) 82%,
+    rgba(0, 0, 0, 0.7) 100%
+  );
+}
+
+.story-glass-gloss::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -30%;
+  width: 90%;
+  height: 190%;
+  transform: rotate(18deg);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.035) 38%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.035) 62%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  filter: blur(26px);
+}
+
+/* On the white stage the sheen is light and the vignette barely there. */
+.story-glass-white .story-glass-gloss {
+  background: radial-gradient(
+    115% 85% at 50% 45%,
+    rgba(0, 0, 0, 0) 56%,
+    rgba(0, 0, 0, 0.05) 84%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+}
+
+.story-glass-white .story-glass-gloss::before {
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 38%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.5) 62%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.story-brain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  will-change: transform, opacity, filter;
+}
+
+/* Visually hidden but readable: the pixel canvases are decorative, this is
+   the text that screen readers and find-in-page actually get. */
+.story-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- text column ---- */
+
+.story-text-area {
+  position: absolute;
+  z-index: 2;
+  top: 14%;
+  left: 6%;
+  width: min(30vw, 420px);
+}
+
+.story-text-area.is-closing {
+  top: 38%;
+  left: 50%;
+  width: min(62vw, 560px);
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+/* The pane is clipped to this box, which is why it can never cover the
+   brain no matter how far it travels. */
+.story-text-clip {
+  position: relative;
+  overflow: hidden;
+  /* Room for pixels to fall out of the bottom without being cut off early. */
+  /* Deep bottom padding gives the falling pixels room inside the clip; the
+     matching negative margin keeps the visible box its original size, which
+     matters on mobile where this column is anchored from the bottom. */
+  padding: 0.5rem 0.75rem 17.5rem;
+  margin: -0.5rem -0.75rem -17.5rem;
+}
+
+.story-text-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.story-pixel-label {
+  margin-bottom: 0.3rem;
+}
+
+/* the small role tag under the region name */
+.story-pixel-role {
+  margin-bottom: 0.9rem;
+  opacity: 0.85;
+}
+
+/* CC BY 4.0 credit for the brain model. Low contrast, out of the way,
+   but present for the whole of Act 2. */
+.story-credit {
+  position: absolute;
+  z-index: 4;
+  left: 1.5rem;
+  bottom: 1.1rem;
+  display: flex;
+  gap: 0.6rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
+  color: rgba(226, 226, 226, 0.34);
+}
+
+.story-credit a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(226, 226, 226, 0.18);
+  transition: color 200ms ease, border-color 200ms ease;
+}
+
+.story-credit a:hover,
+.story-credit a:focus-visible {
+  color: rgba(245, 245, 245, 0.85);
+  border-color: rgba(245, 245, 245, 0.5);
+}
+
+/* ---- window-pane sweep ---- */
+
+.story-pane {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 46%;
+  height: 140%;
+  z-index: 2;
+  pointer-events: none;
+  backdrop-filter: blur(7px) brightness(1.35);
+  -webkit-backdrop-filter: blur(7px) brightness(1.35);
+  /* Dark glass: a cool tint that lifts the black slightly, with a soft
+     light edge. On a black stage a white pane would read as a flashlight. */
+  background: linear-gradient(
+    100deg,
+    rgba(190, 190, 190, 0) 0%,
+    rgba(190, 190, 190, 0.1) 22%,
+    rgba(205, 205, 205, 0.17) 50%,
+    rgba(190, 190, 190, 0.1) 78%,
+    rgba(190, 190, 190, 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 18%,
+    #000 82%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 18%,
+    #000 82%,
+    transparent 100%
+  );
+  animation: storyPaneSweep 1050ms cubic-bezier(0.5, 0.02, 0.28, 1) forwards;
+  will-change: transform;
+}
+
+/* thin light-reflection streak riding the pane */
+.story-pane-streak {
+  position: absolute;
+  top: -10%;
+  left: 38%;
+  width: 10%;
+  height: 120%;
+  transform: skewX(-14deg);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  filter: blur(1.5px);
+}
+
+@keyframes storyPaneSweep {
+  0% { transform: translate3d(-135%, 0, 0) skewX(-7deg); }
+  100% { transform: translate3d(330%, 0, 0) skewX(-7deg); }
+}
+
+/* ---- region dots ---- */
+
+.story-dots {
+  position: absolute;
+  z-index: 2;
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+/* On black: visible but quiet when inactive, clearly lit when active. */
+.story-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background-color: rgba(225, 225, 225, 0.3);
+  transition: transform 300ms ease, background-color 300ms ease,
+    box-shadow 300ms ease;
+}
+
+.story-dot.is-active {
+  background-color: #a5b4fc;
+  box-shadow: 0 0 0.5rem rgba(165, 180, 252, 0.7);
+  transform: scale(1.5);
+}
+
+/* ---- reveal out of Act 1's black ---- */
+
+.story-reveal-mist {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side at 50% 62%,
+    rgba(255, 255, 255, 0.8),
+    rgba(228, 228, 228, 0.45) 48%,
+    rgba(210, 210, 210, 0.16) 74%,
+    rgba(210, 210, 210, 0) 92%
+  );
+  filter: blur(26px);
+}
+
+/* ---- narrow viewports: text moves under the brain ---- */
+
+@media (max-width: 767px) {
+  /* Text panel sits ABOVE the brain on narrow screens. */
+  .story-text-area {
+    top: 8%;
+    bottom: auto;
+    left: 6%;
+    right: 6%;
+    width: auto;
+  }
+
+  .story-text-area.is-closing {
+    top: 12%;
+    bottom: auto;
+    left: 6%;
+    right: 6%;
+    width: auto;
+    transform: none;
+    text-align: left;
+  }
+
+  .story-credit {
+    left: 6%;
+    right: 6%;
+    bottom: 0.7rem;
+    font-size: 0.56rem;
+  }
+
+  .story-dots {
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: 5%;
+    transform: translateX(-50%);
+    flex-direction: row;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-pane {
+    animation: none !important;
+    display: none !important;
+  }
 }

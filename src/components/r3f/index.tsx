@@ -10,15 +10,37 @@ import AudioErrorToast from "./AudioErrorToast";
 import TopHudBar from "./TopHudBar";
 import LoadingOverlay from "./LoadingOverlay";
 import DemoBottomControls from "./DemoBottomControls";
+import StoryIntro from "../story/StoryIntro";
 
 const Scene = lazy(() => import("../Scene"));
+
+// sessionStorage flag so the story only plays once per browser session --
+// skipping or finishing it keeps you on the idle screen on refresh/back-nav
+// within the same tab session. Clear sessionStorage (or open a new tab) to
+// see it again.
+const STORY_SEEN_KEY = "brainxr:story-seen";
 
 const R3F: React.FC = () => {
   const engine = usePlaybackEngine();
   const [hoveredChannel, setHoveredChannel] = useState<ElectrodeName | null>(null);
   const isIdle = engine.mode.kind === "idle";
+  const [showStory, setShowStory] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return sessionStorage.getItem(STORY_SEEN_KEY) !== "1";
+  });
 
   useSpacebarToggle(engine.togglePlayPause);
+
+  if (showStory) {
+    return (
+      <StoryIntro
+        onComplete={() => {
+          sessionStorage.setItem(STORY_SEEN_KEY, "1");
+          setShowStory(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col md:flex-row relative bg-white overflow-hidden text-slate-800 font-sans">
