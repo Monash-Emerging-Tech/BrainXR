@@ -1,5 +1,6 @@
 import React from "react";
 import type { Frame } from "../../utils/signalSource";
+import { PauseThinIcon, PlayThinIcon } from "../icons/IconmonstrIcons";
 
 interface PlaybackControlsProps {
   phase: Frame["phase"];
@@ -28,13 +29,9 @@ const PlaybackControls: React.FC<PlaybackControlsProps> = ({
           title={isPaused ? "Play (Spacebar)" : "Pause (Spacebar)"}
         >
           {isPaused ? (
-            <svg className={`w-4 h-4 md:w-5 md:h-5 fill-current transition-colors duration-300 ${phaseColor}`} viewBox="0 0 24 24">
-              <path d="M8 5v14l11-7z" />
-            </svg>
+            <PlayThinIcon className={`h-4 w-4 transition-colors duration-300 md:h-5 md:w-5 ${phaseColor}`} />
           ) : (
-            <svg className={`w-4 h-4 md:w-5 md:h-5 fill-current transition-colors duration-300 ${phaseColor}`} viewBox="0 0 24 24">
-              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-            </svg>
+            <PauseThinIcon className={`h-4 w-4 transition-colors duration-300 md:h-5 md:w-5 ${phaseColor}`} />
           )}
           <span className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 bg-slate-950 text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200 whitespace-nowrap border border-slate-800 font-mono shadow-md text-white z-50">
             {isPaused ? "Play" : "Pause"} <kbd className="bg-slate-800 px-1 rounded font-sans font-semibold">Space</kbd>

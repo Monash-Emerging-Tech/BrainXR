@@ -30,7 +30,7 @@ const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, focusSensorsActiv
       </button>
       <button
         onClick={() => xrStore.enterVR()}
-        className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-lg hover:shadow-indigo-500/30 active:scale-95 transition-all cursor-pointer border border-indigo-400/40"
+        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-indigo-400/40 bg-indigo-600 text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-indigo-500/30 active:translate-y-0 active:scale-95 md:h-9 md:w-9"
         title="Enter VR"
         aria-label="Enter VR"
       >

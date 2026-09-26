@@ -1,6 +1,7 @@
 import React from "react";
 import { getElectrodeMetadata, type ElectrodeName, type Frame } from "../../utils/signalSource";
 import { REGION_COLOR } from "../../utils/electrodeVisualState";
+import { XMark1Icon } from "../icons/IconmonstrIcons";
 
 interface ElectrodeDrawerProps {
   channel: ElectrodeName | null;
@@ -16,7 +17,7 @@ const ElectrodeDrawer: React.FC<ElectrodeDrawerProps> = ({ channel, open, frame,
   return (
     <aside aria-hidden={!open} aria-live="polite" className={`pointer-events-auto absolute right-0 top-1/2 z-40 max-h-[calc(100%-8rem)] w-[min(22rem,calc(100%-1rem))] -translate-y-1/2 overflow-y-auto rounded-l-2xl border border-r-0 border-white/80 bg-white/95 p-5 shadow-2xl shadow-slate-900/10 backdrop-blur-xl transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${open ? "translate-x-0" : "translate-x-[calc(100%+2rem)]"}`}>
       {metadata && <div key={metadata.name} className="animate-node-panel-in">
-        <button onClick={onClose} aria-label="Close electrode details" className="absolute right-4 top-3 flex h-8 w-8 items-center justify-center rounded-full text-xl text-slate-400 transition hover:bg-slate-100 hover:text-slate-900">&times;</button>
+        <button onClick={onClose} aria-label="Close electrode details" className="absolute right-4 top-3 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-900"><XMark1Icon className="h-2.5 w-2.5" /></button>
         <div className="pr-9">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-500">Selected electrode</p>
           <h2 className="mt-1 font-offbit text-5xl font-bold uppercase leading-none text-slate-950">{metadata.name}</h2>
