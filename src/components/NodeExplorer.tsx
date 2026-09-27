@@ -1,8 +1,8 @@
-import React, { useRef } from "react";
+import React from "react";
 import type { ElectrodeName, Frame } from "../utils/signalSource";
 import CursorTag from "./NodeExplorer/CursorTag";
 import ExplorerOverview from "./NodeExplorer/ExplorerOverview";
-import ElectrodeDrawer from "./NodeExplorer/ElectrodeDrawer";
+import ElectrodeCardDeck from "./NodeExplorer/ElectrodeCardDeck";
 import FocusSensorsDrawer from "./NodeExplorer/FocusSensorsDrawer";
 
 interface NodeExplorerProps {
@@ -18,9 +18,6 @@ interface NodeExplorerProps {
 const NodeExplorer: React.FC<NodeExplorerProps> = ({
   isIdle, selectedChannel, hoveredChannel, frame, highlightPrefrontal, onSelectChannel, onHighlightPrefrontal,
 }) => {
-  const lastSelectedRef = useRef<ElectrodeName | null>(selectedChannel);
-  if (selectedChannel) lastSelectedRef.current = selectedChannel;
-
   const clearSelection = () => {
     onSelectChannel(null);
     onHighlightPrefrontal(false);
@@ -42,11 +39,14 @@ const NodeExplorer: React.FC<NodeExplorerProps> = ({
         />
       )}
       {!isIdle && (
-        <ElectrodeDrawer
-          channel={selectedChannel ?? lastSelectedRef.current}
-          open={selectedChannel != null}
+        <ElectrodeCardDeck
+          channel={selectedChannel}
           frame={frame}
-          onClose={clearSelection}
+          onSelect={(channel) => {
+            onHighlightPrefrontal(false);
+            onSelectChannel(channel);
+          }}
+          onCloseSelection={clearSelection}
         />
       )}
     </>
