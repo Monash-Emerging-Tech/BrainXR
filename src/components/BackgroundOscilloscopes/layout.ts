@@ -43,7 +43,7 @@ export function computeLaneLayout(width: number, height: number, numElectrodes: 
   const usableHeight = Math.max(100, height - paddingTop - paddingBottom);
   const laneHeight = usableHeight / numElectrodes;
 
-  const paddingLeft = 56; // Room for name labels at the left margin
+  const paddingLeft = 24; // Small breathing room; channel labels now live in the card deck
   const drawWidth = width - paddingLeft - 16; // Right margin buffer
 
   return { width, height, paddingTop, paddingLeft, drawWidth, laneHeight };

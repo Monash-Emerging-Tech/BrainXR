@@ -1,4 +1,5 @@
-import { ELECTRODE_NAMES, type ElectrodeName } from "../../utils/signalSource";
+import { type ElectrodeName } from "../../utils/signalSource";
+import { ELECTRODE_DISPLAY_ORDER } from "../../utils/electrodeDisplayOrder";
 import type { HistorySample } from "../../hooks/usePlaybackEngine";
 import { resizeCanvasToDisplaySize, computeLaneLayout } from "./layout";
 import { computeScale } from "./scale";
@@ -14,10 +15,10 @@ export function render(
   highlightedChannels: readonly ElectrodeName[] = []
 ): void {
   const { width, height } = resizeCanvasToDisplaySize(canvas, ctx);
-  const layout = computeLaneLayout(width, height, ELECTRODE_NAMES.length);
+  const layout = computeLaneLayout(width, height, ELECTRODE_DISPLAY_ORDER.length);
   const { means, maxDeviation } = computeScale(histories);
 
-  ELECTRODE_NAMES.forEach((name, idx) => {
+  ELECTRODE_DISPLAY_ORDER.forEach((name, idx) => {
     drawElectrodeLane({
       ctx,
       layout,

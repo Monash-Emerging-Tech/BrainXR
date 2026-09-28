@@ -55,16 +55,6 @@ export function drawElectrodeLane({
   ctx.stroke();
   ctx.setLineDash([]);
 
-  ctx.fillStyle = isSelected
-    ? "rgba(79, 70, 229, 1.0)"
-    : isHovered
-    ? "rgba(67, 56, 202, 0.9)"
-    : "rgba(71, 85, 105, 0.65)";
-  ctx.font = isSelected || isHovered ? "bold 10px monospace" : "9px monospace";
-  ctx.textAlign = "right";
-  ctx.textBaseline = "middle";
-  ctx.fillText(name, paddingLeft - 10, centerY);
-
   if (history.length <= 1) return;
 
   ctx.beginPath();

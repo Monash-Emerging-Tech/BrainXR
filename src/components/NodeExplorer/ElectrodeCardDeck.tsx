@@ -1,12 +1,12 @@
 import React from "react";
 import {
   ELECTRODE_METADATA,
-  ELECTRODE_NAMES,
   getElectrodeMetadata,
   type ElectrodeName,
   type Frame,
 } from "../../utils/signalSource";
 import { REGION_COLOR } from "../../utils/electrodeVisualState";
+import { ELECTRODE_DISPLAY_ORDER } from "../../utils/electrodeDisplayOrder";
 import { XMark1Icon } from "../icons/IconmonstrIcons";
 
 interface ElectrodeCardDeckProps {
@@ -15,18 +15,6 @@ interface ElectrodeCardDeckProps {
   onSelect: (channel: ElectrodeName) => void;
   onCloseSelection: () => void;
 }
-
-const REGION_ORDER = ["Frontal", "Temporal", "Central", "Parietal", "Occipital"] as const;
-
-const ELECTRODE_GROUPS = REGION_ORDER.map((region) => ({
-  region,
-  channels: ELECTRODE_NAMES.filter((name) => ELECTRODE_METADATA[name].region === region),
-}));
-
-const ORDERED_ELECTRODES = ELECTRODE_GROUPS.flatMap(({ channels }) => channels);
-const GROUP_STARTS = new Set(
-  ELECTRODE_GROUPS.slice(1).map(({ channels }) => ORDERED_ELECTRODES.indexOf(channels[0])),
-);
 
 const ElectrodeCardDeck: React.FC<ElectrodeCardDeckProps> = ({
   channel,
@@ -42,27 +30,26 @@ const ElectrodeCardDeck: React.FC<ElectrodeCardDeckProps> = ({
     <div className="pointer-events-none absolute inset-y-0 right-0 z-40 hidden md:block">
       <nav
         aria-label="Electrode card deck"
-        className="pointer-events-auto absolute right-0 top-1/2 flex -translate-y-1/2 flex-col items-end"
+        className="pointer-events-auto absolute bottom-24 right-0 top-[72px] flex flex-col items-end"
       >
-        {ORDERED_ELECTRODES.map((name, index) => {
+        {ELECTRODE_DISPLAY_ORDER.map((name) => {
           const card = ELECTRODE_METADATA[name];
           return (
-            <button
-              key={name}
-              type="button"
-              onClick={() => onSelect(name)}
-              aria-label={`Inspect ${name}, ${card.fullName}, ${card.region}`}
-              className={`group/card relative h-[19px] w-36 translate-x-[4.5rem] overflow-hidden rounded-l-md border-y border-l border-white/45 px-2 text-left shadow-sm transition-all duration-200 ease-out hover:z-30 hover:-translate-x-1 hover:scale-y-110 hover:rounded-l-lg hover:shadow-lg focus-visible:z-30 focus-visible:-translate-x-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 ${GROUP_STARTS.has(index) ? "mt-1.5" : "-mt-px"}`}
-              style={{
-                backgroundColor: REGION_COLOR[card.region],
-              }}
-            >
-              <span className="flex h-full items-center gap-1.5 whitespace-nowrap text-white drop-shadow-sm">
-                <strong className="font-offbit text-[11px] uppercase leading-none">{name}</strong>
-                <span className="text-[7px] font-black uppercase tracking-[0.08em] text-white/85">{card.region}</span>
-              </span>
-              <span className="absolute inset-y-0 left-0 w-0.5 bg-white/45 opacity-0 transition-opacity group-hover/card:opacity-100" />
-            </button>
+            <span key={name} className="flex min-h-0 flex-1 items-center justify-end">
+              <button
+                type="button"
+                onClick={() => onSelect(name)}
+                aria-label={`Inspect ${name}, ${card.fullName}, ${card.region}`}
+                className="group/card relative h-[70%] min-h-3.5 max-h-6 w-36 translate-x-[4.5rem] overflow-hidden rounded-l-md border-y border-l border-white/45 px-2 text-left shadow-sm transition-all duration-200 ease-out hover:z-30 hover:translate-x-0 hover:scale-y-110 hover:rounded-l-lg hover:shadow-lg focus-visible:z-30 focus-visible:translate-x-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
+                style={{ backgroundColor: REGION_COLOR[card.region] }}
+              >
+                <span className="flex h-full items-center gap-1.5 whitespace-nowrap text-white drop-shadow-sm">
+                  <strong className="font-offbit text-[11px] uppercase leading-none">{name}</strong>
+                  <span className="text-[7px] font-black uppercase tracking-[0.08em] text-white/85">{card.region}</span>
+                </span>
+                <span className="absolute inset-y-0 left-0 w-0.5 bg-white/45 opacity-0 transition-opacity group-hover/card:opacity-100" />
+              </button>
+            </span>
           );
         })}
       </nav>
