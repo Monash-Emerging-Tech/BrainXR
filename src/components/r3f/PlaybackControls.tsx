@@ -22,10 +22,10 @@ const PlaybackControls: React.FC<PlaybackControlsProps> = ({
 
   return (
     <div className="pointer-events-auto">
-      <div className="flex items-center gap-1.5 md:gap-2 bg-slate-900/90 border border-slate-700/50 backdrop-blur-md rounded-full p-1 md:p-1.5 shadow-xl">
+      <div className="flex items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/68 p-1 shadow-xl shadow-slate-900/15 backdrop-blur-xl md:gap-2 md:p-1.5">
         <button
           onClick={onTogglePlayPause}
-          className="flex items-center justify-center p-1.5 md:p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-white transition-all active:scale-95 cursor-pointer relative group"
+          className="group relative flex cursor-pointer items-center justify-center rounded-full border border-white/10 bg-white/8 p-1.5 text-white transition-all hover:bg-white/14 active:scale-95 md:p-2"
           title={isPaused ? "Play (Spacebar)" : "Pause (Spacebar)"}
         >
           {isPaused ? (
@@ -38,9 +38,9 @@ const PlaybackControls: React.FC<PlaybackControlsProps> = ({
           </span>
         </button>
 
-        <div className="h-4 md:h-5 w-[1px] bg-slate-800" />
+        <div className="h-4 w-px bg-white/12 md:h-5" />
 
-        <div className="flex items-center bg-slate-950/80 p-0.5 rounded-full border border-slate-800 select-none font-mono text-xs md:text-sm font-bold">
+        <div className="flex select-none items-center rounded-full border border-white/10 bg-white/6 p-0.5 font-mono text-xs font-bold md:text-sm">
           <button
             onClick={() => onSetSpeed(1)}
             className={`px-1.5 py-0.5 md:px-2 md:py-0.5 rounded-full transition-all cursor-pointer ${speed === 1

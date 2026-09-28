@@ -14,8 +14,8 @@ const FocusSensorsDrawer: React.FC<FocusSensorsDrawerProps> = ({ open, frame, on
   <aside
     aria-hidden={!open}
     aria-live="polite"
-    className={`pointer-events-auto absolute right-12 top-1/2 z-50 max-h-[calc(100%-8rem)] w-[min(22rem,calc(100%-1rem))] -translate-y-1/2 overflow-y-auto rounded-2xl border border-white/70 p-5 text-white shadow-2xl shadow-slate-900/20 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${open ? "translate-x-0 rotate-0 scale-100 opacity-100" : "pointer-events-none translate-x-16 rotate-3 scale-90 opacity-0"}`}
-    style={{ backgroundColor: REGION_COLOR.Frontal }}
+    className={`pointer-events-auto absolute left-12 top-1/2 z-50 max-h-[calc(100%-8rem)] w-[min(22rem,calc(100%-1rem))] -translate-y-1/2 overflow-y-auto rounded-2xl border border-white/70 p-5 text-white shadow-2xl shadow-slate-900/20 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${open ? "translate-x-0 rotate-0 scale-100 opacity-100" : "pointer-events-none -translate-x-16 -rotate-3 scale-90 opacity-0"}`}
+    style={{ backgroundColor: `${REGION_COLOR.Frontal}e8`, backdropFilter: "blur(18px)" }}
   >
     <button onClick={onClose} aria-label="Close focus sensor details" className="absolute right-4 top-3 flex h-8 w-8 items-center justify-center rounded-full text-white/70 transition hover:bg-white/15 hover:text-white">
       <XMark1Icon className="h-2.5 w-2.5" />

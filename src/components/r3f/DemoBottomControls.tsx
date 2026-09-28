@@ -23,18 +23,18 @@ const DemoBottomControls: React.FC<DemoBottomControlsProps> = ({ frame, onTrialS
           phase={frame.phase}
           trialIndex={frame.trialIndex ?? 0}
           onTrialSelect={onTrialSelect}
-          controls={<div className="flex items-center gap-1 rounded-full bg-slate-900/95 p-1 shadow-xl">
-          <button onClick={onPrevious} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-300 transition hover:bg-slate-700 hover:text-white" title="Restart track; press again for previous" aria-label="Restart track or go to previous track">
+          controls={<div className="flex items-center gap-1 rounded-full border border-white/15 bg-slate-950/68 p-1 shadow-xl shadow-slate-900/15 backdrop-blur-xl">
+          <button onClick={onPrevious} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-200 transition hover:bg-white/12 hover:text-white" title="Restart track; press again for previous" aria-label="Restart track or go to previous track">
             <MediaControl13Icon className="h-4 w-4" style={{ transform: "scaleX(-1)" }} />
           </button>
-          <button onClick={onTogglePlayPause} className="group relative flex h-9 w-9 items-center justify-center rounded-full bg-slate-800 text-white transition active:scale-95 hover:bg-slate-700" title={isPaused ? "Play (Spacebar)" : "Pause (Spacebar)"} aria-label={isPaused ? "Play" : "Pause"}>
+          <button onClick={onTogglePlayPause} className="group relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/8 text-white transition hover:border-white/20 hover:bg-white/14 active:scale-95" title={isPaused ? "Play (Spacebar)" : "Pause (Spacebar)"} aria-label={isPaused ? "Play" : "Pause"}>
             {isPaused ? (
               <PlayThinIcon className={`h-5 w-5 ${frame.phase === "baseline" ? "text-indigo-400" : "text-emerald-400"}`} />
             ) : (
               <PauseThinIcon className={`h-5 w-5 ${frame.phase === "baseline" ? "text-indigo-400" : "text-emerald-400"}`} />
             )}
           </button>
-          <button onClick={onNext} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-300 transition hover:bg-slate-700 hover:text-white" title="Next track" aria-label="Next track">
+          <button onClick={onNext} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-200 transition hover:bg-white/12 hover:text-white" title="Next track" aria-label="Next track">
             <MediaControl14Icon className="h-4 w-4" />
           </button>
           </div>}

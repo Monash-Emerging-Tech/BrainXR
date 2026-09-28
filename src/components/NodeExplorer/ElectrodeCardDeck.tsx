@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   ELECTRODE_METADATA,
   getElectrodeMetadata,
@@ -6,7 +6,7 @@ import {
   type Frame,
 } from "../../utils/signalSource";
 import { REGION_COLOR } from "../../utils/electrodeVisualState";
-import { ELECTRODE_DISPLAY_ORDER } from "../../utils/electrodeDisplayOrder";
+import { ELECTRODE_DISPLAY_ORDER, ELECTRODE_REGION_ORDER } from "../../utils/electrodeDisplayOrder";
 import { XMark1Icon } from "../icons/IconmonstrIcons";
 
 interface ElectrodeCardDeckProps {
@@ -16,38 +16,73 @@ interface ElectrodeCardDeckProps {
   onCloseSelection: () => void;
 }
 
+const REGION_RANGES = ELECTRODE_REGION_ORDER.map((region) => {
+  const start = ELECTRODE_DISPLAY_ORDER.findIndex((name) => ELECTRODE_METADATA[name].region === region);
+  const count = ELECTRODE_DISPLAY_ORDER.filter((name) => ELECTRODE_METADATA[name].region === region).length;
+  return { region, start, count };
+});
+
 const ElectrodeCardDeck: React.FC<ElectrodeCardDeckProps> = ({
   channel,
   frame,
   onSelect,
   onCloseSelection,
 }) => {
+  const [hoveredCard, setHoveredCard] = useState<ElectrodeName | null>(null);
   const metadata = channel ? getElectrodeMetadata(channel) : null;
   const sample = channel ? frame.channels[channel] : undefined;
   const phaseLabel = frame.phase === "quality-check" ? "Quality check" : frame.phase;
 
   return (
-    <div className="pointer-events-none absolute inset-y-0 right-0 z-40 hidden md:block">
+    <div className="pointer-events-none absolute inset-0 z-40 hidden md:block">
       <nav
         aria-label="Electrode card deck"
-        className="pointer-events-auto absolute bottom-24 right-0 top-[72px] flex flex-col items-end"
+        className="pointer-events-auto absolute bottom-24 right-0 top-[72px] flex w-40 flex-col items-end"
       >
+        {REGION_RANGES.map(({ region, start, count }) => (
+          <span
+            key={region}
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 w-20 rounded-l-2xl opacity-70"
+            style={{
+              top: `${(start / ELECTRODE_DISPLAY_ORDER.length) * 100}%`,
+              height: `${(count / ELECTRODE_DISPLAY_ORDER.length) * 100}%`,
+              background: `linear-gradient(90deg, transparent, ${REGION_COLOR[region]}12)`,
+            }}
+          />
+        ))}
         {ELECTRODE_DISPLAY_ORDER.map((name) => {
           const card = ELECTRODE_METADATA[name];
+          const isDeemphasized = hoveredCard != null && hoveredCard !== name;
           return (
-            <span key={name} className="flex min-h-0 flex-1 items-center justify-end">
+            <span key={name} className="relative flex min-h-0 flex-1 items-center justify-end pr-2">
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none absolute right-4 h-px w-6 origin-right transition-all duration-200 ${hoveredCard === name ? "scale-x-110 opacity-100" : "opacity-50"}`}
+                style={{ backgroundColor: REGION_COLOR[card.region] }}
+              />
               <button
                 type="button"
                 onClick={() => onSelect(name)}
+                onMouseEnter={() => setHoveredCard(name)}
+                onMouseLeave={() => setHoveredCard(null)}
+                onFocus={() => setHoveredCard(name)}
+                onBlur={() => setHoveredCard(null)}
                 aria-label={`Inspect ${name}, ${card.fullName}, ${card.region}`}
-                className="group/card relative h-[70%] min-h-3.5 max-h-6 w-36 translate-x-[4.5rem] overflow-hidden rounded-l-md border-y border-l border-white/45 px-2 text-left shadow-sm transition-all duration-200 ease-out hover:z-30 hover:translate-x-0 hover:scale-y-110 hover:rounded-l-lg hover:shadow-lg focus-visible:z-30 focus-visible:translate-x-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900"
-                style={{ backgroundColor: REGION_COLOR[card.region] }}
+                className={`group/card relative z-10 flex h-[76%] min-h-6 max-h-8 w-9 items-center overflow-hidden rounded-full border border-white/70 text-left shadow-sm backdrop-blur-md transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:z-30 hover:w-28 hover:-translate-x-1 hover:scale-105 hover:shadow-lg focus-visible:z-30 focus-visible:w-28 focus-visible:-translate-x-1 focus-visible:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 ${isDeemphasized ? "opacity-35 saturate-50" : "opacity-100"} ${channel === name ? "ring-2 ring-white/90 ring-offset-1 ring-offset-transparent" : ""}`}
+                style={{
+                  backgroundColor: `${REGION_COLOR[card.region]}a8`,
+                  boxShadow: hoveredCard === name
+                    ? `0 6px 22px ${REGION_COLOR[card.region]}66`
+                    : `0 3px 12px ${REGION_COLOR[card.region]}24`,
+                }}
               >
-                <span className="flex h-full items-center gap-1.5 whitespace-nowrap text-white drop-shadow-sm">
-                  <strong className="font-offbit text-[11px] uppercase leading-none">{name}</strong>
-                  <span className="text-[7px] font-black uppercase tracking-[0.08em] text-white/85">{card.region}</span>
+                <span className="flex h-full min-w-max items-center whitespace-nowrap text-white drop-shadow-sm">
+                  <strong className="flex w-9 shrink-0 items-center justify-center font-offbit text-[10px] uppercase leading-none">{name}</strong>
+                  <span className="-translate-x-1 pr-3 text-[8px] font-black uppercase tracking-[0.08em] text-white/0 transition-all duration-200 group-hover/card:translate-x-0 group-hover/card:text-white/90 group-focus-visible/card:translate-x-0 group-focus-visible/card:text-white/90">
+                    {card.region}
+                  </span>
                 </span>
-                <span className="absolute inset-y-0 left-0 w-0.5 bg-white/45 opacity-0 transition-opacity group-hover/card:opacity-100" />
               </button>
             </span>
           );
@@ -57,8 +92,8 @@ const ElectrodeCardDeck: React.FC<ElectrodeCardDeckProps> = ({
       <article
         aria-hidden={!metadata}
         aria-live="polite"
-        className={`pointer-events-auto absolute right-12 top-1/2 w-[22rem] -translate-y-1/2 overflow-hidden rounded-2xl border border-white/70 shadow-2xl shadow-slate-900/20 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${metadata ? "translate-x-0 rotate-0 scale-100 opacity-100" : "translate-x-16 rotate-3 scale-90 opacity-0 pointer-events-none"}`}
-        style={{ backgroundColor: metadata ? REGION_COLOR[metadata.region] : REGION_COLOR.Frontal }}
+        className={`pointer-events-auto absolute left-12 top-1/2 w-[22rem] -translate-y-1/2 overflow-hidden rounded-2xl border border-white/70 shadow-2xl shadow-slate-900/20 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${metadata ? "translate-x-0 rotate-0 scale-100 opacity-100" : "pointer-events-none -translate-x-16 -rotate-3 scale-90 opacity-0"}`}
+        style={{ backgroundColor: `${metadata ? REGION_COLOR[metadata.region] : REGION_COLOR.Frontal}e8`, backdropFilter: "blur(18px)" }}
       >
         {metadata && (
           <div key={metadata.name} className="animate-node-panel-in p-5 text-white">

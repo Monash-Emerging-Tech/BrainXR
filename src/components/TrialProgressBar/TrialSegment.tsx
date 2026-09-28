@@ -44,11 +44,11 @@ const TrialSegment: React.FC<TrialSegmentProps> = ({
           isActive
             ? "w-4 h-4 shadow-md " +
               (phase === "baseline"
-                ? "border-2 border-indigo-600 bg-slate-950/95"
-                : "bg-indigo-600 border border-indigo-500")
+                ? "border-2 border-indigo-400/80 bg-slate-950/72 backdrop-blur-md"
+                : "border border-indigo-300/60 bg-indigo-600/78 backdrop-blur-md")
             : isPast
-              ? "w-2.5 h-2.5 bg-indigo-600 border border-indigo-500 shadow-sm"
-              : "w-2.5 h-2.5 bg-slate-950/95 border border-slate-800/80"
+              ? "w-2.5 h-2.5 bg-indigo-600/78 border border-indigo-300/50 shadow-sm backdrop-blur-sm"
+              : "w-2.5 h-2.5 bg-slate-950/65 border border-white/15 backdrop-blur-sm"
         }`}
         style={
           isActive && phase === "baseline"
@@ -67,8 +67,8 @@ const TrialSegment: React.FC<TrialSegmentProps> = ({
       <button
         onClick={() => onTrialSelect(index, 3)}
         className={`flex-grow relative cursor-pointer min-w-0 transition-all duration-300 rounded-full ${isActive
-          ? "h-2 bg-slate-950/95 hover:bg-slate-900"
-          : "h-[3px] " + (isPast ? "bg-emerald-500" : "bg-slate-950/50")
+          ? "h-2 border border-white/10 bg-slate-950/68 backdrop-blur-sm hover:bg-slate-950/78"
+          : "h-[3px] " + (isPast ? "bg-emerald-500/80" : "bg-slate-950/42")
           }`}
         title={`Trial ${index + 1} - Stimulation (60s)`}
       >

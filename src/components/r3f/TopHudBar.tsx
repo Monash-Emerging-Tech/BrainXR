@@ -20,7 +20,7 @@ const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, focusSensorsActiv
     <div className="flex items-center gap-3 pointer-events-auto">
       <button
         onClick={onShowPrefrontal}
-        className={`flex h-9 cursor-pointer items-center overflow-hidden rounded-full border bg-slate-900/90 shadow-lg backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-700 hover:shadow-xl active:translate-y-0 active:scale-95 ${focusSensorsActive ? "ring-2 ring-slate-400/35" : ""} ${engine.frame.phase === "baseline" ? "border-indigo-400/40" : "border-emerald-400/40"}`}
+        className={`flex h-9 cursor-pointer items-center overflow-hidden rounded-full border bg-slate-950/68 shadow-lg shadow-slate-900/10 backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-950/82 hover:shadow-xl active:translate-y-0 active:scale-95 ${focusSensorsActive ? "ring-2 ring-white/35" : ""} ${engine.frame.phase === "baseline" ? "border-indigo-300/45" : "border-emerald-300/45"}`}
         title="Highlight the four focus-related sensors"
         aria-label="Highlight the four focus-related sensors"
         aria-pressed={focusSensorsActive}
@@ -30,7 +30,7 @@ const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, focusSensorsActiv
       </button>
       <button
         onClick={() => xrStore.enterVR()}
-        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-indigo-400/40 bg-indigo-600 text-white shadow-lg transition-all duration-200 hover:-translate-y-0.5 hover:bg-indigo-500 hover:shadow-indigo-500/30 active:translate-y-0 active:scale-95 md:h-9 md:w-9"
+        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-indigo-600/72 text-white shadow-lg shadow-indigo-500/15 backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-white/45 hover:bg-indigo-500/88 hover:shadow-indigo-500/30 active:translate-y-0 active:scale-95 md:h-9 md:w-9"
         title="Enter VR"
         aria-label="Enter VR"
       >
