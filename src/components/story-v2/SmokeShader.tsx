@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { STORY_V2 } from "./storyContentV2";
@@ -17,6 +17,13 @@ import { v2Debug } from "./v2Debug";
  *   uReach    radial mask, grows from the exact centre as the smoke pours
  *   uDensity  0 -> 1 -> 0 envelope, the pour and then the clear
  *   uTime     churn, independent of either
+ *
+ * ONE shader serves both smokes. Scene 1's is near-black over white and
+ * composites normally; scene 2's is pale grey over black and composites
+ * ADDITIVELY, so it glows out of the dark instead of laying a flat grey
+ * sheet over it. Colour and peak opacity are uniforms and the blend mode is
+ * a prop -- a second copy of the shader would be two things to keep in step
+ * for no gain.
  */
 
 const CFG = STORY_V2.smoke;
@@ -106,9 +113,12 @@ void main() {
 interface PlaneProps {
   reachRef: React.RefObject<number>;
   densityRef: React.RefObject<number>;
+  color: readonly [number, number, number];
+  maxOpacity: number;
+  additive: boolean;
 }
 
-function SmokePlane({ reachRef, densityRef }: PlaneProps) {
+function SmokePlane({ reachRef, densityRef, color, maxOpacity, additive }: PlaneProps) {
   const { size } = useThree();
   const matRef = useRef<THREE.ShaderMaterial>(null);
 
@@ -118,15 +128,25 @@ function SmokePlane({ reachRef, densityRef }: PlaneProps) {
       uReach: { value: 0 },
       uDensity: { value: 0 },
       uAspect: { value: 1 },
-      uColor: { value: new THREE.Color(...CFG.color) },
+      uColor: { value: new THREE.Color(color[0], color[1], color[2]) },
       uScale: { value: CFG.scale },
       uWarp: { value: CFG.warp },
       uEdgeLow: { value: CFG.edgeLow },
       uEdgeHigh: { value: CFG.edgeHigh },
-      uMaxOpacity: { value: CFG.maxOpacity },
+      uMaxOpacity: { value: maxOpacity },
     }),
+    // Built once per mount: the values are pushed in useFrame below, so a
+    // colour change must not rebuild the material mid-scene.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
+
+  useEffect(() => {
+    const u = matRef.current?.uniforms;
+    if (!u) return;
+    (u.uColor.value as THREE.Color).setRGB(color[0], color[1], color[2]);
+    u.uMaxOpacity.value = maxOpacity;
+  }, [color, maxOpacity]);
 
   useFrame((state) => {
     const u = matRef.current?.uniforms;
@@ -150,6 +170,9 @@ function SmokePlane({ reachRef, densityRef }: PlaneProps) {
         fragmentShader={FRAG}
         uniforms={uniforms}
         transparent
+        // Additive is what makes pale smoke read as light on black. Normal
+        // blending there would paint a flat grey rectangle.
+        blending={additive ? THREE.AdditiveBlending : THREE.NormalBlending}
         depthTest={false}
         depthWrite={false}
       />
@@ -162,10 +185,23 @@ export interface SmokeShaderProps {
   reachRef: React.RefObject<number>;
   /** Live 0..1 density envelope: pour, then clear. */
   densityRef: React.RefObject<number>;
+  /** Linear RGB, 0..1. Defaults to scene 1's near-black ink. */
+  color?: readonly [number, number, number];
+  /** Peak opacity. Defaults to scene 1's. */
+  maxOpacity?: number;
+  /** True for pale smoke on black, so it glows rather than greys. */
+  additive?: boolean;
   className?: string;
 }
 
-export default function SmokeShader({ reachRef, densityRef, className }: SmokeShaderProps) {
+export default function SmokeShader({
+  reachRef,
+  densityRef,
+  color = CFG.color,
+  maxOpacity = CFG.maxOpacity,
+  additive = false,
+  className,
+}: SmokeShaderProps) {
   return (
     <div className={className} aria-hidden="true">
       <Canvas
@@ -180,7 +216,13 @@ export default function SmokeShader({ reachRef, densityRef, className }: SmokeSh
           if (!ctx) v2Debug.smokeError = "no webgl context";
         }}
       >
-        <SmokePlane reachRef={reachRef} densityRef={densityRef} />
+        <SmokePlane
+          reachRef={reachRef}
+          densityRef={densityRef}
+          color={color}
+          maxOpacity={maxOpacity}
+          additive={additive}
+        />
       </Canvas>
     </div>
   );

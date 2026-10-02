@@ -48,6 +48,10 @@ export default function DebugHud({
           `smoke   frames ${v2Debug.smokeFrames}${
             v2Debug.smokeError ? `  ERR ${v2Debug.smokeError}` : ""
           }`,
+          `brain   span ${v2Debug.brainSpan.toFixed(3)}  h ${v2Debug.brainHeight.toFixed(3)}`,
+          `        on screen ${Math.round(v2Debug.brainSpanPx)}px wide, ${Math.round(
+            v2Debug.brainHeightPx,
+          )}px tall`,
         ].join("\n");
       }
       raf = requestAnimationFrame(tick);

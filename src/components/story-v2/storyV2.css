@@ -124,6 +124,19 @@ html.storyv2-active {
   opacity: 1;
 }
 
+/* ---- the white smoke the brain emerges from ---- */
+
+/* Above the brain on purpose: the brain fading up UNDERNEATH it is what
+   reads as emerging from inside the cloud rather than beside it. */
+.storyv2-whitesmoke {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
 /* ---- the brain ---- */
 
 .storyv2-brain {
@@ -139,10 +152,25 @@ html.storyv2-active {
     filter var(--v2-brain-ms, 4000ms) ease;
 }
 
+.storyv2-brain-canvas {
+  width: 100%;
+  height: 100%;
+}
+
 .storyv2-brain.is-revealed {
   opacity: 1;
   transform: scale(1);
   filter: blur(0);
+}
+
+/* Once the reveal has landed the blur and the transform come OFF entirely.
+   A filter left on a live WebGL canvas keeps an extra compositor layer
+   alive and resampled for every remaining beat, for no visible gain. */
+.storyv2-brain.is-crisp {
+  filter: none;
+  transform: none;
+  transition: none;
+  will-change: auto;
 }
 
 /* Until the black hold has elapsed the brain is not merely faint: the
@@ -152,6 +180,154 @@ html.storyv2-active {
   visibility: hidden;
   opacity: 0;
   transition: none;
+}
+
+/* ==================================================================== */
+/* Scenes 3+ -- the beat panels.                                        */
+/*                                                                      */
+/* v2 owns these outright rather than reusing v1's .story-text-area,    */
+/* because the column's position and width are now computed (see        */
+/* useStageLayout) so that it can never be printed over the brain.      */
+/* v1's rules are keyed to its own scroll layout and stay untouched.    */
+/* ==================================================================== */
+
+.storyv2-textcol {
+  position: absolute;
+  z-index: 2;
+  /* left / top / width are set inline from the layout solve. */
+  transform: translateY(-50%);
+}
+
+/* Stacked layout: the text owns the top of the screen, not a column. */
+.storyv2-textcol.is-portrait {
+  transform: none;
+}
+
+/* The pane is clipped to this box, which is why it can never reach the
+   brain however far it travels. The deep bottom padding gives the leaving
+   text room inside the clip; the matching negative margin keeps the
+   visible box its original size. */
+.storyv2-textclip {
+  position: relative;
+  overflow: hidden;
+  padding: 0.5rem 0.75rem 14rem;
+  margin: -0.5rem -0.75rem -14rem;
+}
+
+.storyv2-textinner {
+  position: relative;
+  z-index: 1;
+  transition:
+    opacity 320ms ease,
+    transform 320ms ease;
+}
+
+/* Leaving under the sweep's leading edge: it drops and fades, and the
+   incoming text only starts forming once the pane has passed. */
+.storyv2-textinner.is-leaving {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.storyv2-beat-name {
+  margin-bottom: 0.35rem;
+}
+
+/* the small role tag under the region name */
+.storyv2-beat-role {
+  display: block;
+  margin-bottom: 1rem;
+  font-family: 'OffBit', monospace;
+  letter-spacing: 0.16em;
+  text-transform: lowercase;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+.storyv2-beat-closing {
+  margin-top: 0.25rem;
+}
+
+.storyv2-body {
+  margin: 0;
+}
+
+.storyv2-body-line {
+  display: block;
+  will-change: opacity, transform, filter;
+}
+
+@media (max-width: 767px) {
+  .storyv2-textclip {
+    padding-bottom: 8rem;
+    margin-bottom: -8rem;
+  }
+
+  .storyv2-beat-role {
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* ---- window-pane sweep (v2's copy; v1's is keyed to its own column) ---- */
+
+.storyv2-pane {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 46%;
+  height: 140%;
+  z-index: 2;
+  pointer-events: none;
+  backdrop-filter: blur(7px) brightness(1.35);
+  -webkit-backdrop-filter: blur(7px) brightness(1.35);
+  /* Dark glass: a cool tint that lifts the black slightly, with a soft
+     light edge. On a black stage a white pane would read as a flashlight. */
+  background: linear-gradient(
+    100deg,
+    rgba(190, 190, 190, 0) 0%,
+    rgba(190, 190, 190, 0.1) 22%,
+    rgba(205, 205, 205, 0.17) 50%,
+    rgba(190, 190, 190, 0.1) 78%,
+    rgba(190, 190, 190, 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 18%,
+    #000 82%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 18%,
+    #000 82%,
+    transparent 100%
+  );
+  animation: storyV2PaneSweep 1050ms cubic-bezier(0.5, 0.02, 0.28, 1) forwards;
+  will-change: transform;
+}
+
+/* thin light-reflection streak riding the pane */
+.storyv2-pane-streak {
+  position: absolute;
+  top: -10%;
+  left: 38%;
+  width: 10%;
+  height: 120%;
+  transform: skewX(-14deg);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  filter: blur(1.5px);
+}
+
+@keyframes storyV2PaneSweep {
+  0% { transform: translate3d(-135%, 0, 0) skewX(-7deg); }
+  100% { transform: translate3d(330%, 0, 0) skewX(-7deg); }
 }
 
 /* ---- dev HUD (off unless DEBUG_HUD or ?v2debug=1) ---- */

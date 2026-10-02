@@ -36,16 +36,25 @@ read-only:
 | Module | Used for |
 |---|---|
 | `pixelGrid.ts` | sampling, called **per character** for the cell grids |
-| `SwellFilter.tsx` | the inverse swell-blur over the forming line |
-| `PixelText.tsx` | the beat panels — its `mode="in"/"out"` path is already time-driven |
-| `Brain3D.tsx` | the real model, lighting and fallback. `smokeRise` omitted, so no smoke |
+| `SwellFilter.tsx` | the inverse swell-blur, over the forming line and the beat copy |
+| `BrainModel.tsx` | the real segmented model: lobes, rotation, highlights, prefrontal |
+| `BrainFallback.tsx` | the error boundary around it |
 | `storyContent.ts` | `BRAIN_REGIONS`, `FINALE_BEATS`, `MODEL_CREDIT`, `STORY_PACING.brain` |
 | `IdleSplash.tsx` | the wordmark, so scene 0 matches the idle screen **by construction** |
 | global CSS | `.story-pane`, `.story-text-area`, `.story-dots`, `.story-credit`, `.story-glass*` |
 
-The only thing that had to be re-implemented is the **sweep state machine**,
-which in v1 lives inside `Act2.tsx` keyed off scroll values. v2's copy is in
-`SceneBeat.tsx`, driven by scene index instead.
+Two things had to be re-implemented rather than imported:
+
+- the **sweep state machine**, which in v1 lives inside `Act2.tsx` keyed off
+  scroll values. v2's copy is in `SceneBeat.tsx`, driven by scene index.
+- **`Brain3D.tsx`**, forked as `BrainStageV2.tsx`. v1 takes a `scale` prop —
+  a number tuned by eye against one screen — and wires a smoke burst and a
+  procedural fallback shell around it. v2 needs the brain sized from the
+  viewport and placed by the same solve that places the text, so the fork
+  keeps v1's lighting rig and imports the same `BrainModel`, and replaces
+  everything around it. v1 is untouched and still drives `?story=v1`.
+
+`PixelText.tsx` is **no longer used at all**: see *The text is real text*.
 
 ## Files
 
@@ -59,10 +68,13 @@ src/components/story-v2/
   SceneBeat.tsx          scenes 3+
   CellPixelText.tsx      per-character dot-matrix forming text
   DoubleVisionText.tsx   FOCUS?? ghost stack
-  SmokeShader.tsx        scene 1 smoke, full-screen fragment shader
+  BeatBody.tsx           beat body copy: real sans, swell-blur, no particles
+  BrainStageV2.tsx       the brain: viewport-derived fit and placement
+  useStageLayout.ts      the one solve that places the brain AND the text
+  SmokeShader.tsx        both smokes, one full-screen fragment shader
   pixelGridV2.ts         particle sampling, taken off the real text
   DebugHud.tsx           dev-only scene / phase / elapsed readout
-  v2Debug.ts             the live values that HUD reads
+  v2Debug.ts             the live values the HUD reads
   storyV2.css            all of v2's styling
 ```
 
@@ -118,8 +130,8 @@ first in DOM order and therefore first in tab order.
 | # | Id | Length | What happens |
 |---|---|---|---|
 | 0 | `landing` | rest | BRAINXR wordmark on white |
-| 1 | `question` | 11.6s | smoke → the question forms → hold → FOCUS?? |
-| 2 | `toBlack` | 4s | white → glossy black, brain emerges |
+| 1 | `question` | 13.9s | smoke → the question forms → hold → FOCUS?? |
+| 2 | `toBlack` | 10.9s | white → black → hold → white smoke, brain emerges from it |
 | 3–7 | regions | 2.7s each | Occipital, Parietal, Central, Temporal, Frontal |
 | 8–9 | finale | 2.7s each | the two prefrontal beats |
 | 10 | `closing` | 2.7s | "So how do we measure it?" |
@@ -230,50 +242,149 @@ the word arrives. Its entrance headroom is then pulled back out of the layout
 with negative margins, so the flex column centres on the **ink** rather than on
 empty space.
 
-### Scene 2 — white to black, then the brain
+### Scene 2 — white to black, then the brain out of the smoke
 
-**Three distinct stages, 10s total.** The brain is completely absent for the
-first two.
+**Four stages.** The brain is completely absent for the first two, and for
+the second half it is *inside* the smoke rather than beside it.
 
 | From | To | Stage |
 |---|---|---|
 | 0 | 4000 | White to glossy black, text blurring away |
 | 4000 | 6000 | **Pure glossy black, nothing on screen** |
-| 6000 | 10000 | The brain reveal |
+| 6000 | 10900 | **White smoke** pours from the exact centre, then clears |
+| 6900 | 10900 | The **brain reveal**, running underneath it |
 
 > **The bug this fixes.** The reveal used to be keyed to the brain
 > **mounting**, which happened the instant scene 2 began. So the 4s brain
-> reveal ran concurrently with the 4s white-to-black, and the brain was visible
-> right through the transition. There was no black hold at all.
+> reveal ran concurrently with the 4s white-to-black, and the brain was
+> visible right through the transition. There was no black hold at all.
 
 Until its stage begins the brain carries `visibility: hidden`, so the
 compositor paints **nothing** for it — not a low-opacity material. It stays
 mounted through the first two stages so the WebGL context and the model are
 warm by the time it appears.
 
+**The smoke is the same shader as scene 1**, not a second copy of it. Colour
+and peak opacity are uniforms and the blend mode is a prop: scene 1's is
+near-black over white and composites normally, scene 2's is pale grey over
+black and composites **additively**, so it glows out of the dark instead of
+laying a flat grey sheet over it.
+
+**The smoke is the top layer.** That is the whole trick — the brain fading up
+*underneath* it is what reads as emerging from inside the cloud. Its density
+eases out rather than fading linearly, so it holds its body while the brain
+is still only a shape inside it and then goes quickly; a linear fade spent
+most of the reveal as a barely-there haze, and the brain read as appearing
+next to the smoke rather than out of it.
+
+**Nothing lingers.** `smokeClearMs` is *derived*, not authored: the smoke
+must be completely gone at the exact frame the brain becomes crisp, and
+deriving it from the brain's own timings is the only way that invariant
+cannot drift the next time one of the numbers is tuned. See
+`TO_BLACK_MARKS`.
+
+The brain's blur is a CSS filter on its own layer, and it is **removed**, not
+faded, once the reveal lands (`is-crisp`): a filter left on a live WebGL
+canvas keeps an extra compositor layer alive and resampled for every
+remaining beat, for no visible gain.
+
 The colour transition itself is **CSS, not a JS loop**: the compositor
 interpolates a flat full-screen colour, which is smoother than per-frame JS,
 cannot band, and costs zero React renders.
 
-No smoke and no U-zoom in v2.
+**A freshly mounted element cannot transition from a value it never held.**
+The brain therefore gets one frame at its hidden state before the revealed
+class lands, and the opening layer **stays mounted** through scene 2 rather
+than being replaced by a copy — otherwise both would snap instead of easing.
 
-**A freshly mounted element cannot transition from a value it never held.** The
-brain therefore gets one frame at its hidden state before the revealed class
-lands, and the opening layer **stays mounted** through scene 2 rather than being
-replaced by a copy — otherwise both would snap instead of easing.
+Reduced motion: no smoke, a plain fade, still after the black hold.
+
+### Sizing and placing the brain
+
+`BrainStageV2` measures the model **once** and hands three numbers to the
+layout. All are taken in the model's own local space, because the beats
+rotate it about Y and a world-space box would breathe as it turned:
+
+| | |
+|---|---|
+| **height** | its Y extent. Y rotation cannot change it, so this is what "two thirds of the viewport height" is measured against, and why the brain reads at the size it was asked for from every angle. |
+| **span** | the longer of its two horizontal extents: the widest its silhouette ever gets. This is what must clear the text and stay on screen. |
+| **width** | the shorter one — what faces you, and what "55% of the viewport width" means on a phone. |
+
+The scale then falls out of the camera's own field of view and distance, so
+it is identical on every screen and is recomputed on resize.
+
+> **Two bounds that were too big, in order.** A full 3D bounding **sphere**
+> came first. It folds the vertical extent into the horizontal bound, so the
+> brain was clamped to 56% of the viewport height on a 1080p screen when
+> there was room for all 66%. The swept **circle** came next, which is the
+> right bound for a box but not for a brain: a brain is near enough an
+> ellipsoid that its silhouette never comes close to filling its own
+> circumscribed circle, so the layout kept shoving it 150px right of centre
+> to clear text it was nowhere near. The longer horizontal extent bounds an
+> ellipsoid's projection exactly, and is just as invariant.
+
+### The layout is one solve, not two
+
+`useStageLayout` places the brain and the text column together, because they
+are one problem: the column's width is whatever is left once the brain has
+taken its share, and the brain's centre is wherever it has to be for the text
+to clear it. Solving them separately is how the text ended up printed over
+the brain.
+
+**Landscape.** The brain is two thirds of the viewport height and centred.
+The text is a left column, vertically centred, at most `maxCh` characters
+wide. If that column plus its clear gap reaches into the brain, **the brain
+moves right** — the text does not shrink. Only once the brain has run out of
+room on the right, where the progress dots live, does the text give width
+back, and never below `minCh`.
+
+**Portrait.** There is no room for a column beside anything, so the stage
+stacks: text along the top, brain below at `portraitWidthFraction` of the
+viewport width.
 
 ### Scenes 3+ — one scroll per beat
 
-The same choreography as v1's Act 2 — frosted pane sweeps the text column, old
-pixels fall as its leading edge arrives, new ones assemble once it has passed,
-brain rotates underneath — driven by scene index instead of scroll.
+The same choreography as v1's Act 2 — a frosted pane sweeps the text column,
+the old text leaves under its leading edge, the new text assembles once it
+has passed, the brain rotates underneath — driven by scene index instead of
+scroll position.
 
 `SceneBeat` **persists across every beat**. If each beat mounted its own
-instance, the outgoing text would vanish instead of falling and the sweep would
-have nothing to hide.
+instance, the outgoing text would vanish instead of leaving and the sweep
+would have nothing to hide.
 
-Region copy, role tags, prefrontal finale, progress dots and the model
-attribution all come from v1 unchanged.
+#### The text is real text
+
+> **The bug this fixes.** Every part of a beat used to be assembled out of
+> sampled pixels under a `maxParticles` cap. A region name can carry that; a
+> two-sentence paragraph cannot, and a paragraph rebuilt from a budget of
+> dots arrived as unreadable fragments. `PixelText` is gone from v2 entirely.
+
+Each piece now gets the treatment it can actually carry:
+
+| | |
+|---|---|
+| **name** | OffBit in the region's colour. Particles jitter in their cells, converge onto the glyphs, and hand over to real OffBit underneath as they fade — `CellPixelText`, the question line's treatment, reused wholesale. |
+| **role** | small OffBit, real text, a simple fade a beat after the name. |
+| **body** | sans, no particles at all, revealed with the inverse swell-blur and a staggered rise. See `BeatBody`. |
+
+The **closing line** is short and a headline, so it takes the name's particle
+treatment rather than the body's. It stays in the left column like every
+other beat; v1 centres it, which in v2 would put it straight over the brain.
+
+**`BeatBody` breaks its own lines** rather than letting the browser wrap, for
+two reasons: the stagger needs a line to be an addressable element, and the
+swell filter needs its own instance per line because each is at a different
+progress. Each filter is dropped the moment its line lands — an SVG filter
+left on static text keeps a layer alive for nothing.
+
+Region copy, role tags, the prefrontal finale, the progress dots and the
+model attribution all come from v1 unchanged.
+
+v2 owns the beat CSS outright rather than reusing v1's `.story-text-area`,
+because the column's position and width are now computed. v1's rules are
+keyed to its own scroll layout and stay untouched.
 
 ## The cursor tag
 
@@ -323,9 +434,10 @@ context to the same readout.
 
 Everything tunable is in `STORY_V2` in `storyContentV2.ts`: scene durations,
 input quiet-time and thresholds, cursor-tag behaviour, scene-1 timings, grid
-density and jitter, ghost count / offsets / breathing, smoke, the to-black
-transition, and the beat sweep. `DEBUG_SCENES` logs every transition and input
-decision.
+density and jitter, ghost count / offsets / breathing, both smokes, the
+to-black transition and its white smoke, the brain's fit and margins, the
+text column's type sizes and measures, and the beat sweep and reveals.
+`DEBUG_SCENES` logs every transition and input decision.
 
 ## Reduced motion
 
@@ -343,5 +455,10 @@ no sweep. Scene durations are capped so the story does not crawl.
   out at 1 or 2, which would mean the webfont had not loaded or the face is an
   outline font. It only sets the particle pitch now, so a wrong answer costs
   density, not legibility.
-- The **brain sits slightly left of centre**. That comes from `Brain3D` and the
-  model itself, both of which v2 imports from v1 unchanged.
+- The brain's **centre is its bounding box's centre, not its visual one**, so
+  a pose whose mass sits to one side reads as about 40px off centre at 1080p.
+  Correcting it would mean a per-pose silhouette centroid, which is a lot of
+  machinery for a 2% offset.
+- `width` (the head-on extent, which sizes portrait) is the only one of the
+  three measurements that is not rotation-invariant: it is taken at whatever
+  pose the model holds when it loads. A few percent either way is invisible.

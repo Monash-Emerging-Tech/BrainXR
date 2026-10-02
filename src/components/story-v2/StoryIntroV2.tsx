@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import useReducedMotion from "../../hooks/useReducedMotion";
-import Brain3D from "../story/Brain3D";
-import { BRAIN_REGIONS, STORY_PACING } from "../story/storyContent";
+import { ACT2, BRAIN_REGIONS } from "../story/storyContent";
 import "./storyV2.css";
+import BrainStageV2, { type BrainMetrics } from "./BrainStageV2";
 import DebugHud from "./DebugHud";
+import SmokeShader from "./SmokeShader";
+import useStageLayout from "./useStageLayout";
 import SceneBeat from "./SceneBeat";
 import SceneOpening from "./SceneOpening";
 import ScrollCursorTag from "./ScrollCursorTag";
@@ -13,6 +15,7 @@ import {
   FIRST_BEAT_SCENE,
   SCENES,
   STORY_V2,
+  TO_BLACK_MARKS,
   TO_BLACK_SCENE,
   V2_COPY,
 } from "./storyContentV2";
@@ -29,11 +32,15 @@ import {
  * loop: the compositor interpolates the colour, which is both smoother
  * (no banding, no dropped frames) and free of per-frame React renders.
  *
+ * SCENE 2 RUNS IN FOUR STAGES, and the brain emerges from INSIDE the smoke
+ * rather than beside it -- see the brainStage effect below.
+ *
  * v1 is untouched and still reachable with ?story=v1.
  */
 
 const TB = STORY_V2.toBlack;
-const BRAIN = STORY_PACING.brain;
+
+const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
 
 export interface StoryIntroV2Props {
   onComplete: () => void;
@@ -42,6 +49,12 @@ export interface StoryIntroV2Props {
 export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
   const reducedMotion = useReducedMotion();
   const skipRef = useRef<HTMLButtonElement>(null);
+  // The model's real proportions, measured once it has loaded, so the
+  // layout can size the brain against its actual height rather than a
+  // guess. Until then the solve runs on a sane default.
+  const [brainFit, setBrainFit] = useState<BrainMetrics | null>(null);
+  // The one solve that places BOTH the brain and the text column.
+  const layout = useStageLayout(ACT2.bodyFont, brainFit);
   // Dev only: off unless DEBUG_HUD is set or the URL carries ?v2debug=1.
   const showHud = useMemo(() => debugHudEnabled(), []);
 
@@ -73,11 +86,6 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
     };
   }, []);
 
-  const isNarrow = useMemo(() => {
-    if (typeof window === "undefined") return false;
-    return window.matchMedia("(max-width: 767px)").matches;
-  }, []);
-
   // ---- derived scene state; changes once per scene, never per frame ----
   const onBlack = index >= TO_BLACK_SCENE;
   const showBrain = index >= TO_BLACK_SCENE;
@@ -91,38 +99,114 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
   const brainIndex = inFinale ? FRONTAL : Math.min(beatIndex, FRONTAL);
   const pulse = inBeats && beatIndex === BRAIN_REGIONS.length + 1;
 
-  // ---- scene 2 runs in three stages, not one ----
+  // ---- scene 2 runs in four stages, not one ----
   //
-  // THE BUG THIS FIXES: the reveal used to be keyed to the brain MOUNTING,
+  // THE BUG THIS FIXED: the reveal used to be keyed to the brain MOUNTING,
   // which happened the instant scene 2 began -- so the 4s brain reveal ran
   // concurrently with the 4s white-to-black and the brain was visible
   // through the whole transition. There was no black hold at all.
   //
-  // Now the brain stays mounted but fully hidden (visibility: hidden, so
-  // the compositor paints nothing) until the black hold has elapsed.
-  const [brainStage, setBrainStage] = useState<"hidden" | "armed" | "revealed">(
-    "hidden",
-  );
+  //   hidden    visibility: hidden, so the compositor paints NOTHING for it
+  //             -- not a low-opacity material. It stays mounted through the
+  //             fade and the black hold so the WebGL context and the model
+  //             are warm by the time it appears.
+  //   armed     one frame at the hidden state. A freshly revealed element
+  //             cannot transition from a value it never held.
+  //   revealed  the 4s reveal, running UNDERNEATH the smoke.
+  //   crisp     the filter and the transform are dropped entirely. A blur
+  //             left on a live WebGL canvas keeps an extra layer alive and
+  //             resampled for every remaining beat.
+  const [brainStage, setBrainStage] = useState<
+    "hidden" | "armed" | "revealed" | "crisp"
+  >("hidden");
 
   useEffect(() => {
     if (!showBrain) {
       setBrainStage("hidden");
       return;
     }
-    if (index > TO_BLACK_SCENE || reducedMotion) {
-      // Arriving from a later scene, or reduced motion: no staging.
-      setBrainStage("revealed");
+    if (index > TO_BLACK_SCENE) {
+      // Arriving from a later scene: no staging, it is simply there.
+      setBrainStage("crisp");
       return;
     }
-    const revealAt = TB.fadeMs + TB.blackHoldMs;
+    if (reducedMotion) {
+      // Reduced motion: no smoke, a plain fade, still after the black hold.
+      const t = setTimeout(() => {
+        setBrainStage("armed");
+        requestAnimationFrame(() => setBrainStage("revealed"));
+      }, TB.fadeMs);
+      return () => clearTimeout(t);
+    }
+
     const arm = setTimeout(() => {
       setBrainStage("armed");
-      // One frame at the hidden state, or the CSS transition has nothing
-      // to move from and the reveal snaps.
       requestAnimationFrame(() => setBrainStage("revealed"));
-    }, revealAt);
-    return () => clearTimeout(arm);
+    }, TO_BLACK_MARKS.brainStart);
+    // Sharp exactly when the smoke has finished clearing.
+    const sharpen = setTimeout(() => setBrainStage("crisp"), TO_BLACK_MARKS.brainEnd);
+    return () => {
+      clearTimeout(arm);
+      clearTimeout(sharpen);
+    };
   }, [showBrain, index, reducedMotion]);
+
+  // ---- the white smoke the brain emerges from ----
+  //
+  // The same shader as scene 1, given a pale colour and an ADDITIVE blend so
+  // it glows out of the black rather than laying a grey sheet over it. It is
+  // the TOP layer: the brain fading up beneath it is what sells the brain as
+  // emerging from inside the cloud rather than appearing next to it.
+  //
+  // Its clear is timed so it is completely gone at the exact frame the brain
+  // becomes crisp -- see TO_BLACK_MARKS, where that is structural.
+  const smokeReachRef = useRef(0);
+  const smokeDensityRef = useRef(0);
+  const [showWhiteSmoke, setShowWhiteSmoke] = useState(false);
+
+  useEffect(() => {
+    const live = index === TO_BLACK_SCENE && phase === "playing" && !reducedMotion;
+    if (!live || fastForwarded) {
+      setShowWhiteSmoke(false);
+      smokeReachRef.current = 0;
+      smokeDensityRef.current = 0;
+      return;
+    }
+
+    setShowWhiteSmoke(true);
+    let raf = 0;
+    const tick = (now: number) => {
+      const ms = now - startedAt;
+      const since = ms - TO_BLACK_MARKS.smokeStart;
+
+      if (since <= 0) {
+        smokeReachRef.current = 0;
+        smokeDensityRef.current = 0;
+      } else if (since < TB.smokePourMs) {
+        const t = since / TB.smokePourMs;
+        smokeReachRef.current = t;
+        smokeDensityRef.current = clamp01(t * 3.2);
+      } else {
+        const t = clamp01((since - TB.smokePourMs) / TO_BLACK_MARKS.smokeClearMs);
+        smokeReachRef.current = 1 + t * 0.55;
+        // Eased rather than linear: the smoke holds its body while the
+        // brain is still only a shape inside it, then goes quickly. A
+        // linear fade spent most of the reveal as a barely-there haze, so
+        // the brain read as appearing NEXT to the smoke rather than out of
+        // it. It still reaches exactly zero at t = 1.
+        smokeDensityRef.current = 1 - t * t;
+      }
+
+      if (ms >= TO_BLACK_MARKS.smokeEnd) {
+        smokeDensityRef.current = 0;
+        setShowWhiteSmoke(false);
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [index, phase, startedAt, fastForwarded, reducedMotion]);
 
   const waiting = phase === "idle";
 
@@ -155,12 +239,14 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
       </div>
 
       {/* The brain persists from scene 2 on, so no scene boundary ever
-          remounts the WebGL canvas or re-fetches the model. */}
+          remounts the WebGL canvas or re-fetches the model. Its size and
+          placement come from the same solve that places the text, so the
+          two can never collide. */}
       {showBrain && (
         <div
           className={`storyv2-brain ${brainStage === "hidden" ? "is-hidden" : ""} ${
-            brainStage === "revealed" ? "is-revealed" : ""
-          }`}
+            brainStage === "revealed" || brainStage === "crisp" ? "is-revealed" : ""
+          } ${brainStage === "crisp" ? "is-crisp" : ""}`}
           style={
             {
               "--v2-brain-ms": `${TB.brainRevealMs}ms`,
@@ -169,18 +255,30 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
             } as React.CSSProperties
           }
         >
-          <Brain3D
-            regions={BRAIN_REGIONS}
+          <BrainStageV2
+            layout={layout}
+            onMeasured={setBrainFit}
             activeIndex={brainIndex}
             prefrontal={inFinale}
             pulse={pulse}
             reducedMotion={reducedMotion}
-            scale={
-              isNarrow ? BRAIN.viewportHeightRatioMobile : BRAIN.viewportHeightRatioDesktop
-            }
-            offsetY={isNarrow ? BRAIN.offsetYMobile : 0}
+            className="storyv2-brain-canvas"
           />
         </div>
+      )}
+
+      {/* ...and the smoke sits ON TOP of it, which is the whole trick: the
+          brain fading up underneath reads as emerging from inside the
+          cloud. It is gone by the time the brain is crisp. */}
+      {showWhiteSmoke && (
+        <SmokeShader
+          className="storyv2-whitesmoke"
+          reachRef={smokeReachRef}
+          densityRef={smokeDensityRef}
+          color={TB.smokeColor}
+          maxOpacity={TB.smokeOpacity}
+          additive
+        />
       )}
 
       {/* Scenes 0 and 1, kept mounted through scene 2 so the text has
@@ -204,7 +302,11 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
       {/* scenes 3+ */}
       {inBeats && (
         <div className="storyv2-layer">
-          <SceneBeat beatIndex={beatIndex} reducedMotion={reducedMotion} />
+          <SceneBeat
+            beatIndex={beatIndex}
+            layout={layout}
+            reducedMotion={reducedMotion}
+          />
         </div>
       )}
 

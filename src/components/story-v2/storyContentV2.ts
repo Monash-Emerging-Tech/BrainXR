@@ -78,10 +78,72 @@ export const Q_MARKS = (() => {
   };
 })();
 
+/**
+ * Scene 2's authored timings. Lifted out of STORY_V2 so the scene's own
+ * duration can be DERIVED from them rather than restated as a literal.
+ */
+const TO_BLACK = {
+  /** (a) White -> glossy black, text blurring away. */
+  fadeMs: 4000,
+  /** (b) Pure glossy black, nothing on screen at all. */
+  blackHoldMs: 2000,
+  /**
+   * (c) White smoke erupts from the exact screen centre, and the brain
+   * reveal runs UNDERNEATH it, so the brain appears to emerge from inside
+   * the smoke rather than fade up next to it.
+   *
+   * How long the smoke pours outward before it starts thinning.
+   */
+  smokePourMs: 1800,
+  /** How far into the smoke the brain reveal begins. */
+  brainDelayMs: 900,
+  /** The reveal: low opacity + blurred + slightly small -> crisp, full size. */
+  brainRevealMs: 4000,
+  /**
+   * The clear is DERIVED, not authored (see TO_BLACK_MARKS): the smoke has
+   * to be completely gone at the exact moment the brain becomes crisp, and
+   * deriving it is the only way that invariant cannot drift when one of the
+   * numbers above is tuned.
+   */
+  /** Pale grey, so it glows on black instead of reading as a flat sheet. */
+  smokeColor: [0.93, 0.94, 0.98] as [number, number, number],
+  /** Additive peak. Lower than the black smoke: additive light builds fast. */
+  smokeOpacity: 0.72,
+  /** Blur applied to the text layer as it leaves. */
+  textBlurPx: 28,
+  /** Brain starts slightly small and soft. */
+  brainStartScale: 0.86,
+  brainStartBlurPx: 16,
+} as const;
+
+/**
+ * Scene 2's stage boundaries, in ms from its start.
+ *
+ * `smokeClearMs` is derived here rather than authored, because the smoke has
+ * to be completely gone at the exact moment the brain becomes crisp. Written
+ * as two independent numbers that invariant drifts the first time either one
+ * is tuned; derived, it cannot.
+ */
+export const TO_BLACK_MARKS = (() => {
+  const smokeStart = TO_BLACK.fadeMs + TO_BLACK.blackHoldMs;
+  const brainStart = smokeStart + TO_BLACK.brainDelayMs;
+  const brainEnd = brainStart + TO_BLACK.brainRevealMs;
+  // The smoke ends WITH the brain, by construction.
+  const smokeEnd = brainEnd;
+  return {
+    smokeStart,
+    brainStart,
+    brainEnd,
+    smokeEnd,
+    smokeClearMs: smokeEnd - smokeStart - TO_BLACK.smokePourMs,
+    total: smokeEnd,
+  };
+})();
+
 export const SCENES: readonly SceneDef[] = [
   { id: "landing", durationMs: 0 },
   { id: "question", durationMs: Q_MARKS.total, fastForwardable: true },
-  { id: "toBlack", durationMs: 4000 + 2000 + 4000 },
+  { id: "toBlack", durationMs: TO_BLACK_MARKS.total },
   { id: "occipital", durationMs: 2700 },
   { id: "parietal", durationMs: 2700 },
   { id: "central", durationMs: 2700 },
@@ -256,18 +318,35 @@ export const STORY_V2 = {
    * Scene 2, in three distinct stages. The brain is completely absent for
    * the first two -- not merely faint.
    */
-  toBlack: {
-    /** (a) White -> glossy black, text blurring away. */
-    fadeMs: 4000,
-    /** (b) Pure glossy black, nothing on screen at all. */
-    blackHoldMs: 2000,
-    /** (c) Only now does the brain begin to appear. */
-    brainRevealMs: 4000,
-    /** Blur applied to the text layer as it leaves. */
-    textBlurPx: 28,
-    /** Brain starts slightly small and soft. */
-    brainStartScale: 0.86,
-    brainStartBlurPx: 16,
+  toBlack: TO_BLACK,
+
+  /**
+   * The brain's size and placement, derived every time from the model's
+   * bounding SPHERE and the camera, never from a magic scale number.
+   *
+   * A sphere rather than a box because the brain rotates: a box fit that
+   * just clears the frame head-on will clip a quarter turn later.
+   */
+  brain: {
+    /** Bounding-sphere diameter as a fraction of viewport HEIGHT. */
+    viewportHeightFraction: 0.66,
+    /** Portrait instead sizes it against viewport WIDTH. */
+    portraitWidthFraction: 0.55,
+    /**
+     * Portrait: the brain's centre, as a fraction of viewport height.
+     * Sits below the text block but well clear of the progress dots and
+     * the credit line, which move to the bottom edge on a phone.
+     */
+    portraitCenterY: 0.58,
+    /** Below this width the stage stacks: text on top, brain underneath. */
+    portraitBreakpointPx: 768,
+    /** Clear space between the text column and the brain's swept circle. */
+    textGapPx: 48,
+    /**
+     * How much viewport must stay to the right of the brain when it is
+     * pushed right to clear the text -- the progress dots live there.
+     */
+    rightMarginFraction: 0.1,
   },
 
   /** Scenes 3+: the same sweep choreography v1 uses, on scene timing. */
@@ -276,7 +355,50 @@ export const STORY_V2 = {
     panePassMs: 480,
     /** Reduced motion: a plain crossfade in place of the sweep. */
     crossfadeMs: 300,
+    /** The region name's particles jitter, converge, and hand over. */
+    nameFormMs: 1400,
+    /** Inverse swell-blur over the name's particles. */
+    nameSwellMs: 1100,
+    /** The role tag fades in this long after the name starts. */
+    roleDelayMs: 520,
+    roleFadeMs: 520,
+    /** Body copy: swell-blur plus a gentle upward fade, per line. */
+    bodyDelayMs: 760,
+    bodyLineStaggerMs: 130,
+    bodyRevealMs: 1150,
+    /** How far each body line drifts up as it arrives. */
+    bodyRisePx: 14,
   },
+
+  /** The left text column. All sizes in CSS px unless noted. */
+  text: {
+    /** Side gutter, as a fraction of viewport width, with a floor. */
+    gutterFraction: 0.055,
+    minGutterPx: 28,
+    /** Region name, in OffBit -- big enough for the particles to read. */
+    namePx: 30,
+    namePxPortrait: 24,
+    /** The small role tag under it. */
+    rolePx: 13,
+    /** Body copy. */
+    bodyPx: 19,
+    bodyPxPortrait: 16,
+    bodyLineHeight: 1.5,
+    /** Longest body line, in characters. The column is sized from this. */
+    maxCh: 38,
+    /**
+     * ...and the shortest it may be squeezed to. The brain is pushed right
+     * to make room FIRST; only when it has run out of room does the text
+     * give any width back.
+     */
+    minCh: 26,
+    /** The closing line is a headline, so it gets the particle treatment. */
+    closingPx: 27,
+    closingPxPortrait: 21,
+    /** Body copy on the black glass. */
+    bodyOpacity: 0.85,
+  },
+
 } as const;
 
 /** Line 1, uppercase for v2. */

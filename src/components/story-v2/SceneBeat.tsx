@@ -1,67 +1,87 @@
-import { useEffect, useRef, useState } from "react";
-import PixelText from "../story/PixelText";
+import { useEffect, useMemo, useRef, useState } from "react";
+import SwellFilter, { prefersLayeredSwell } from "../story/SwellFilter";
 import { ACT2, BRAIN_REGIONS, MODEL_CREDIT } from "../story/storyContent";
+import BeatBody from "./BeatBody";
+import CellPixelText from "./CellPixelText";
 import { BEAT_PANELS, BODY_COLOR, STORY_V2 } from "./storyContentV2";
+import type { StageLayout } from "./useStageLayout";
 
 /**
  * Scenes 3+: one beat per scroll.
  *
- * Same choreography as v1's Act 2 -- the frosted pane sweeps the text
- * column, the old pixels fall as its leading edge arrives, the new ones
- * assemble once it has passed -- but driven by the scene index instead of a
- * scroll position.
+ * THE TEXT IS REAL TEXT. Each piece gets the treatment it can actually
+ * carry, rather than all three being rebuilt out of capped particle budgets:
+ *
+ *   NAME     OffBit in the region's colour. Particles jitter in their
+ *            cells, converge onto the glyphs, and hand over to real OffBit
+ *            underneath as they fade -- the question line's treatment,
+ *            reused wholesale.
+ *   ROLE     small OffBit, real text, a simple fade a beat after the name.
+ *   BODY     sans, no particles at all, revealed with the inverse
+ *            swell-blur and a staggered rise. See BeatBody.
+ *
+ * The closing line is a headline, so it takes the NAME treatment.
+ *
+ * LAYOUT comes from useStageLayout, the same solve that places the brain,
+ * so the column can never be printed over it.
  *
  * This component PERSISTS across every beat. If each beat mounted its own
- * instance the outgoing text would vanish instead of falling, and the sweep
+ * instance the outgoing text would vanish instead of leaving, and the sweep
  * would have nothing to hide.
  */
 
 const CFG = STORY_V2.beats;
+const T = STORY_V2.text;
 
 export interface SceneBeatProps {
   /** Index into BEAT_PANELS. */
   beatIndex: number;
+  layout: StageLayout;
   reducedMotion: boolean;
 }
 
-export default function SceneBeat({ beatIndex, reducedMotion }: SceneBeatProps) {
-  const areaRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
+const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
+
+export default function SceneBeat({
+  beatIndex,
+  layout,
+  reducedMotion,
+}: SceneBeatProps) {
+  const layered = useMemo(() => prefersLayeredSwell(), []);
 
   const [shown, setShown] = useState(beatIndex);
-  const [mode, setMode] = useState<"in" | "out">("in");
+  const [leaving, setLeaving] = useState(false);
   const [sweeping, setSweeping] = useState(false);
   const [sweepKey, setSweepKey] = useState(0);
+  const [revealKey, setRevealKey] = useState(0);
 
-  useEffect(() => {
-    const el = areaRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      setWidth(Math.round(entries[0]?.contentRect.width ?? 0));
-    });
-    ro.observe(el);
-    setWidth(Math.round(el.getBoundingClientRect().width));
-    return () => ro.disconnect();
-  }, []);
+  // Live values for the name's particle formation and its swell overlay.
+  const nameRef = useRef(0);
+  const nameSwellRef = useRef(0);
+  const roleElRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     if (shown === beatIndex) return;
 
     if (reducedMotion) {
-      setMode("out");
+      setLeaving(true);
       const swap = setTimeout(() => {
         setShown(beatIndex);
-        setMode("in");
+        setLeaving(false);
+        setRevealKey((k) => k + 1);
       }, CFG.crossfadeMs);
       return () => clearTimeout(swap);
     }
 
+    // The pane sweeps; the outgoing text leaves under its leading edge, and
+    // the incoming text only starts forming once it has passed.
     setSweeping(true);
     setSweepKey((k) => k + 1);
-    setMode("out");
+    setLeaving(true);
     const swap = setTimeout(() => {
       setShown(beatIndex);
-      setMode("in");
+      setLeaving(false);
+      setRevealKey((k) => k + 1);
     }, CFG.panePassMs);
     return () => clearTimeout(swap);
   }, [beatIndex, shown, reducedMotion]);
@@ -75,6 +95,41 @@ export default function SceneBeat({ beatIndex, reducedMotion }: SceneBeatProps) 
     return () => clearTimeout(done);
   }, [sweepKey, sweeping]);
 
+  // One rAF drives the name's formation and the role tag's fade. Both are
+  // written to refs and inline styles, so a beat costs a handful of renders
+  // rather than one per frame.
+  useEffect(() => {
+    if (reducedMotion) {
+      nameRef.current = 1;
+      nameSwellRef.current = 1;
+      if (roleElRef.current) roleElRef.current.style.opacity = "1";
+      return;
+    }
+    nameRef.current = 0;
+    nameSwellRef.current = 0;
+    if (roleElRef.current) roleElRef.current.style.opacity = "0";
+
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const ms = now - start;
+      nameRef.current = clamp01(ms / CFG.nameFormMs);
+      nameSwellRef.current = clamp01(ms / CFG.nameSwellMs);
+
+      const role = roleElRef.current;
+      if (role) {
+        const p = clamp01((ms - CFG.roleDelayMs) / CFG.roleFadeMs);
+        role.style.opacity = String(p);
+        role.style.transform = p < 1 ? `translateY(${(1 - p) * 6}px)` : "";
+      }
+
+      if (ms > CFG.nameFormMs + CFG.roleDelayMs + CFG.roleFadeMs) return;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [revealKey, shown, reducedMotion]);
+
   const panel = BEAT_PANELS[Math.min(shown, BEAT_PANELS.length - 1)];
   const isRegion = panel.kind === "region";
   const isClosing = panel.kind === "closing";
@@ -82,62 +137,81 @@ export default function SceneBeat({ beatIndex, reducedMotion }: SceneBeatProps) 
 
   return (
     <div className="storyv2-scene storyv2-beats">
-      <div className={`story-text-area ${isClosing ? "is-closing" : ""}`}>
-        <div className="story-text-clip">
-          <div ref={areaRef} className="story-text-inner">
-            {width > 0 && isRegion && (
+      <svg className="story-filter-defs" aria-hidden="true">
+        <defs>
+          <SwellFilter id="storyV2SwellName" layered={layered} />
+        </defs>
+      </svg>
+
+      <div
+        className={`storyv2-textcol ${layout.portrait ? "is-portrait" : ""}`}
+        style={{
+          left: layout.textLeft,
+          top: layout.textTop,
+          width: layout.textWidth,
+        }}
+      >
+        {/* The pane is clipped to this box, which is why it can never reach
+            the brain however far it travels. */}
+        <div className="storyv2-textclip">
+          <div className={`storyv2-textinner ${leaving ? "is-leaving" : ""}`}>
+            {isRegion && (
               <>
-                <PixelText
-                  key={`${shown}-label`}
+                <CellPixelText
+                  key={`${shown}-name`}
                   text={panel.label ?? ""}
-                  mode={mode}
                   font={ACT2.labelFont}
-                  fontSize={20}
+                  fontSize={layout.namePx}
                   fontWeight={ACT2.labelWeight}
                   color={panel.color}
-                  width={width}
-                  cellSize={3}
-                  maxParticles={420}
+                  progressRef={nameRef}
+                  swellRef={nameSwellRef}
+                  swellId="storyV2SwellName"
                   reducedMotion={reducedMotion}
-                  className="story-pixel-label"
+                  className="storyv2-beat-name"
                 />
-                <PixelText
-                  key={`${shown}-role`}
-                  text={`· ${panel.role ?? ""}`}
-                  mode={mode}
-                  font={ACT2.bodyFont}
-                  fontSize={14}
-                  fontWeight={ACT2.bodyWeight}
-                  color={panel.color}
-                  width={width}
-                  cellSize={3}
-                  maxParticles={360}
-                  reducedMotion={reducedMotion}
-                  className="story-pixel-role"
-                />
+                <span
+                  ref={roleElRef}
+                  className="storyv2-beat-role"
+                  style={{ color: panel.color, fontSize: T.rolePx }}
+                >
+                  {panel.role}
+                </span>
               </>
             )}
 
-            {width > 0 && (
-              <PixelText
+            {isClosing ? (
+              // Short, and a headline: it earns the particle treatment.
+              <CellPixelText
+                key={`${shown}-closing`}
+                text={panel.sentence}
+                font={ACT2.labelFont}
+                fontSize={layout.closingPx}
+                fontWeight={ACT2.labelWeight}
+                color={panel.color}
+                progressRef={nameRef}
+                swellRef={nameSwellRef}
+                swellId="storyV2SwellName"
+                reducedMotion={reducedMotion}
+                className="storyv2-beat-closing"
+              />
+            ) : (
+              <BeatBody
                 key={`${shown}-body`}
                 text={panel.sentence}
-                mode={mode}
                 font={ACT2.bodyFont}
-                fontSize={isClosing ? 24 : isRegion ? 17 : 19}
-                fontWeight={ACT2.bodyWeight}
+                fontSize={layout.bodyPx}
                 color={isRegion ? BODY_COLOR : panel.color}
-                width={width}
-                cellSize={3}
-                maxParticles={1200}
+                width={layout.textWidth}
+                revealKey={revealKey}
                 reducedMotion={reducedMotion}
               />
             )}
           </div>
 
           {sweeping && !reducedMotion && (
-            <div key={sweepKey} className="story-pane" aria-hidden="true">
-              <span className="story-pane-streak" />
+            <div key={sweepKey} className="storyv2-pane" aria-hidden="true">
+              <span className="storyv2-pane-streak" />
             </div>
           )}
         </div>

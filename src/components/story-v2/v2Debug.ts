@@ -20,6 +20,12 @@ export interface V2DebugFrame {
   focus: number;
   /** Set by SmokeShader once its material has compiled and drawn a frame. */
   smokeFrames: number;
+  /** The brain fit: what was measured off the model, and what came out. */
+  brainSpan: number;
+  brainHeight: number;
+  /** Widest span and the model's own height, on screen, in CSS px. */
+  brainSpanPx: number;
+  brainHeightPx: number;
   /** Last WebGL / shader error seen, if any. */
   smokeError: string;
 }
@@ -34,6 +40,10 @@ export const v2Debug: V2DebugFrame = {
   focus: 0,
   smokeFrames: 0,
   smokeError: "",
+  brainSpan: 0,
+  brainHeight: 0,
+  brainSpanPx: 0,
+  brainHeightPx: 0,
 };
 
 export function resetV2Debug(): void {
