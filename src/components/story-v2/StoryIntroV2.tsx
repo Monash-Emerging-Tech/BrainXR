@@ -3,6 +3,7 @@ import useReducedMotion from "../../hooks/useReducedMotion";
 import { ACT2, BRAIN_REGIONS } from "../story/storyContent";
 import "./storyV2.css";
 import BrainStageV2, { type BrainMetrics } from "./BrainStageV2";
+import { fitPreviewPose, IDLE_CAMERA, makeRigPose, type RigPose } from "./headsetRig";
 import DebugHud from "./DebugHud";
 import SmokeShader from "./SmokeShader";
 import useStageLayout from "./useStageLayout";
@@ -12,6 +13,7 @@ import ScrollCursorTag from "./ScrollCursorTag";
 import useSceneRunner from "./useSceneRunner";
 import {
   debugHudEnabled,
+  fitPreviewMode,
   FIRST_BEAT_SCENE,
   SCENES,
   STORY_V2,
@@ -57,6 +59,10 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
   const layout = useStageLayout(ACT2.bodyFont, brainFit);
   // Dev only: off unless DEBUG_HUD is set or the URL carries ?v2debug=1.
   const showHud = useMemo(() => debugHudEnabled(), []);
+  // Dev only: ?v2fit=front|side shows the brain-in-headset fit, still.
+  const fitPreview = useMemo(() => fitPreviewMode(), []);
+  const previewPoseRef = useRef<RigPose | null>(null);
+  const previewCameraRef = useRef<{ z: number; fov: number } | null>(null);
 
   const finish = useMemo(() => {
     return () => {
@@ -209,6 +215,26 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
   }, [index, phase, startedAt, fastForwarded, reducedMotion]);
 
   const waiting = phase === "idle";
+
+  if (fitPreview) {
+    previewPoseRef.current ??= fitPreviewPose(fitPreview, makeRigPose());
+    previewCameraRef.current ??= { z: IDLE_CAMERA.z, fov: IDLE_CAMERA.fov };
+    return (
+      <div className="storyv2-root" style={{ backgroundColor: "#d5d7dc" }}>
+        <div className="storyv2-brain is-revealed is-crisp">
+          <BrainStageV2
+            layout={layout}
+            activeIndex={BRAIN_REGIONS.length - 1}
+            headset
+            poseRef={previewPoseRef}
+            cameraRef={previewCameraRef}
+            debugFit
+            className="storyv2-brain-canvas"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -27,6 +27,17 @@ export function debugHudEnabled(): boolean {
   return new URLSearchParams(window.location.search).get("v2debug") === "1";
 }
 
+/**
+ * Dev only: `?v2fit=front` or `?v2fit=side` skips the story and shows the
+ * brain sitting inside the headset, still, at the idle screen's camera and
+ * size -- for checking and nudging `STORY_V2.act3.brainFit`.
+ */
+export function fitPreviewMode(): "front" | "side" | null {
+  if (typeof window === "undefined") return null;
+  const v = new URLSearchParams(window.location.search).get("v2fit");
+  return v === "front" || v === "side" ? v : null;
+}
+
 export type SceneId =
   | "landing"
   | "question"
@@ -397,6 +408,27 @@ export const STORY_V2 = {
     closingPxPortrait: 21,
     /** Body copy on the black glass. */
     bodyOpacity: 0.85,
+  },
+
+  /**
+   * Act 3: the headset handoff. The brain and the headset share ONE rig in
+   * the brain canvas, so they turn and scale together.
+   */
+  act3: {
+    /**
+     * Where the brain sits inside the headset, in the HEADSET's local units
+     * (+Y up, +Z front, origin at the base; FpZ z=+20.3, Oz z=-20.1, T3/T4
+     * x=+-16.9, Cz y=21.7). `scale` turns the brain's own units (normalised
+     * to 2.4 on its longest axis) into headset units. Nudge with ?v2fit=front
+     * and ?v2fit=side.
+     *
+     * Derived from the electrode positions with a 1.5-unit gap: front-to-back
+     * fills FpZ..Oz (40.39 - 3 = 37.39 over the brain's 2.4 depth), the top
+     * sits 1.5 under Cz, and it is centred between FpZ/Oz and T3/T4. That
+     * leaves ~1.6 either side of T3/T4. The temporal lobes, cerebellum and
+     * stem hang below the electrode ring, as on a real head.
+     */
+    brainFit: { scale: 15.58, x: -0.01, y: 3.87, z: 0.07 },
   },
 
 } as const;
