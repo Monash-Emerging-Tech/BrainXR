@@ -24,7 +24,7 @@ const FocusSensorsDrawer: React.FC<FocusSensorsDrawerProps> = ({ open, frame, on
     <div className="pr-9">
       <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/65">Focus sensor group</p>
       <h2 className="mt-2 font-offbit text-3xl font-bold uppercase leading-none text-white">Prefrontal attention signals</h2>
-      <p className="mt-3 text-sm leading-5 text-white/85">These four frontal electrodes provide complementary context for attention and executive function. No single sensor measures focus by itself.</p>
+      <p className="mt-3 text-sm leading-5 text-white/85">These four focus-related frontal electrodes provide complementary context for attention and executive function. No single sensor measures focus by itself.</p>
     </div>
 
     <div className="mt-5 border-t border-white/25 pt-4">
@@ -38,7 +38,7 @@ const FocusSensorsDrawer: React.FC<FocusSensorsDrawerProps> = ({ open, frame, on
               key={name}
               type="button"
               onClick={() => onSelectSignal(name)}
-              className="group rounded-xl border border-white/10 bg-white/12 px-3 py-2.5 text-left text-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-white/35 hover:bg-white/22 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="group cursor-pointer rounded-xl border border-white/25 bg-white/15 px-3 py-2.5 text-left text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-2px_0_rgba(15,23,42,0.16),0_3px_0_rgba(15,23,42,0.18),0_6px_12px_rgba(15,23,42,0.12)] transition duration-200 hover:-translate-y-1 hover:border-white/50 hover:bg-white/25 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.5),inset_0_-2px_0_rgba(15,23,42,0.18),0_4px_0_rgba(15,23,42,0.2),0_9px_18px_rgba(15,23,42,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white active:translate-y-px active:shadow-[inset_0_1px_0_rgba(255,255,255,0.3),inset_0_-1px_0_rgba(15,23,42,0.2),0_1px_0_rgba(15,23,42,0.2)]"
               aria-label={`Inspect ${name}, ${metadata.fullName}`}
             >
               <div className="flex items-center justify-between gap-2">
