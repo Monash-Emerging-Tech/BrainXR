@@ -6,8 +6,7 @@ export type AppMode =
   | { kind: "demo" }
   | {
       kind: "live";
-      connection: "searching" | "checking" | "connected";
-      device?: string;
+      connection: "connecting" | "connected" | "disconnected" | "error";
     };
 
 export interface ModeLayout {

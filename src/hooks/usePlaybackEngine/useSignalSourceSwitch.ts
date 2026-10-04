@@ -1,6 +1,6 @@
 import { useEffect, type RefObject } from "react";
 import type { SignalSource } from "../../utils/signalSource";
-import { idleSignalSource, qualityCheckSignalSource } from "../../utils/proceduralSignalSource";
+import { idleSignalSource } from "../../utils/proceduralSignalSource";
 import { createDeapSignalSource } from "../../utils/deapSignalSource";
 import type { AppMode } from "../../utils/appMode";
 import { clearHistories, type Histories } from "./history";
@@ -48,9 +48,8 @@ export function useSignalSourceSwitch({
       return () => {
         cancelled = true;
       };
-    } else if (mode.kind === "live" && mode.connection === "connected") {
-      sourceRef.current = qualityCheckSignalSource;
+    } else if (mode.kind === "live") {
       setIsLoading(false);
     }
-  }, [mode]);
+  }, [mode.kind]);
 }

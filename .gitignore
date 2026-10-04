@@ -25,6 +25,7 @@ pnpm-debug.log*
 
 # python
 __pycache__/
+.venv/
 
 # blender
 *.blend1

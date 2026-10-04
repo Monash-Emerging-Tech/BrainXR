@@ -21,13 +21,17 @@ Inside of your Astro project, you'll see the following folders and files:
 
 Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
 
+## Real-time EEG prototype
+
+The optional local simulated EEG to WebSocket to BrainXR vertical slice is documented in [`prototype/eeg-streaming/README.md`](prototype/eeg-streaming/README.md). It is explicitly simulated and is not scientifically or medically validated.
+
 There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
 
 Any static assets, like images, can be placed in the `public/` directory.
 
 ## 🧞 Commands
 
-All commands are run from the root of the project, from a terminal:
+All commands are run from the root of the project, from a terminal. The repository pins pnpm 11.28.0. Dependency install scripts are denied unless explicitly trusted in `pnpm-workspace.yaml`; only the native helpers required by Tailwind and esbuild are allowed.
 
 | Command                   | Action                                           |
 | :------------------------ | :----------------------------------------------- |

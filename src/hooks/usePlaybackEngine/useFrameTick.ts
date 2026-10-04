@@ -111,6 +111,7 @@ export function useFrameTick({
       // Mutate the ring buffers in place — no per-tick array/object cloning
       const isBaseline = nextFrame.phase === "baseline";
       const histories = historiesRef.current;
+      if (modeRef.current.kind === "live" && Object.keys(nextFrame.channels).length === 0) return;
       ELECTRODE_NAMES.forEach((name) => {
         pushSample(histories, name, { value: nextFrame.channels[name]?.value ?? 0, isBaseline });
       });

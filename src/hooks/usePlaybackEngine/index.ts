@@ -17,6 +17,7 @@ import { useSignalSourceSwitch } from "./useSignalSourceSwitch";
 import { useFrameTick } from "./useFrameTick";
 import { useAudioSync } from "./useAudioSync";
 import { useEngineActions } from "./useEngineActions";
+import { useLiveEEGStream } from "./useLiveEEGStream";
 import type { PlaybackEngine } from "./types";
 
 export type { PlaybackEngine } from "./types";
@@ -45,6 +46,7 @@ export function usePlaybackEngine(): PlaybackEngine {
   const audioController = useAudioSync({ mode, isPaused, speed, timeRef });
 
   useSignalSourceSwitch({ mode, timeRef, sourceRef, historiesRef, setSpeed, setIsPaused, setIsLoading });
+  useLiveEEGStream({ modeKind: mode.kind, sourceRef, historiesRef, setMode });
   useFrameTick({
     speed,
     isPaused,

@@ -1,7 +1,6 @@
 import { useCallback, type RefObject } from "react";
-import type { ElectrodeName, Frame, SignalSource } from "../../utils/signalSource";
+import type { Frame, SignalSource } from "../../utils/signalSource";
 import type { AppMode } from "../../utils/appMode";
-import { simulateHeadsetConnection } from "../../utils/connectionFlow";
 import { clearHistories, type Histories } from "./history";
 import { TRIAL_SECONDS } from "./useFrameTick";
 
@@ -47,11 +46,7 @@ export function useEngineActions({
 
   const startLive = useCallback(() => {
     cancelConnectionRef.current();
-    setMode({ kind: "live", connection: "searching" });
-
-    cancelConnectionRef.current = simulateHeadsetConnection((progress) => {
-      setMode({ kind: "live", connection: progress.step, device: progress.device });
-    });
+    setMode({ kind: "live", connection: "connecting" });
   }, []);
 
   const disconnect = useCallback(() => {

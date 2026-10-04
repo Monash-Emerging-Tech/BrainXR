@@ -4,10 +4,11 @@ import type { Frame } from "../../utils/signalSource";
 interface PhaseIndicatorProps {
   isDemo: boolean;
   phase: Frame["phase"];
+  liveConnection?: "connecting" | "connected" | "disconnected" | "error";
 }
 
-// Centered "Baseline / Stimulus Phase" pill, shown only in Demo Mode.
-const PhaseIndicator: React.FC<PhaseIndicatorProps> = ({ isDemo, phase }) => (
+// Centered demo-phase or simulated live-connection status pill.
+const PhaseIndicator: React.FC<PhaseIndicatorProps> = ({ isDemo, phase, liveConnection }) => (
   <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto flex justify-center">
     {isDemo && (
       <div className="flex items-center gap-1.5 md:gap-2 bg-slate-900/90 border border-slate-700/50 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-2xl transition-all duration-300">
@@ -19,6 +20,14 @@ const PhaseIndicator: React.FC<PhaseIndicatorProps> = ({ isDemo, phase }) => (
           }`}>
           {phase === "baseline" ? "Baseline" : "Stimulus"}
           <span className="hidden sm:inline"> Phase</span>
+        </span>
+      </div>
+    )}
+    {!isDemo && liveConnection && (
+      <div className="flex items-center gap-2 bg-slate-900/90 border border-cyan-500/40 backdrop-blur-md px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-2xl">
+        <span className={`w-2 h-2 rounded-full ${liveConnection === "connected" ? "bg-emerald-400" : liveConnection === "error" ? "bg-red-400" : "bg-amber-400"} animate-pulse`} />
+        <span className="text-[9px] md:text-xs font-black tracking-[0.12em] uppercase text-cyan-300">
+          Simulation · {liveConnection}
         </span>
       </div>
     )}

@@ -14,7 +14,11 @@ interface TopHudBarProps {
 const TopHudBar: React.FC<TopHudBarProps> = ({ engine }) => (
   <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between gap-4 pointer-events-none">
     <BackButton onClick={engine.disconnect} />
-    <PhaseIndicator isDemo={engine.mode.kind === "demo"} phase={engine.frame.phase} />
+    <PhaseIndicator
+      isDemo={engine.mode.kind === "demo"}
+      phase={engine.frame.phase}
+      liveConnection={engine.mode.kind === "live" ? engine.mode.connection : undefined}
+    />
     <div className="flex items-center gap-3 pointer-events-auto">
       <button
         onClick={() => xrStore.enterVR()}
