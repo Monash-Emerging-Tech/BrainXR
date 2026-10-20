@@ -10,6 +10,7 @@ interface TrialProgressBarProps {
   phase: Frame["phase"];
   trialIndex: number;
   onTrialSelect: (index: number, startOffset?: number) => void;
+  controls?: React.ReactNode;
 }
 
 const TOTAL_DURATION = 63;
@@ -19,6 +20,7 @@ const TrialProgressBar: React.FC<TrialProgressBarProps> = ({
   phase,
   trialIndex,
   onTrialSelect,
+  controls,
 }) => (
   <div className="flex flex-col gap-2 w-full text-slate-800">
     {/* 40 Connected Trials: Circle (Baseline) -> Bar (Stimulation) */}
@@ -37,14 +39,16 @@ const TrialProgressBar: React.FC<TrialProgressBarProps> = ({
     </div>
 
     {/* Sub-label showing current trial details and time readout */}
-    <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold select-none mt-1">
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center text-[11px] text-slate-500 font-semibold select-none mt-1">
       <div className="flex items-center gap-2">
         <span className="font-mono text-slate-800 font-bold">
           Trial {(trialIndex ?? 0) + 1} of 40
         </span>
       </div>
 
-      <div className="font-mono text-slate-700">
+      <div className="pointer-events-auto justify-self-center">{controls}</div>
+
+      <div className="justify-self-end font-mono text-slate-700">
         {formatTime(trialElapsed)} / {formatTime(TOTAL_DURATION)}
       </div>
     </div>

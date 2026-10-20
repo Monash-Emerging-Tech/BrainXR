@@ -13,6 +13,7 @@ interface ElectrodeNodeProps {
   rotation: [number, number, number];
   isSelected?: boolean;
   isHovered?: boolean;
+  isContextHighlighted?: boolean;
   onRef: (mesh: THREE.Mesh | null) => void;
   onSelect?: (name: ElectrodeName) => void;
   onHover?: (name: ElectrodeName | null) => void;
@@ -33,6 +34,7 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
   rotation,
   isSelected = false,
   isHovered = false,
+  isContextHighlighted = false,
   onRef,
   onSelect,
   onHover,
@@ -154,7 +156,7 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
           controller ray can fire dozens of hover transitions per second sweeping across
           nodes, and mounting/unmounting would reallocate the ring geometry/material each time. */}
       <group position={ringOffset} rotation={ringRotation} scale={2.1}>
-        <group ref={ringGroupRef} visible={isSelected || isHovered}>
+        <group ref={ringGroupRef} visible={isSelected || isHovered || isContextHighlighted}>
           {/* Glowing halo disc aura extending onto headset surface */}
           <mesh raycast={() => null}>
             <ringGeometry args={[baseRadius * 1.25, baseRadius * 2.2, 32]} />
@@ -162,7 +164,7 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
               color={ringColor}
               side={THREE.DoubleSide}
               transparent
-              opacity={isSelected ? 0.5 : 0.25}
+              opacity={isSelected ? 0.55 : isHovered ? 0.32 : 0.16}
               depthWrite={false}
             />
           </mesh>

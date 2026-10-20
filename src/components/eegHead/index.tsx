@@ -2,7 +2,7 @@ import * as THREE from "three";
 import React, { useEffect, forwardRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import type { ElectrodeName, Frame } from "../../utils/signalSource";
+import { PREFRONTAL_ELECTRODES, type ElectrodeName, type Frame } from "../../utils/signalSource";
 import { computeElectrodeVisualState } from "../../utils/electrodeVisualState";
 import type { GLTFResult } from "./gltfTypes";
 import { ELECTRODE_NODE_PLACEMENTS, updateElectrodeGeometry } from "./electrodeNodes";
@@ -13,6 +13,8 @@ interface EEGHeadProps extends React.ComponentPropsWithoutRef<"group"> {
   frameRef: React.RefObject<Frame>;
   selectedChannel?: ElectrodeName | null;
   hoveredChannel?: ElectrodeName | null;
+  highlightPrefrontal?: boolean;
+  highlightAllElectrodes?: boolean;
   onChannelSelect?: (channelName: ElectrodeName) => void;
   onChannelHover?: (channelName: ElectrodeName | null) => void;
 }
@@ -20,7 +22,7 @@ interface EEGHeadProps extends React.ComponentPropsWithoutRef<"group"> {
 const BLACK_COLOR = new THREE.Color(0x000000);
 
 const EEGHead = forwardRef<THREE.Group, EEGHeadProps>(
-  ({ frameRef, selectedChannel, hoveredChannel, onChannelSelect, onChannelHover, ...props }, ref) => {
+  ({ frameRef, selectedChannel, hoveredChannel, highlightPrefrontal = false, highlightAllElectrodes = false, onChannelSelect, onChannelHover, ...props }, ref) => {
     const { nodes, materials } = useGLTF("/digitalTwin.glb") as unknown as GLTFResult;
     const { meshRefs, getRefCallback } = useElectrodeMeshRefs();
 
@@ -75,6 +77,7 @@ const EEGHead = forwardRef<THREE.Group, EEGHeadProps>(
               rotation={rotation}
               isSelected={name === selectedChannel}
               isHovered={name === hoveredChannel}
+              isContextHighlighted={highlightAllElectrodes || (highlightPrefrontal && PREFRONTAL_ELECTRODES.includes(name as typeof PREFRONTAL_ELECTRODES[number]))}
               onRef={getRefCallback(name)}
               onSelect={onChannelSelect}
               onHover={onChannelHover}

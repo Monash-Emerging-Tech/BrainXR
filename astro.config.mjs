@@ -8,7 +8,10 @@ import tailwindcss from '@tailwindcss/vite';
 // https://astro.build/config
 export default defineConfig({
   integrations: [react()],
-server: { host: true },
+  // The Astro development inspector is useful while authoring pages, but its
+  // floating bottom toolbar is not part of the BrainXR interface.
+  devToolbar: { enabled: false },
+  server: { host: true },
   vite: {
     plugins: [tailwindcss()],
     resolve: {

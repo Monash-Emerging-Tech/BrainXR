@@ -10,6 +10,7 @@ interface BackgroundOscilloscopesProps {
   // data arrived, redraw" signal.
   frameRef: React.RefObject<Frame>;
   selectedChannel: ElectrodeName | null;
+  highlightedChannels?: readonly ElectrodeName[];
   hoveredChannel?: ElectrodeName | null;
 }
 
@@ -17,6 +18,7 @@ const BackgroundOscilloscopes: React.FC<BackgroundOscilloscopesProps> = ({
   historiesRef,
   frameRef,
   selectedChannel,
+  highlightedChannels = [],
   hoveredChannel,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,7 +42,7 @@ const BackgroundOscilloscopes: React.FC<BackgroundOscilloscopesProps> = ({
       if (needsRedraw || frameRef.current !== lastFrame) {
         lastFrame = frameRef.current;
         needsRedraw = false;
-        render(ctx, canvas, histories, selectedChannel, hoveredChannel);
+        render(ctx, canvas, histories, selectedChannel, hoveredChannel, highlightedChannels);
       }
 
       raf = requestAnimationFrame(draw);
@@ -48,7 +50,7 @@ const BackgroundOscilloscopes: React.FC<BackgroundOscilloscopesProps> = ({
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [historiesRef, frameRef, selectedChannel, hoveredChannel]);
+  }, [historiesRef, frameRef, selectedChannel, hoveredChannel, highlightedChannels]);
 
   return (
     <canvas

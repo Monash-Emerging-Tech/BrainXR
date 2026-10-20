@@ -1,38 +1,45 @@
 import React from "react";
 import type { Frame } from "../../utils/signalSource";
 import TrialProgressBar from "../TrialProgressBar";
-import TrialDial from "../TrialDial";
+import { MediaControl13Icon, MediaControl14Icon, PauseThinIcon, PlayThinIcon } from "../icons/IconmonstrIcons";
 
 interface DemoBottomControlsProps {
   frame: Frame;
   onTrialSelect: (index: number, startOffset?: number) => void;
+  isPaused: boolean;
+  onTogglePlayPause: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
 }
 
 // Floating bottom-of-screen Demo Mode controls: the trial timeline (left,
 // stretching across) and the rotary trial dial (bottom-right).
-const DemoBottomControls: React.FC<DemoBottomControlsProps> = ({ frame, onTrialSelect }) => (
+const DemoBottomControls: React.FC<DemoBottomControlsProps> = ({ frame, onTrialSelect, isPaused, onTogglePlayPause, onPrevious, onNext }) => (
   <>
-    <div className="absolute inset-x-0 bottom-6 flex flex-col items-center justify-center z-30 pl-8 pr-56 md:px-8 pointer-events-none">
-      <div className="w-full max-w-3xl pointer-events-auto">
+    <div className="absolute inset-x-0 bottom-5 z-30 flex flex-col items-center justify-center px-4 pointer-events-none">
+      <div className="w-full max-w-[52rem] pointer-events-auto">
         <TrialProgressBar
           trialElapsed={frame.trialElapsed ?? 0}
           phase={frame.phase}
           trialIndex={frame.trialIndex ?? 0}
           onTrialSelect={onTrialSelect}
+          controls={<div className="flex items-center gap-1 rounded-full border border-white/15 bg-slate-950/68 p-1 shadow-xl shadow-slate-900/15 backdrop-blur-xl">
+          <button onClick={onPrevious} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-200 transition hover:bg-white/12 hover:text-white" title="Restart track; press again for previous" aria-label="Restart track or go to previous track">
+            <MediaControl13Icon className="h-4 w-4" style={{ transform: "scaleX(-1)" }} />
+          </button>
+          <button onClick={onTogglePlayPause} className="group relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/8 text-white transition hover:border-white/20 hover:bg-white/14 active:scale-95" title={isPaused ? "Play (Spacebar)" : "Pause (Spacebar)"} aria-label={isPaused ? "Play" : "Pause"}>
+            {isPaused ? (
+              <PlayThinIcon className={`h-5 w-5 ${frame.phase === "baseline" ? "text-indigo-400" : "text-emerald-400"}`} />
+            ) : (
+              <PauseThinIcon className={`h-5 w-5 ${frame.phase === "baseline" ? "text-indigo-400" : "text-emerald-400"}`} />
+            )}
+          </button>
+          <button onClick={onNext} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-200 transition hover:bg-white/12 hover:text-white" title="Next track" aria-label="Next track">
+            <MediaControl14Icon className="h-4 w-4" />
+          </button>
+          </div>}
         />
       </div>
-    </div>
-
-    <div className="absolute right-6 bottom-6 z-30 pointer-events-auto">
-      <TrialDial
-        trialIndex={frame.trialIndex ?? 0}
-        totalTrials={40}
-        phase={frame.phase}
-        trialElapsed={frame.trialElapsed ?? 0}
-        focus={frame.focus}
-        focus_avg={frame.focus_avg}
-        onTrialSelect={onTrialSelect}
-      />
     </div>
   </>
 );

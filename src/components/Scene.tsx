@@ -13,9 +13,10 @@ import HeadWrapper from "./HeadWrapper";
 import { xrStore } from "../utils/xrStore";
 import type { ElectrodeName, Frame } from "../utils/signalSource";
 import type { HistorySample } from "../hooks/usePlaybackEngine";
+import type { HeadsetPresentationStage } from "../utils/headsetPresentation";
 
 // OrbitControls is a sibling of <XR>, not nested inside it, so the
-// context-based useXR() hook isn't reachable here — read presentation
+// context-based useXR() hook isn't reachable here - read presentation
 // state straight off the store instead.
 function useIsXRPresenting(): boolean {
   return useSyncExternalStore(
@@ -30,8 +31,11 @@ interface SceneProps {
   historiesRef?: React.RefObject<Record<ElectrodeName, HistorySample[]>>;
   selectedChannel: ElectrodeName | null;
   hoveredChannel?: ElectrodeName | null;
+  highlightPrefrontal?: boolean;
+  presentationStage?: HeadsetPresentationStage;
   onChannelSelect: (name: ElectrodeName) => void;
   onChannelHover?: (name: ElectrodeName | null) => void;
+  onClearSelection?: () => void;
   onStartDemo?: () => void;
   onStartLive?: () => void;
   onTrialSelect?: (index: number, startOffset?: number) => void;
@@ -47,8 +51,11 @@ const Scene: React.FC<SceneProps> = ({
   historiesRef,
   selectedChannel,
   hoveredChannel,
+  highlightPrefrontal = false,
+  presentationStage = "interactive",
   onChannelSelect,
   onChannelHover,
+  onClearSelection,
   onStartDemo,
   onStartLive,
   onTrialSelect,
@@ -62,17 +69,16 @@ const Scene: React.FC<SceneProps> = ({
 
   return (
     <Canvas
-      shadows
+      dpr={[1, 1.5]}
+      onPointerMissed={onClearSelection}
       camera={{ position: [0, 0, 7.5], fov: 45 }}
-      style={{ background: "transparent" }}
-      gl={{ alpha: true }}
+      style={{ background: "transparent", cursor: hoveredChannel ? "pointer" : "grab" }}
+      gl={{ alpha: true, powerPreference: "high-performance" }}
     >
       <ambientLight intensity={Math.PI / 1.5} />
       <directionalLight
         position={[5, 10, 5]}
         intensity={Math.PI}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
       />
       <pointLight position={[-10, 10, -5]} intensity={Math.PI / 2} />
       <pointLight position={[0, -10, 0]} intensity={Math.PI / 2} />
@@ -83,6 +89,8 @@ const Scene: React.FC<SceneProps> = ({
           historiesRef={historiesRef}
           selectedChannel={selectedChannel}
           hoveredChannel={hoveredChannel}
+          highlightPrefrontal={highlightPrefrontal}
+          presentationStage={presentationStage}
           onChannelSelect={onChannelSelect}
           onChannelHover={onChannelHover}
           onStartDemo={onStartDemo}
