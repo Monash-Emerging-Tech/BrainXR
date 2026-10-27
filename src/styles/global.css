@@ -88,3 +88,17 @@
   cursor: pointer !important;
 }
 
+/* Gradient styling derived from EEG node cortical regions: Frontal (Indigo), Temporal (Purple), Central (Blue), Parietal (Cyan), Occipital (Emerald) */
+.eeg-node-gradient-text {
+  background: linear-gradient(
+    135deg,
+    #6366f1 0%,
+    #a855f7 25%,
+    #3b82f6 50%,
+    #06b6d4 75%,
+    #10b981 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+

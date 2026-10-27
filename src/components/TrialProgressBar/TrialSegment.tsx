@@ -41,44 +41,44 @@ const TrialSegment: React.FC<TrialSegmentProps> = ({
       {isActive ? (
         /* Unified Shape for Active Trial: Baseline Circle + Tapered Bridge + Emerald Bar */
         <div className="flex items-center w-full min-w-0 relative">
-          {/* Solitary Phase Indicator Badge hovering directly above the active trial segment (left-aligned) */}
-          <div className="absolute -top-6 left-0 flex items-center pointer-events-none select-none z-30 animate-fade-in">
+          {/* Solitary Phase Indicator Badge hovering directly above the active trial segment (aligned to baseline or stimulus bar) */}
+          <div
+            className={`absolute -top-6 flex items-center pointer-events-none select-none z-30 transition-all duration-500 ease-in-out ${
+              phase === "stimulus" ? "left-4" : "left-0"
+            }`}
+          >
             <span
               className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider border shadow-md backdrop-blur-xl whitespace-nowrap transition-all duration-300 ${
-                phase === "baseline"
-                  ? "border-indigo-400/60 bg-slate-950/90 text-indigo-300 shadow-indigo-950/40"
-                  : "border-emerald-400/60 bg-slate-950/90 text-emerald-300 shadow-emerald-950/40"
+                phase === "stimulus"
+                  ? "border-emerald-400/60 bg-slate-950/90 text-emerald-300 shadow-emerald-950/40"
+                  : "border-indigo-400/60 bg-slate-950/90 text-indigo-300 shadow-indigo-950/40"
               }`}
             >
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  phase === "baseline"
-                    ? "bg-indigo-400 shadow-[0_0_8px_#818cf8] animate-pulse"
-                    : "bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse"
+                  phase === "stimulus"
+                    ? "bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse"
+                    : "bg-indigo-400 shadow-[0_0_8px_#818cf8] animate-pulse"
                 }`}
               />
-              {phase === "baseline" ? "Baseline Phase" : "Stimulus Phase"}
+              {phase === "stimulus" ? "Stimulus Phase" : "Baseline Phase"}
             </span>
           </div>
 
           {/* 1. Baseline Circle Component */}
           <button
             onClick={() => onTrialSelect(index, 0)}
-            className={`w-4 h-4 rounded-full shrink-0 relative cursor-pointer z-20 transition-all duration-300 shadow-md ${
-              phase === "baseline"
-                ? "border-2 border-indigo-400 bg-slate-950/80 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
-                : "border border-indigo-400/70 bg-indigo-600 shadow-sm"
-            }`}
+            className="w-4 h-4 rounded-full shrink-0 relative cursor-pointer z-20 border-2 border-indigo-400 bg-indigo-600 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
             style={
-              phase === "baseline"
+              phase !== "stimulus"
                 ? {
-                    background: `linear-gradient(to right, #6366f1 ${baselinePercentage}%, rgba(2, 6, 23, 0.95) ${baselinePercentage}%)`,
+                    background: `linear-gradient(to right, #4f46e5 ${baselinePercentage}%, rgba(2, 6, 23, 0.95) ${baselinePercentage}%)`,
                   }
                 : undefined
             }
             title={`Trial ${index + 1} - Baseline (3s)`}
           >
-            {phase === "baseline" && (
+            {phase !== "stimulus" && (
               <span className="absolute inset-[-4px] rounded-full bg-indigo-500/35 animate-pulse -z-10" />
             )}
           </button>
@@ -87,9 +87,9 @@ const TrialSegment: React.FC<TrialSegmentProps> = ({
           <div
             onClick={() => onTrialSelect(index, 0)}
             className={`w-2 shrink-0 relative -ml-1 -mr-1 z-10 cursor-pointer h-2.5 transition-colors duration-300 ${
-              phase === "baseline"
-                ? "bg-gradient-to-r from-indigo-500/80 to-slate-950/70"
-                : "bg-gradient-to-r from-indigo-600 to-emerald-600/80"
+              phase === "stimulus"
+                ? "bg-gradient-to-r from-indigo-600 to-emerald-600/80"
+                : "bg-gradient-to-r from-indigo-500/80 to-slate-950/70"
             }`}
             style={{
               clipPath: "polygon(0% 0%, 100% 25%, 100% 75%, 0% 100%)",

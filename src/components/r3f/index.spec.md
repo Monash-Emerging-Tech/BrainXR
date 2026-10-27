@@ -5,10 +5,10 @@ Composition root mounted by `src/pages/index.astro`. Owns the
 panels based on `engine.mode`:
 
 - Idle: `IdleHeadline`/`IdleActions` (`../IdleSplash.tsx`) over the showcase spin.
-- Any active mode: [[TopHudBar]] (exit/phase/playback controls).
-- Demo only: [[DemoBottomControls]] (trial timeline + dial).
+- Any active mode: [[TopHudBar]] (exit button, center Focus Sensors toggle monitor, and Enter VR button).
+- Demo only: [[DemoBottomControls]] (trial timeline with contextual phase indicator + dial).
 - Always: [[../BackgroundOscilloscopes/index|BackgroundOscilloscopes]] behind
-  everything, `Scene` (`../Scene.tsx`, the 3D canvas) in the middle, and
+  everything (with interactive neomorphic channel selection labels), `Scene` (`../Scene.tsx`, the 3D canvas) in the middle, and
   conditionally [[AudioErrorToast]], [[LoadingOverlay]].
 
 [[useSpacebarToggle]] wires the global play/pause shortcut.

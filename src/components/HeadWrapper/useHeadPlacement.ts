@@ -34,6 +34,11 @@ const NODE_POSITIONS = new Map(
   ELECTRODE_NODE_PLACEMENTS.map((p) => [p.name, new THREE.Vector3(...p.position)])
 );
 
+// Nodes located along the lower perimeter/brow/temple/occiput line that need a lower vertical focus offset
+const LOWER_FOCUS_NODES = new Set<string>([
+  "Fp1", "Fp2", "FpZ", "F7", "F8", "T3", "T4", "T5", "T6", "O1", "O2", "Oz",
+]);
+
 // Per-frame placement of the headset group: a fixed physical-scale pose in
 // front of the user in WebXR (draggable via useXRDragInteraction), or an
 // auto-scaled showcase/idle layout on the 2D desktop viewport.
@@ -104,8 +109,9 @@ export function useHeadPlacement({
         group.scale.lerp(tempTargetScale, slerpFactor);
         group.quaternion.slerp(DEFAULT_HEADSET_QUATERNION, slerpFactor);
       } else if (effectiveFocusChannel) {
-        // Recenter headset and target node directly onto the visual center of the canvas
-        const stageScale = presentationStage === "electrodes" ? targetScale * 1.08 : targetScale;
+        // Recenter headset and target node directly onto the visual center of the canvas (+30% bigger when focused)
+        const baseFocusScale = targetScale * 1.3;
+        const stageScale = presentationStage === "electrodes" ? baseFocusScale * 1.08 : baseFocusScale;
         tempTargetScale.setScalar(stageScale);
         group.scale.lerp(tempTargetScale, slerpFactor);
 
@@ -132,8 +138,14 @@ export function useHeadPlacement({
         // Apply current/target rotation and scale to the node vector to find its world offset
         tempNodeOffset.copy(tempNodeLocalPos).applyQuaternion(group.quaternion).multiply(group.scale);
 
-        // Position the group so the focused node lands exactly at (0, 0, 0) in canvas world space
-        tempTargetPosition.set(-tempNodeOffset.x, -tempNodeOffset.y, -tempNodeOffset.z);
+        // Position the group so the focused node lands in canvas world space with appropriate vertical clearance.
+        // Equatorial/lower perimeter nodes (fp1, fp2, fpz, f7, f8, t3, t4, t5, t6, o1, o2, oz)
+        // are placed lower than crown nodes, nudged up by +2 rem (~3.5% viewport height).
+        const isLowerNode = LOWER_FOCUS_NODES.has(effectiveFocusChannel);
+        const verticalFocusOffset = isLowerNode
+          ? -state.viewport.height * 0.015
+          : state.viewport.height * 0.105;
+        tempTargetPosition.set(-tempNodeOffset.x, -tempNodeOffset.y + verticalFocusOffset, -tempNodeOffset.z);
         group.position.lerp(tempTargetPosition, slerpFactor);
       } else if (presentationStage === "showcase" || (presentationStage === "interactive" && (frameRef.current.phase === "idle" || isDemoPhase))) {
         // Incremental showcase rotation around world Y: resumes rotation directly from whatever

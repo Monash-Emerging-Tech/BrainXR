@@ -1,7 +1,6 @@
 # PhaseIndicator.tsx
 
-Centered pill in the HUD nav bar naming the current DEAP phase (Baseline /
-Stimulus). Renders an empty positioned wrapper (for layout stability) outside
-Demo Mode.
+Phase pill styling and indicator previously in the top HUD nav bar, consolidated directly over the active [[../TrialProgressBar/TrialSegment|TrialSegment]] for semantic proximity to the trial timeline.
+Renders baseline vs stimulus state with distinct chromatic glowing beacons.
 
 **Props**: `isDemo`, `phase` (`Frame["phase"]`).

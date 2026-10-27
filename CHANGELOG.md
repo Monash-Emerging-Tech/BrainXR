@@ -2,6 +2,13 @@
 
 All notable changes to this project, derived from git history, newest first.
 
+## 2026-10-27
+
+- **`de45d71`** [UX] a smoother node focusing mechanism — auto-rotates and dynamically translates the 3D headset so focused electrodes or the prefrontal group center orthogonally at `(0, 0, 0)` in viewport space. Upon deselection, continuous showcase spinning smoothly resumes around world Y directly from that orientation without angle reset or snapping; demo mode remains stably centered without vertical bobbing oscillation.
+- **`61d69c9`** [UX] a more scemantic location for the phase indicator — relocated the phase pill from the top HUD navigation bar to float contextually above the active `TrialSegment` on the bottom timeline with pulsing status indicator dots.
+- **`e0e03f2`** [UX] redesign so focus sensors get more attention than phase indicator — promoted the Focus Sensors monitor to the top HUD bar center with a prominent glassmorphic pill, chromatic glowing beacon, and real-time focus percentage badge.
+- **`174dbe6`** [UX] interactable labels for the nodes — added neomorphic, clickable channel label buttons along the left oscilloscope margin enabling direct channel hover and selection, paired with zero-overhead direct DOM voltage readouts (`±µV`).
+
 ## 2026-09-16
 
 - **`ad218f7`** [XR][Performance] Node Selection Lagginess Fixes - Epoch 3 — stopped reallocating the selection/hover halo ring's geometry and material on every hover transition (toggles visibility instead of mounting/unmounting); rebound headset/panel repositioning to the controller's grip button instead of the trigger, and guarded node selection against the grip's near-field pointer so the two gestures no longer compete on the same input channel.

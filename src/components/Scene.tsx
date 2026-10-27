@@ -71,7 +71,7 @@ const Scene: React.FC<SceneProps> = ({
     <Canvas
       dpr={[1, 1.5]}
       onPointerMissed={onClearSelection}
-      camera={{ position: [0, 0, 7.5], fov: 45 }}
+      camera={{ position: [0, 0, 6.2], fov: 45 }}
       style={{ background: "transparent", cursor: hoveredChannel ? "pointer" : "grab" }}
       gl={{ alpha: true, powerPreference: "high-performance" }}
     >
