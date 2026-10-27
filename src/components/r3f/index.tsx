@@ -10,6 +10,7 @@ import AudioErrorToast from "./AudioErrorToast";
 import TopHudBar from "./TopHudBar";
 import LoadingOverlay from "./LoadingOverlay";
 import DemoBottomControls from "./DemoBottomControls";
+import NodeDetailsBanner from "./NodeDetailsBanner";
 import { headsetPresentation } from "../../utils/headsetPresentation";
 
 const Scene = lazy(() => import("../Scene"));
@@ -144,9 +145,9 @@ const R3F: React.FC = () => {
 
         {engine.mode.kind === "demo" && (
           <>
-            {/* Animated guidance signifier: floats above bottom controls when unfocused, moves below audio unavailable toast when a node is clicked */}
+            {/* Animated guidance signifier & node details: floats above bottom controls when unfocused, moves below audio unavailable toast when a node is clicked */}
             <div
-              className={`pointer-events-none absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] select-none text-center px-4 whitespace-nowrap ${
+              className={`pointer-events-none absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] select-none text-center px-4 w-full max-w-[52rem] flex flex-col items-center ${
                 Boolean(engine.selectedChannel || highlightPrefrontal)
                   ? engine.audioError
                     ? "top-32"
@@ -154,9 +155,18 @@ const R3F: React.FC = () => {
                   : "bottom-32"
               }`}
             >
-              <span className="eeg-node-gradient-text font-mono text-[11px] md:text-xs font-black uppercase tracking-[0.22em] leading-relaxed drop-shadow-sm">
+              <span className="eeg-node-gradient-text font-mono text-[11px] md:text-xs font-black uppercase tracking-[0.22em] leading-relaxed drop-shadow-sm whitespace-nowrap">
                 pinch and click nodes to explore what EEG headsets do
               </span>
+
+              {Boolean(engine.selectedChannel || highlightPrefrontal) && (
+                <NodeDetailsBanner
+                  channel={engine.selectedChannel}
+                  isPrefrontalGroup={highlightPrefrontal}
+                  frame={engine.frame}
+                  onSelectChannel={selectChannel}
+                />
+              )}
             </div>
 
             <DemoBottomControls
