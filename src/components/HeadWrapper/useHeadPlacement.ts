@@ -109,7 +109,8 @@ export function useHeadPlacement({
         group.scale.lerp(tempTargetScale, slerpFactor);
         group.quaternion.slerp(DEFAULT_HEADSET_QUATERNION, slerpFactor);
       } else if (effectiveFocusChannel) {
-        // Recenter headset and target node directly onto the visual center of the canvas (+30% bigger when focused)
+        // Approach 1: Headset stays vertically centered at its fixed anchor point (-11 * scale) at all times.
+        // Selecting a node smoothly rotates the headset to face the camera directly, with +30% focus scale boost.
         const baseFocusScale = targetScale * 1.3;
         const stageScale = presentationStage === "electrodes" ? baseFocusScale * 1.08 : baseFocusScale;
         tempTargetScale.setScalar(stageScale);
@@ -127,25 +128,8 @@ export function useHeadPlacement({
         );
         group.quaternion.slerp(targetQuat, slerpFactor);
 
-        // Compute local node position relative to model origin
-        const nodePos = NODE_POSITIONS.get(effectiveFocusChannel);
-        if (nodePos) {
-          tempNodeLocalPos.copy(nodePos);
-        } else {
-          tempNodeLocalPos.set(0, 11, 0);
-        }
-
-        // Apply current/target rotation and scale to the node vector to find its world offset
-        tempNodeOffset.copy(tempNodeLocalPos).applyQuaternion(group.quaternion).multiply(group.scale);
-
-        // Position the group so the focused node lands in canvas world space with appropriate vertical clearance.
-        // Equatorial/lower perimeter nodes (fp1, fp2, fpz, f7, f8, t3, t4, t5, t6, o1, o2, oz)
-        // are placed lower than crown nodes, nudged up by +2 rem (~3.5% viewport height).
-        const isLowerNode = LOWER_FOCUS_NODES.has(effectiveFocusChannel);
-        const verticalFocusOffset = isLowerNode
-          ? -state.viewport.height * 0.015
-          : state.viewport.height * 0.105;
-        tempTargetPosition.set(-tempNodeOffset.x, -tempNodeOffset.y + verticalFocusOffset, -tempNodeOffset.z);
+        // Keep the headset centered at the constant vertical midpoint
+        tempTargetPosition.set(0, -11 * stageScale, 0);
         group.position.lerp(tempTargetPosition, slerpFactor);
       } else if (presentationStage === "showcase" || (presentationStage === "interactive" && (frameRef.current.phase === "idle" || isDemoPhase))) {
         // Incremental showcase rotation around world Y: resumes rotation directly from whatever
