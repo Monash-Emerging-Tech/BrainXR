@@ -3,7 +3,7 @@
 The `useFrame` loop that positions/scales/rotates the headset group every
 three.js frame.
 
-**Signature**: `useHeadPlacement({ groupRef, frameRef, isDraggingRef, xrPositionRef, xrRotationRef, selectedChannel }): void`
+**Signature**: `useHeadPlacement({ groupRef, frameRef, isDraggingRef, xrPositionRef, xrRotationRef, selectedChannel, highlightPrefrontal, presentationStage }): void`
 
 - In WebXR: resets to a fixed pose (`(0, 1.3, -1.1)`, target rotation) the
   moment presentation starts, scales to real-world size (~22cm diameter),
@@ -11,7 +11,7 @@ three.js frame.
   [[useXRDragInteraction]] has `isDraggingRef` set, in which case it leaves
   the group alone (the drag handlers are already writing to it directly).
 - On the 2D desktop viewport: scales the model to occupy ~1/3 of the
-  viewport height. In idle and demo phases when no channel is selected, it maintains a slow showcase spin (with subtle bobbing motion in idle mode, while demo mode remains stably centered without oscillation); otherwise it smoothly auto-rotates (slerps) the headset to focus on the `selectedChannel` so its ring faces the camera orthogonally with zero roll.
+  viewport height. When any electrode or the prefrontal focus sensors are active (`selectedChannel` or `highlightPrefrontal`), it smoothly auto-rotates (slerps) the headset to face the camera orthogonally and translates the model so that the focused node is visually centered at `(0, 0, 0)` in the middle of the whole canvas. When deselected, it resumes continuous showcase spinning around world Y directly from that focused position without storing or resetting rotation angles. In idle mode, a subtle bobbing motion is added, while demo mode remains stably centered without vertical oscillation.
 
 **Non-obvious**: while a channel is selected, the focus-quaternion
 computation runs every frame (not just once on select) via

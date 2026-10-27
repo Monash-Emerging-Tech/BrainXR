@@ -75,6 +75,7 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
     xrPositionRef,
     xrRotationRef,
     selectedChannel,
+    highlightPrefrontal,
     presentationStage,
   });
 

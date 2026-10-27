@@ -5,6 +5,7 @@ import type { ElectrodeName, Frame } from "../../utils/signalSource";
 import {
   getElectrodeFocusQuaternion,
   DEFAULT_HEADSET_QUATERNION,
+  ELECTRODE_NODE_PLACEMENTS,
 } from "../eegHead/electrodeNodes";
 import type { HeadsetPresentationStage } from "../../utils/headsetPresentation";
 
@@ -15,6 +16,7 @@ interface Params {
   xrPositionRef: React.RefObject<THREE.Vector3>;
   xrRotationRef: React.RefObject<THREE.Quaternion>;
   selectedChannel?: ElectrodeName | null;
+  highlightPrefrontal?: boolean;
   presentationStage?: HeadsetPresentationStage;
 }
 
@@ -24,6 +26,13 @@ const tempWorldUp = new THREE.Vector3(0, 1, 0);
 const tempFocusQuat = new THREE.Quaternion();
 const tempTargetPosition = new THREE.Vector3();
 const tempTargetScale = new THREE.Vector3();
+const tempNodeLocalPos = new THREE.Vector3();
+const tempNodeOffset = new THREE.Vector3();
+
+// Quick lookup of local node positions from ELECTRODE_NODE_PLACEMENTS
+const NODE_POSITIONS = new Map(
+  ELECTRODE_NODE_PLACEMENTS.map((p) => [p.name, new THREE.Vector3(...p.position)])
+);
 
 // Per-frame placement of the headset group: a fixed physical-scale pose in
 // front of the user in WebXR (draggable via useXRDragInteraction), or an
@@ -37,6 +46,7 @@ export function useHeadPlacement({
   xrPositionRef,
   xrRotationRef,
   selectedChannel,
+  highlightPrefrontal = false,
   presentationStage = "interactive",
 }: Params): void {
   const wasPresentingRef = useRef(false);
@@ -45,11 +55,13 @@ export function useHeadPlacement({
     const time = state.clock.getElapsedTime();
     const isPresenting = state.gl.xr.isPresenting;
     const isDemoPhase = frameRef.current.phase === "baseline" || frameRef.current.phase === "stimulus";
-    const shouldShowcaseRotate = frameRef.current.phase === "idle" || isDemoPhase;
     const group = groupRef.current;
     if (!group) return;
 
     const slerpFactor = 1 - Math.exp(-8 * Math.min(delta, 0.1));
+    const effectiveFocusChannel =
+      selectedChannel ??
+      (highlightPrefrontal || presentationStage === "prefrontal" ? "FpZ" : null);
 
     if (isPresenting) {
       // --- WebXR VR/AR Presentation Layout ---
@@ -57,9 +69,8 @@ export function useHeadPlacement({
       state.camera.getWorldPosition(tempCamPos);
       tempVec.subVectors(tempCamPos, xrPositionRef.current).normalize();
 
-      const focusChannel = selectedChannel ?? (presentationStage === "prefrontal" ? "FpZ" : null);
-      const targetQuat = focusChannel
-        ? getElectrodeFocusQuaternion(focusChannel, tempVec, tempWorldUp, tempFocusQuat)
+      const targetQuat = effectiveFocusChannel
+        ? getElectrodeFocusQuaternion(effectiveFocusChannel, tempVec, tempWorldUp, tempFocusQuat)
         : DEFAULT_HEADSET_QUATERNION;
 
       if (!wasPresentingRef.current) {
@@ -92,11 +103,44 @@ export function useHeadPlacement({
         group.position.lerp(tempTargetPosition, slerpFactor);
         group.scale.lerp(tempTargetScale, slerpFactor);
         group.quaternion.slerp(DEFAULT_HEADSET_QUATERNION, slerpFactor);
-      } else if ((presentationStage === "showcase" || (presentationStage === "interactive" && shouldShowcaseRotate)) && !selectedChannel) {
-        // Slow showcase spin when no channel is selected. Idle mode adds subtle bobbing; demo mode stays centered with no oscillation.
-        group.rotation.y = time * 0.15;
-        group.rotation.x = Math.sin(time * 0.4) * 0.05 + Math.PI / 32;
-        group.rotation.z = 0;
+      } else if (effectiveFocusChannel) {
+        // Recenter headset and target node directly onto the visual center of the canvas
+        const stageScale = presentationStage === "electrodes" ? targetScale * 1.08 : targetScale;
+        tempTargetScale.setScalar(stageScale);
+        group.scale.lerp(tempTargetScale, slerpFactor);
+
+        // Vector from head position to 2D desktop camera
+        state.camera.getWorldPosition(tempCamPos);
+        tempVec.subVectors(tempCamPos, group.position).normalize();
+
+        const targetQuat = getElectrodeFocusQuaternion(
+          effectiveFocusChannel,
+          tempVec,
+          state.camera.up,
+          tempFocusQuat
+        );
+        group.quaternion.slerp(targetQuat, slerpFactor);
+
+        // Compute local node position relative to model origin
+        const nodePos = NODE_POSITIONS.get(effectiveFocusChannel);
+        if (nodePos) {
+          tempNodeLocalPos.copy(nodePos);
+        } else {
+          tempNodeLocalPos.set(0, 11, 0);
+        }
+
+        // Apply current/target rotation and scale to the node vector to find its world offset
+        tempNodeOffset.copy(tempNodeLocalPos).applyQuaternion(group.quaternion).multiply(group.scale);
+
+        // Position the group so the focused node lands exactly at (0, 0, 0) in canvas world space
+        tempTargetPosition.set(-tempNodeOffset.x, -tempNodeOffset.y, -tempNodeOffset.z);
+        group.position.lerp(tempTargetPosition, slerpFactor);
+      } else if (presentationStage === "showcase" || (presentationStage === "interactive" && (frameRef.current.phase === "idle" || isDemoPhase))) {
+        // Incremental showcase rotation around world Y: resumes rotation directly from whatever
+        // orientation the headset was focused at when deselected, without storing previous angles.
+        const dt = Math.min(delta, 0.1);
+        group.rotateOnWorldAxis(tempWorldUp, dt * 0.15);
+
         const bobbing = isDemoPhase ? 0 : Math.cos(time * 1.2) * 0.2;
         tempTargetPosition.set(0, -11 * targetScale - bobbing, 0);
         tempTargetScale.setScalar(targetScale * 1.1);
@@ -108,17 +152,7 @@ export function useHeadPlacement({
         tempTargetPosition.set(0, -11 * targetScale, 0);
         group.scale.lerp(tempTargetScale, slerpFactor);
         group.position.lerp(tempTargetPosition, slerpFactor);
-
-        // Vector from head position to 2D desktop camera
-        state.camera.getWorldPosition(tempCamPos);
-        tempVec.subVectors(tempCamPos, group.position).normalize();
-
-        const focusChannel = selectedChannel ?? (presentationStage === "prefrontal" ? "FpZ" : null);
-        const targetQuat = focusChannel
-          ? getElectrodeFocusQuaternion(focusChannel, tempVec, state.camera.up, tempFocusQuat)
-          : DEFAULT_HEADSET_QUATERNION;
-
-        group.quaternion.slerp(targetQuat, slerpFactor);
+        group.quaternion.slerp(DEFAULT_HEADSET_QUATERNION, slerpFactor);
       }
     }
   });
