@@ -48,22 +48,8 @@ const TrialProgressBar: React.FC<TrialProgressBarProps> = ({
 
       <div className="pointer-events-auto justify-self-center">{controls}</div>
 
-      <div className="flex flex-col items-stretch justify-self-end gap-1 min-w-[7.5rem]">
-        <span className="font-mono text-slate-700 text-center whitespace-nowrap text-xs font-semibold">
-          {formatTime(trialElapsed)} / {formatTime(TOTAL_DURATION)}
-        </span>
-        <span className={`flex items-center justify-center gap-1.5 rounded-full w-full py-0.5 text-[9px] font-black uppercase tracking-wider border shadow-sm backdrop-blur-xl transition-all duration-300 ${
-          phase === "baseline"
-            ? "border-indigo-400/50 bg-slate-950/85 text-indigo-200 shadow-indigo-950/20"
-            : "border-emerald-400/50 bg-slate-950/85 text-emerald-200 shadow-emerald-950/20"
-        }`}>
-          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-            phase === "baseline"
-              ? "bg-indigo-400 shadow-[0_0_8px_#818cf8] animate-pulse"
-              : "bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse"
-          }`} />
-          <span>{phase === "baseline" ? "Baseline" : "Stimulus"}</span>
-        </span>
+      <div className="justify-self-end font-mono text-slate-700 whitespace-nowrap text-xs font-semibold">
+        {formatTime(trialElapsed)} / {formatTime(TOTAL_DURATION)}
       </div>
     </div>
   </div>

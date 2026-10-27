@@ -20,7 +20,7 @@ const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, focusSensorsActiv
     <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between gap-4 pointer-events-none">
       <BackButton onClick={onBack} />
 
-      {/* Center Focus Sensors Component - Attention Grabbing */}
+      {/* Center Focus Sensors Component */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-auto flex justify-center">
         <button
           onClick={onShowPrefrontal}
