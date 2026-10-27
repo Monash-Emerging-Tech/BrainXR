@@ -34,51 +34,83 @@ const TrialSegment: React.FC<TrialSegmentProps> = ({
   return (
     <div
       className={`flex items-center min-w-0 transition-all duration-500 ease-in-out ${isActive
-        ? "flex-[30] min-w-[150px] md:min-w-[260px] gap-2"
-        : "flex-[1] min-w-[10px]"
+        ? "flex-[30] min-w-[150px] md:min-w-[260px]"
+        : "flex-[1] min-w-[10px] gap-0.5"
         }`}
     >
-      <button
-        onClick={() => onTrialSelect(index, 0)}
-        className={`rounded-full shrink-0 transition-[width,height,border-color,box-shadow] duration-300 relative cursor-pointer z-10 ${
-          isActive
-            ? "w-4 h-4 shadow-md " +
-              (phase === "baseline"
-                ? "border-2 border-indigo-400/80 bg-slate-950/72 backdrop-blur-md"
-                : "border border-indigo-300/60 bg-indigo-600/78 backdrop-blur-md")
-            : isPast
-              ? "w-2.5 h-2.5 bg-indigo-600/78 border border-indigo-300/50 shadow-sm backdrop-blur-sm"
-              : "w-2.5 h-2.5 bg-slate-950/65 border border-white/15 backdrop-blur-sm"
-        }`}
-        style={
-          isActive && phase === "baseline"
-            ? {
-                background: `linear-gradient(to right, #4f46e5 ${baselinePercentage}%, rgba(2, 6, 23, 0.95) ${baselinePercentage}%)`,
-              }
-            : undefined
-        }
-        title={`Trial ${index + 1} - Baseline (3s)`}
-      >
-        {isActive && phase === "baseline" && (
-          <span className="absolute inset-[-4px] rounded-full bg-indigo-500/30 animate-pulse" />
-        )}
-      </button>
+      {isActive ? (
+        /* Unified Shape for Active Trial: Baseline Circle + Tapered Bridge + Emerald Bar */
+        <div className="flex items-center w-full min-w-0 relative">
+          {/* 1. Baseline Circle Component */}
+          <button
+            onClick={() => onTrialSelect(index, 0)}
+            className={`w-4 h-4 rounded-full shrink-0 relative cursor-pointer z-20 transition-all duration-300 shadow-md ${
+              phase === "baseline"
+                ? "border-2 border-indigo-400 bg-slate-950/80 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                : "border border-indigo-400/70 bg-indigo-600 shadow-sm"
+            }`}
+            style={
+              phase === "baseline"
+                ? {
+                    background: `linear-gradient(to right, #6366f1 ${baselinePercentage}%, rgba(2, 6, 23, 0.95) ${baselinePercentage}%)`,
+                  }
+                : undefined
+            }
+            title={`Trial ${index + 1} - Baseline (3s)`}
+          >
+            {phase === "baseline" && (
+              <span className="absolute inset-[-4px] rounded-full bg-indigo-500/35 animate-pulse -z-10" />
+            )}
+          </button>
 
-      <button
-        onClick={() => onTrialSelect(index, 3)}
-        className={`flex-grow relative cursor-pointer min-w-0 transition-all duration-300 rounded-full ${isActive
-          ? "h-2 border border-white/10 bg-slate-950/68 backdrop-blur-sm hover:bg-slate-950/78"
-          : "h-[3px] " + (isPast ? "bg-emerald-500/80" : "bg-slate-950/42")
-          }`}
-        title={`Trial ${index + 1} - Stimulation (60s)`}
-      >
-        {isActive && (
+          {/* 2. Flush Tapered Neck / Bridge connecting Circle to Bar */}
           <div
-            className="absolute left-0 top-0 bottom-0 bg-emerald-500 transition-all duration-100 ease-out rounded-full"
-            style={{ width: `${stimulusPercentage}%` }}
+            onClick={() => onTrialSelect(index, 0)}
+            className={`w-2 shrink-0 relative -ml-1 -mr-1 z-10 cursor-pointer h-2.5 transition-colors duration-300 ${
+              phase === "baseline"
+                ? "bg-gradient-to-r from-indigo-500/80 to-slate-950/70"
+                : "bg-gradient-to-r from-indigo-600 to-emerald-600/80"
+            }`}
+            style={{
+              clipPath: "polygon(0% 0%, 100% 25%, 100% 75%, 0% 100%)",
+            }}
+            title={`Trial ${index + 1} - Transition`}
           />
-        )}
-      </button>
+
+          {/* 3. Emerald Stimulation Bar (smaller height, flush against neck) */}
+          <button
+            onClick={() => onTrialSelect(index, 3)}
+            className="flex-grow h-2 relative cursor-pointer min-w-0 transition-all duration-300 rounded-r-full border-y border-r border-white/10 bg-slate-950/70 backdrop-blur-sm overflow-hidden hover:bg-slate-950/80"
+            title={`Trial ${index + 1} - Stimulation (60s)`}
+          >
+            {/* Background track fill for completed baseline or progress */}
+            <div
+              className="absolute left-0 top-0 bottom-0 bg-emerald-500 transition-all duration-100 ease-out rounded-r-full"
+              style={{ width: `${stimulusPercentage}%` }}
+            />
+          </button>
+        </div>
+      ) : (
+        /* Inactive or Past Trials: Compact circle and subtle bar */
+        <>
+          <button
+            onClick={() => onTrialSelect(index, 0)}
+            className={`rounded-full shrink-0 transition-[width,height,border-color] duration-300 relative cursor-pointer ${
+              isPast
+                ? "w-2.5 h-2.5 bg-indigo-600/78 border border-indigo-300/50 shadow-sm"
+                : "w-2.5 h-2.5 bg-slate-950/65 border border-white/15"
+            }`}
+            title={`Trial ${index + 1} - Baseline (3s)`}
+          />
+          <button
+            onClick={() => onTrialSelect(index, 3)}
+            className={`flex-grow relative cursor-pointer min-w-0 transition-all duration-300 rounded-full h-[3px] ${
+              isPast ? "bg-emerald-500/80" : "bg-slate-950/42"
+            }`}
+            title={`Trial ${index + 1} - Stimulation (60s)`}
+          />
+        </>
+      )}
     </div>
   );
 };

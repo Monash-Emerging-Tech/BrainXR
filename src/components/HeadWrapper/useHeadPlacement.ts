@@ -44,7 +44,8 @@ export function useHeadPlacement({
   useFrame((state, delta) => {
     const time = state.clock.getElapsedTime();
     const isPresenting = state.gl.xr.isPresenting;
-    const isIdleShowcase = frameRef.current.phase === "idle";
+    const isDemoPhase = frameRef.current.phase === "baseline" || frameRef.current.phase === "stimulus";
+    const shouldShowcaseRotate = frameRef.current.phase === "idle" || isDemoPhase;
     const group = groupRef.current;
     if (!group) return;
 
@@ -91,12 +92,13 @@ export function useHeadPlacement({
         group.position.lerp(tempTargetPosition, slerpFactor);
         group.scale.lerp(tempTargetScale, slerpFactor);
         group.quaternion.slerp(DEFAULT_HEADSET_QUATERNION, slerpFactor);
-      } else if ((presentationStage === "showcase" || (presentationStage === "interactive" && isIdleShowcase)) && !selectedChannel) {
-        // Slow showcase spin plus a subtle bobbing motion when no channel is selected.
+      } else if ((presentationStage === "showcase" || (presentationStage === "interactive" && shouldShowcaseRotate)) && !selectedChannel) {
+        // Slow showcase spin when no channel is selected. Idle mode adds subtle bobbing; demo mode stays centered with no oscillation.
         group.rotation.y = time * 0.15;
         group.rotation.x = Math.sin(time * 0.4) * 0.05 + Math.PI / 32;
         group.rotation.z = 0;
-        tempTargetPosition.set(0, -11 * targetScale - Math.cos(time * 1.2) * 0.2, 0);
+        const bobbing = isDemoPhase ? 0 : Math.cos(time * 1.2) * 0.2;
+        tempTargetPosition.set(0, -11 * targetScale - bobbing, 0);
         tempTargetScale.setScalar(targetScale * 1.1);
         group.position.lerp(tempTargetPosition, slerpFactor);
         group.scale.lerp(tempTargetScale, slerpFactor);

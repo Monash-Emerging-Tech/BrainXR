@@ -38,18 +38,32 @@ const TrialProgressBar: React.FC<TrialProgressBarProps> = ({
       ))}
     </div>
 
-    {/* Sub-label showing current trial details and time readout */}
+    {/* Sub-label showing current trial details, center controls, and time readout with phase tag */}
     <div className="grid grid-cols-[1fr_auto_1fr] items-center text-[11px] text-slate-500 font-semibold select-none mt-1">
       <div className="flex items-center gap-2">
-        <span className="font-mono text-slate-800 font-bold">
+        <span className="font-mono text-slate-800 font-bold whitespace-nowrap">
           Trial {(trialIndex ?? 0) + 1} of 40
         </span>
       </div>
 
       <div className="pointer-events-auto justify-self-center">{controls}</div>
 
-      <div className="justify-self-end font-mono text-slate-700">
-        {formatTime(trialElapsed)} / {formatTime(TOTAL_DURATION)}
+      <div className="flex flex-col items-stretch justify-self-end gap-1 min-w-[7.5rem]">
+        <span className="font-mono text-slate-700 text-center whitespace-nowrap text-xs font-semibold">
+          {formatTime(trialElapsed)} / {formatTime(TOTAL_DURATION)}
+        </span>
+        <span className={`flex items-center justify-center gap-1.5 rounded-full w-full py-0.5 text-[9px] font-black uppercase tracking-wider border shadow-sm backdrop-blur-xl transition-all duration-300 ${
+          phase === "baseline"
+            ? "border-indigo-400/50 bg-slate-950/85 text-indigo-200 shadow-indigo-950/20"
+            : "border-emerald-400/50 bg-slate-950/85 text-emerald-200 shadow-emerald-950/20"
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+            phase === "baseline"
+              ? "bg-indigo-400 shadow-[0_0_8px_#818cf8] animate-pulse"
+              : "bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse"
+          }`} />
+          <span>{phase === "baseline" ? "Baseline" : "Stimulus"}</span>
+        </span>
       </div>
     </div>
   </div>

@@ -11,8 +11,7 @@ three.js frame.
   [[useXRDragInteraction]] has `isDraggingRef` set, in which case it leaves
   the group alone (the drag handlers are already writing to it directly).
 - On the 2D desktop viewport: scales the model to occupy ~1/3 of the
-  viewport height. In the idle phase it adds a slow showcase spin and a
-  bobbing motion; otherwise it smoothly auto-rotates (slerps) the headset to focus on the `selectedChannel` so its ring faces the camera orthogonally with zero roll.
+  viewport height. In idle and demo phases when no channel is selected, it maintains a slow showcase spin (with subtle bobbing motion in idle mode, while demo mode remains stably centered without oscillation); otherwise it smoothly auto-rotates (slerps) the headset to focus on the `selectedChannel` so its ring faces the camera orthogonally with zero roll.
 
 **Non-obvious**: while a channel is selected, the focus-quaternion
 computation runs every frame (not just once on select) via
