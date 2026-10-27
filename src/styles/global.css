@@ -51,3 +51,40 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Neomorphic surface for electrode node labels */
+.neomorphic-label-idle {
+  background: transparent;
+  color: #64748b;
+  box-shadow: none;
+  border: 1px solid transparent;
+  transform: translateY(-50%);
+  cursor: pointer !important;
+}
+
+.neomorphic-label-surface {
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 600;
+  box-shadow: 
+    2px 2px 5px rgba(166, 180, 200, 0.45),
+    -2px -2px 5px rgba(255, 255, 255, 0.95),
+    0 0 6px rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  transform: translateY(-50%);
+  cursor: pointer !important;
+}
+
+.neomorphic-label-selected {
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 700;
+  box-shadow: 
+    inset 2px 2px 4px rgba(166, 180, 200, 0.5),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.95),
+    0 0 6px rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  transform: translateY(-50%);
+  cursor: pointer !important;
+}
+

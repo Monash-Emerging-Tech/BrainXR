@@ -31,9 +31,13 @@ const R3F: React.FC = () => {
     // A guided group highlight is only context for that guided step. Once the
     // visitor chooses any individual node, the inspection follows that node.
     setHighlightPrefrontal(false);
+    if (engine.selectedChannel === channel) {
+      engine.selectChannel(null);
+      return;
+    }
     if (isIdle) engine.startDemo();
     engine.selectChannel(channel);
-  }, [engine.selectChannel, engine.startDemo, isIdle]);
+  }, [engine.selectedChannel, engine.selectChannel, engine.startDemo, isIdle]);
 
   const startDemo = useCallback(() => {
     setHighlightPrefrontal(false);
@@ -82,6 +86,8 @@ const R3F: React.FC = () => {
         selectedChannel={engine.selectedChannel}
         highlightedChannels={highlightPrefrontal ? PREFRONTAL_ELECTRODES : []}
         hoveredChannel={hoveredChannel}
+        onSelectChannel={selectChannel}
+        onHoverChannel={setHoveredChannel}
       />
 
       {/* ======================================================== */}
