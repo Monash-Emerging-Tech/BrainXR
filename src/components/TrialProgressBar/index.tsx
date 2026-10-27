@@ -23,12 +23,6 @@ const TrialProgressBar: React.FC<TrialProgressBarProps> = ({
   controls,
 }) => (
   <div className="flex flex-col gap-2 w-full text-slate-800">
-    {/* Guidance banner in EEG node region colors - elevated 3.5rem higher */}
-    <div className="flex justify-center items-center w-full select-none text-center px-2 mb-14">
-      <span className="eeg-node-gradient-text font-mono text-[11px] md:text-xs font-black uppercase tracking-[0.22em] leading-relaxed drop-shadow-sm">
-        pinch and click nodes to explore what EEG headsets do
-      </span>
-    </div>
 
     {/* 40 Connected Trials: Circle (Baseline) -> Bar (Stimulation) */}
     <div className="flex justify-between items-center w-full gap-[2px] select-none">

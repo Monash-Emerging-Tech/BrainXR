@@ -143,14 +143,31 @@ const R3F: React.FC = () => {
         {isIdle && <IdleActions onStartDemo={startDemo} onStartLive={engine.startLive} />}
 
         {engine.mode.kind === "demo" && (
-          <DemoBottomControls
-            frame={engine.frame}
-            onTrialSelect={engine.selectTrial}
-            isPaused={engine.isPaused}
-            onTogglePlayPause={engine.togglePlayPause}
-            onPrevious={previousTrack}
-            onNext={nextTrack}
-          />
+          <>
+            {/* Animated guidance signifier: floats above bottom controls when unfocused, moves below audio unavailable toast when a node is clicked */}
+            <div
+              className={`pointer-events-none absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] select-none text-center px-4 whitespace-nowrap ${
+                Boolean(engine.selectedChannel || highlightPrefrontal)
+                  ? engine.audioError
+                    ? "top-32"
+                    : "top-20"
+                  : "bottom-32"
+              }`}
+            >
+              <span className="eeg-node-gradient-text font-mono text-[11px] md:text-xs font-black uppercase tracking-[0.22em] leading-relaxed drop-shadow-sm">
+                pinch and click nodes to explore what EEG headsets do
+              </span>
+            </div>
+
+            <DemoBottomControls
+              frame={engine.frame}
+              onTrialSelect={engine.selectTrial}
+              isPaused={engine.isPaused}
+              onTogglePlayPause={engine.togglePlayPause}
+              onPrevious={previousTrack}
+              onNext={nextTrack}
+            />
+          </>
         )}
       </div>
     </div>

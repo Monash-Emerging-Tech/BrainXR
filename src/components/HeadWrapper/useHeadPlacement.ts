@@ -119,12 +119,17 @@ export function useHeadPlacement({
         tempTargetPosition.set(0, -11 * group.scale.y, 0);
         group.position.lerp(tempTargetPosition, slerpFactor);
       } else if (presentationStage === "showcase" || (presentationStage === "interactive" && (frameRef.current.phase === "idle" || isDemoPhase))) {
-        // Unfocused state: smoothly return to normal base scale and reorient to normal resting quaternion
         tempTargetScale.setScalar(targetScale);
         group.scale.lerp(tempTargetScale, slerpFactor);
 
-        // Reorient model to normal resting orientation (pitch forward slightly at Math.PI / 32)
-        group.quaternion.slerp(DEFAULT_HEADSET_QUATERNION, slerpFactor);
+        if (frameRef.current.phase === "idle" || presentationStage === "showcase") {
+          // Continuous showcase spin in idle mode
+          const dt = Math.min(delta, 0.1);
+          group.rotateOnWorldAxis(tempWorldUp, dt * 0.15);
+        } else {
+          // Reorient to initial resting quaternion on entering demo mode
+          group.quaternion.slerp(DEFAULT_HEADSET_QUATERNION, slerpFactor);
+        }
 
         const bobbing = isDemoPhase ? 0 : Math.cos(time * 1.2) * 0.2;
         tempTargetPosition.set(0, -11 * group.scale.y - bobbing, 0);
