@@ -119,14 +119,12 @@ export function useHeadPlacement({
         tempTargetPosition.set(0, -11 * group.scale.y, 0);
         group.position.lerp(tempTargetPosition, slerpFactor);
       } else if (presentationStage === "showcase" || (presentationStage === "interactive" && (frameRef.current.phase === "idle" || isDemoPhase))) {
-        // Unfocused showcase state: smoothly return to normal base scale
+        // Unfocused state: smoothly return to normal base scale and reorient to normal resting quaternion
         tempTargetScale.setScalar(targetScale);
         group.scale.lerp(tempTargetScale, slerpFactor);
 
-        // Incremental showcase rotation around world Y: resumes rotation directly from whatever
-        // orientation the headset was focused at when deselected, without storing previous angles.
-        const dt = Math.min(delta, 0.1);
-        group.rotateOnWorldAxis(tempWorldUp, dt * 0.15);
+        // Reorient model to normal resting orientation (pitch forward slightly at Math.PI / 32)
+        group.quaternion.slerp(DEFAULT_HEADSET_QUATERNION, slerpFactor);
 
         const bobbing = isDemoPhase ? 0 : Math.cos(time * 1.2) * 0.2;
         tempTargetPosition.set(0, -11 * group.scale.y - bobbing, 0);
