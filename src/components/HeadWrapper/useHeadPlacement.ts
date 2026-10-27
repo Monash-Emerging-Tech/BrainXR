@@ -5,7 +5,6 @@ import type { ElectrodeName, Frame } from "../../utils/signalSource";
 import {
   getElectrodeFocusQuaternion,
   DEFAULT_HEADSET_QUATERNION,
-  ELECTRODE_NODE_PLACEMENTS,
 } from "../eegHead/electrodeNodes";
 import type { HeadsetPresentationStage } from "../../utils/headsetPresentation";
 
@@ -26,18 +25,6 @@ const tempWorldUp = new THREE.Vector3(0, 1, 0);
 const tempFocusQuat = new THREE.Quaternion();
 const tempTargetPosition = new THREE.Vector3();
 const tempTargetScale = new THREE.Vector3();
-const tempNodeLocalPos = new THREE.Vector3();
-const tempNodeOffset = new THREE.Vector3();
-
-// Quick lookup of local node positions from ELECTRODE_NODE_PLACEMENTS
-const NODE_POSITIONS = new Map(
-  ELECTRODE_NODE_PLACEMENTS.map((p) => [p.name, new THREE.Vector3(...p.position)])
-);
-
-// Nodes located along the lower perimeter/brow/temple/occiput line that need a lower vertical focus offset
-const LOWER_FOCUS_NODES = new Set<string>([
-  "Fp1", "Fp2", "FpZ", "F7", "F8", "T3", "T4", "T5", "T6", "O1", "O2", "Oz",
-]);
 
 // Per-frame placement of the headset group: a fixed physical-scale pose in
 // front of the user in WebXR (draggable via useXRDragInteraction), or an
@@ -63,7 +50,7 @@ export function useHeadPlacement({
     const group = groupRef.current;
     if (!group) return;
 
-    const slerpFactor = 1 - Math.exp(-8 * Math.min(delta, 0.1));
+    const slerpFactor = 1 - Math.exp(-5 * Math.min(delta, 0.1));
     const effectiveFocusChannel =
       selectedChannel ??
       (highlightPrefrontal || presentationStage === "prefrontal" ? "FpZ" : null);
@@ -128,20 +115,22 @@ export function useHeadPlacement({
         );
         group.quaternion.slerp(targetQuat, slerpFactor);
 
-        // Keep the headset centered at the constant vertical midpoint
-        tempTargetPosition.set(0, -11 * stageScale, 0);
+        // Keep the headset centered at the constant vertical midpoint, tracking group.scale.y continuously for smooth zooming
+        tempTargetPosition.set(0, -11 * group.scale.y, 0);
         group.position.lerp(tempTargetPosition, slerpFactor);
       } else if (presentationStage === "showcase" || (presentationStage === "interactive" && (frameRef.current.phase === "idle" || isDemoPhase))) {
+        // Unfocused showcase state: smoothly return to normal base scale
+        tempTargetScale.setScalar(targetScale);
+        group.scale.lerp(tempTargetScale, slerpFactor);
+
         // Incremental showcase rotation around world Y: resumes rotation directly from whatever
         // orientation the headset was focused at when deselected, without storing previous angles.
         const dt = Math.min(delta, 0.1);
         group.rotateOnWorldAxis(tempWorldUp, dt * 0.15);
 
         const bobbing = isDemoPhase ? 0 : Math.cos(time * 1.2) * 0.2;
-        tempTargetPosition.set(0, -11 * targetScale - bobbing, 0);
-        tempTargetScale.setScalar(targetScale * 1.1);
+        tempTargetPosition.set(0, -11 * group.scale.y - bobbing, 0);
         group.position.lerp(tempTargetPosition, slerpFactor);
-        group.scale.lerp(tempTargetScale, slerpFactor);
       } else {
         const stageScale = presentationStage === "electrodes" ? targetScale * 1.08 : targetScale;
         tempTargetScale.setScalar(stageScale);
