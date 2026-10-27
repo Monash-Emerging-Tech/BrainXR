@@ -102,7 +102,7 @@ const R3F: React.FC = () => {
         {isIdle && <IdleHeadline variant="solid" />}
 
         {/* 3D R3F Canvas */}
-        <div className="w-full h-full z-10">
+        <div className="w-full h-full z-10 translate-y-8">
           <Suspense fallback={null}>
             <Scene
               frameRef={engine.frameRef}

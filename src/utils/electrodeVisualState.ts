@@ -74,6 +74,40 @@ function stimulusState(electrodeName: ElectrodeName, value: number): ElectrodeVi
   return { color, intensity, opacity: 1.0 };
 }
 
+// Hash string to pseudo-random float [0, 1)
+function pseudoRandom(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(Math.sin(hash));
+}
+
+function idleBlinkState(electrodeName: ElectrodeName, time: number): ElectrodeVisualState {
+  const seed = pseudoRandom(electrodeName);
+  // Each node has its own period and time offset
+  const cycleDuration = 2.0 + seed * 3.5; // cycle between 2s and 5.5s
+  const cyclePhase = (time + seed * 100) % cycleDuration;
+  const blinkDuration = 0.5 + (seed * 0.4); // active blink lasts 0.5s - 0.9s
+
+  if (cyclePhase < blinkDuration) {
+    // Smooth bell-curve pulse using sin
+    const progress = cyclePhase / blinkDuration;
+    const pulse = Math.sin(progress * Math.PI);
+    const region = ELECTRODE_METADATA[electrodeName]?.region;
+    const color = (region && REGION_COLOR_OBJS[region]) || STIMULUS_COLOR_OBJ;
+
+    return {
+      color,
+      intensity: pulse * 1.6,
+      opacity: 0.4 + pulse * 0.6,
+    };
+  }
+
+  return { color: IDLE_COLOR_OBJ, intensity: 0, opacity: 0.4 };
+}
+
 export function computeElectrodeVisualState(
   frame: Frame,
   electrodeName: ElectrodeName,
@@ -81,7 +115,11 @@ export function computeElectrodeVisualState(
 ): ElectrodeVisualState {
   const sample = frame.channels[electrodeName];
 
-  if (frame.phase === "idle" || frame.phase === "baseline" || !sample) {
+  if (frame.phase === "idle") {
+    return idleBlinkState(electrodeName, time);
+  }
+
+  if (frame.phase === "baseline" || !sample) {
     return { color: IDLE_COLOR_OBJ, intensity: 0, opacity: frame.phase === "baseline" ? 0.5 : 0.4 };
   }
 
@@ -91,3 +129,4 @@ export function computeElectrodeVisualState(
 
   return stimulusState(electrodeName, sample.value);
 }
+
