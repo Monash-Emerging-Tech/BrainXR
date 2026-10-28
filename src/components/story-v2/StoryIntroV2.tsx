@@ -252,9 +252,27 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
         ref={skipRef}
         type="button"
         onClick={finish}
-        className="fixed top-5 right-5 z-[100] px-4 py-2 rounded-full bg-slate-900/70 text-white text-xs font-offbit tracking-wide border border-white/25 backdrop-blur-sm hover:bg-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 transition-colors cursor-pointer"
+        className="group fixed top-5 right-5 z-[100] flex items-center justify-center w-10 h-10 rounded-full bg-slate-900/80 text-white border border-slate-700/60 backdrop-blur-md hover:bg-slate-900 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 transition-all shadow-md active:scale-95 cursor-pointer"
+        title="Skip intro"
+        aria-label="Skip intro"
       >
-        {V2_COPY.skipLabel}
+        <div className="relative w-4 h-4 flex items-center justify-center">
+          {/* Base: Single play triangle with end bar */}
+          <svg
+            className="absolute inset-0 w-full h-full fill-current text-white/90 group-hover:text-white transition-opacity duration-300 group-hover:opacity-0"
+            viewBox="0 0 24 24"
+          >
+            <path d="M8 18a1 1 0 0 1-1-1V7a1 1 0 0 1 1.555-.832l8 5a1 1 0 0 1 0 1.664l-8 5A1 1 0 0 1 8 18zm10-11a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0V8a1 1 0 0 1 1-1z" />
+          </svg>
+
+          {/* Hover: Double triangle skip track (⏭) perfectly centered */}
+          <svg
+            className="absolute inset-0 w-full h-full fill-current text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            viewBox="0 0 24 24"
+          >
+            <path d="M5 18a1 1 0 0 1-1-1V7a1 1 0 0 1 1.555-.832l6.5 4.062a1 1 0 0 1 0 1.54l-6.5 4.062A1 1 0 0 1 5 18zm7 0a1 1 0 0 1-1-1V7a1 1 0 0 1 1.555-.832l6.5 4.062a1 1 0 0 1 0 1.54l-6.5 4.062A1 1 0 0 1 12 18zm8-11a1 1 0 0 1 1 1v8a1 1 0 1 1-2 0V8a1 1 0 0 1 1-1z" />
+          </svg>
+        </div>
       </button>
 
       {/* glossy black glass, faded in during scene 2 */}
