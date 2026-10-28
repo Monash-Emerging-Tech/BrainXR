@@ -1,0 +1,427 @@
+/* ==================================================================== */
+/* STORY V2 (src/components/story-v2) -- scroll triggers scenes.        */
+/* v1's rules above are untouched and still drive ?story=v1.            */
+/* ==================================================================== */
+
+/* v2 locks body scrolling, so the gutter v1 reserves would show as a
+   permanent blank strip. Only suppressed while v2 is mounted. */
+html.storyv2-active {
+  scrollbar-gutter: auto;
+}
+
+.storyv2-root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background-color: #f2f2f2;
+  /* Scene 2's white -> glossy black. A flat full-screen colour lerp done
+     by the compositor: smooth, no banding, no per-frame React renders. */
+  transition: background-color var(--v2-black-ms, 4000ms) cubic-bezier(0.4, 0, 0.3, 1);
+}
+
+.storyv2-root.is-black {
+  background-color: #050505;
+}
+
+.storyv2-layer {
+  position: absolute;
+  inset: 0;
+  transition: opacity 600ms ease;
+}
+
+/* The opening text as it leaves: blurs out while the background darkens. */
+.storyv2-leaving {
+  opacity: 0;
+  filter: blur(var(--v2-text-blur, 28px));
+  transition:
+    opacity var(--v2-black-ms, 4000ms) ease,
+    filter var(--v2-black-ms, 4000ms) ease;
+  pointer-events: none;
+}
+
+.storyv2-scene {
+  position: absolute;
+  inset: 0;
+}
+
+/* ---- scene 0 / 1 ---- */
+
+.storyv2-wordmark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  /* Scaled toward the middle of the viewport during the swallow. The
+     element spans the viewport, so the default 50% 50% origin IS the exact
+     screen centre. */
+  transform-origin: 50% 50%;
+  will-change: transform, opacity, filter;
+}
+
+/* IdleSplash pins its headline near the top of the page, which is right
+   for the idle screen and wrong here. These overrides are CSS-only and
+   scoped to v2, so IdleSplash itself is untouched and the type -- font,
+   weight, size, letter spacing -- stays exactly as it is there. */
+.storyv2-wordmark > div {
+  position: relative !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  width: 100%;
+}
+
+/* Full-screen shader canvas for the smoke burst. */
+.storyv2-smoke {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.storyv2-opening {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Line 1 and FOCUS?? centre as ONE group, vertically and horizontally.
+   Each child is sized to its own tight ink box, so `align-items: center`
+   centres each line on its real width rather than on a sampling canvas. */
+.storyv2-question {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6rem;
+  padding: 0 1.5rem;
+  max-width: 100%;
+}
+
+.storyv2-line,
+.storyv2-focus {
+  max-width: 100%;
+}
+
+/* ---- the glossy black glass, faded in during scene 2 ---- */
+
+.storyv2-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--v2-black-ms, 4000ms) ease;
+}
+
+.storyv2-root.is-black .storyv2-glass {
+  opacity: 1;
+}
+
+/* ---- the white smoke the brain emerges from ---- */
+
+/* Above the brain on purpose: the brain fading up UNDERNEATH it is what
+   reads as emerging from inside the cloud rather than beside it. */
+.storyv2-whitesmoke {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ---- the brain ---- */
+
+.storyv2-brain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transform: scale(var(--v2-brain-scale, 0.86));
+  filter: blur(var(--v2-brain-blur, 16px));
+  transition:
+    opacity var(--v2-brain-ms, 4000ms) ease,
+    transform var(--v2-brain-ms, 4000ms) cubic-bezier(0.22, 1, 0.36, 1),
+    filter var(--v2-brain-ms, 4000ms) ease;
+}
+
+.storyv2-brain-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.storyv2-brain.is-revealed {
+  opacity: 1;
+  transform: scale(1);
+  filter: blur(0);
+}
+
+/* Once the reveal has landed the blur and the transform come OFF entirely.
+   A filter left on a live WebGL canvas keeps an extra compositor layer
+   alive and resampled for every remaining beat, for no visible gain. */
+.storyv2-brain.is-crisp {
+  filter: none;
+  transform: none;
+  transition: none;
+  will-change: auto;
+}
+
+/* Until the black hold has elapsed the brain is not merely faint: the
+   compositor paints nothing at all for it. It stays mounted so the WebGL
+   context and the model are warm by the time it appears. */
+.storyv2-brain.is-hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: none;
+}
+
+/* ==================================================================== */
+/* Scenes 3+ -- the beat panels.                                        */
+/*                                                                      */
+/* v2 owns these outright rather than reusing v1's .story-text-area,    */
+/* because the column's position and width are now computed (see        */
+/* useStageLayout) so that it can never be printed over the brain.      */
+/* v1's rules are keyed to its own scroll layout and stay untouched.    */
+/* ==================================================================== */
+
+.storyv2-textcol {
+  position: absolute;
+  z-index: 2;
+  /* left / top / width are set inline from the layout solve. */
+  transform: translateY(-50%);
+}
+
+/* Stacked layout: the text owns the top of the screen, not a column. */
+.storyv2-textcol.is-portrait {
+  transform: none;
+}
+
+/* The pane is clipped to this box, which is why it can never reach the
+   brain however far it travels. The deep bottom padding gives the leaving
+   text room inside the clip; the matching negative margin keeps the
+   visible box its original size. */
+.storyv2-textclip {
+  position: relative;
+  overflow: hidden;
+  padding: 0.5rem 0.75rem 14rem;
+  margin: -0.5rem -0.75rem -14rem;
+}
+
+.storyv2-textinner {
+  position: relative;
+  z-index: 1;
+  transition:
+    opacity 320ms ease,
+    transform 320ms ease;
+}
+
+/* Leaving under the sweep's leading edge: it drops and fades, and the
+   incoming text only starts forming once the pane has passed. */
+.storyv2-textinner.is-leaving {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.storyv2-beat-name {
+  margin-bottom: 0.35rem;
+}
+
+/* the small role tag under the region name */
+.storyv2-beat-role {
+  display: block;
+  margin-bottom: 1rem;
+  font-family: 'OffBit', monospace;
+  letter-spacing: 0.16em;
+  text-transform: lowercase;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+.storyv2-beat-closing {
+  margin-top: 0.25rem;
+}
+
+.storyv2-body {
+  margin: 0;
+}
+
+.storyv2-body-line {
+  display: block;
+  will-change: opacity, transform, filter;
+}
+
+@media (max-width: 767px) {
+  .storyv2-textclip {
+    padding-bottom: 8rem;
+    margin-bottom: -8rem;
+  }
+
+  .storyv2-beat-role {
+    margin-bottom: 0.75rem;
+  }
+}
+
+/* ---- window-pane sweep (v2's copy; v1's is keyed to its own column) ---- */
+
+.storyv2-pane {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 46%;
+  height: 140%;
+  z-index: 2;
+  pointer-events: none;
+  backdrop-filter: blur(7px) brightness(1.35);
+  -webkit-backdrop-filter: blur(7px) brightness(1.35);
+  /* Dark glass: a cool tint that lifts the black slightly, with a soft
+     light edge. On a black stage a white pane would read as a flashlight. */
+  background: linear-gradient(
+    100deg,
+    rgba(190, 190, 190, 0) 0%,
+    rgba(190, 190, 190, 0.1) 22%,
+    rgba(205, 205, 205, 0.17) 50%,
+    rgba(190, 190, 190, 0.1) 78%,
+    rgba(190, 190, 190, 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 18%,
+    #000 82%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    #000 18%,
+    #000 82%,
+    transparent 100%
+  );
+  animation: storyV2PaneSweep 1050ms cubic-bezier(0.5, 0.02, 0.28, 1) forwards;
+  will-change: transform;
+}
+
+/* thin light-reflection streak riding the pane */
+.storyv2-pane-streak {
+  position: absolute;
+  top: -10%;
+  left: 38%;
+  width: 10%;
+  height: 120%;
+  transform: skewX(-14deg);
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  filter: blur(1.5px);
+}
+
+@keyframes storyV2PaneSweep {
+  0% { transform: translate3d(-135%, 0, 0) skewX(-7deg); }
+  100% { transform: translate3d(330%, 0, 0) skewX(-7deg); }
+}
+
+/* ---- dev HUD (off unless DEBUG_HUD or ?v2debug=1) ---- */
+
+.storyv2-hud {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 120;
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre;
+  color: #7dffb0;
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid rgba(125, 255, 176, 0.3);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---- the "scroll" pill that trails the cursor ---- */
+
+.storyv2-cursor-tag {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 95;
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  font-family: 'OffBit', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(10, 10, 10, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 260ms ease;
+  will-change: transform;
+}
+
+.storyv2-cursor-tag.is-visible {
+  opacity: 1;
+}
+
+/* ---- touch devices get a static hint instead ---- */
+
+.storyv2-swipe-hint {
+  position: fixed;
+  z-index: 95;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: 'OffBit', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  mix-blend-mode: difference;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.storyv2-swipe-hint.is-visible {
+  opacity: 1;
+}
+
+.storyv2-swipe-caret {
+  width: 1px;
+  height: 1.8rem;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.55));
+  animation: storyHintBob 2.4s ease-in-out infinite;
+}
+
+@media (max-width: 767px) {
+  .storyv2-question {
+    gap: 1.1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .storyv2-swipe-caret {
+    animation: none !important;
+  }
+}
