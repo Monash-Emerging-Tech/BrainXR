@@ -26,9 +26,34 @@ export const IdleHeadline: React.FC<IdleHeadlineProps> = ({ variant }) => {
   const zClass = variant === "solid" ? "z-0" : "z-20";
 
   return (
-    <div className={`absolute top-12 md:top-16 left-0 right-0 ${zClass} pointer-events-none select-none px-6 md:px-12 lg:px-16`}>
-      <div className="flex flex-col items-stretch w-full">
-        <SpannedText text="an MNET experience" className={`${textClass} text-sm sm:text-base md:text-lg lg:text-xl font-bold`} />
+    <div className={`absolute top-6 md:top-8 left-0 right-0 ${zClass} pointer-events-none select-none px-6 md:px-12 lg:px-16`}>
+      <div className="flex flex-col items-center w-full">
+        {/* Intro Badge / Origin Story link (interactive on the front/outline layer) */}
+        {variant === "outline" ? (
+          <div className="pointer-events-auto mb-3">
+            <a
+              href="/onboarding"
+              className="group inline-flex items-center justify-center gap-2 rounded-full bg-slate-900/80 pl-3 pr-3.5 py-1.5 text-xs font-offbit tracking-wide text-white border border-slate-700/60 backdrop-blur-md hover:bg-slate-900 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 transition-all shadow-sm cursor-pointer no-underline"
+              title="Experience the BrainXR Origin Story"
+            >
+              <span className="flex items-center text-xs leading-none transition-transform duration-200 group-hover:scale-110 select-none">🧠</span>
+              <span className="flex items-center text-[11px] sm:text-xs tracking-wider uppercase font-semibold leading-none pt-[1px]">explore the origin story</span>
+              <span className="flex items-center text-[11px] leading-none text-slate-400 group-hover:translate-x-0.5 transition-transform" aria-hidden="true">→</span>
+            </a>
+          </div>
+        ) : (
+          <div className="h-[34px] mb-3 invisible" aria-hidden="true" />
+        )}
+
+        {/* Only render 'an MNET experience' on the solid layer to keep it single and crisp */}
+        {variant === "solid" ? (
+          <SpannedText text="an MNET experience" className="text-slate-900 text-sm sm:text-base md:text-lg lg:text-xl font-bold" />
+        ) : (
+          <div className="invisible" aria-hidden="true">
+            <SpannedText text="an MNET experience" className="text-sm sm:text-base md:text-lg lg:text-xl font-bold" />
+          </div>
+        )}
+
         <h1 className={`flex justify-between w-full text-[13vw] font-black uppercase leading-none ${textClass}`}>
           {"BrainXR".split("").map((char, index) => (
             <span key={index}>{char}</span>

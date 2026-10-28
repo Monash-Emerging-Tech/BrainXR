@@ -162,20 +162,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
           />
         )}
 
-        {/* Top-Center Origin Story Button in Idle Mode */}
-        {isIdle && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto">
-            <a
-              href="/onboarding"
-              style={{ backgroundColor: "#1a1a1a" }}
-              className="group flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-black/20 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-white/30 hover:shadow-indigo-500/20 active:translate-y-0 active:scale-95 no-underline cursor-pointer"
-              title="Experience the BrainXR Origin Story"
-            >
-              <span className="text-sm leading-none transition-transform duration-200 group-hover:scale-115">🧠</span>
-              <span className="tracking-[0.12em]">Origin Story</span>
-            </a>
-          </div>
-        )}
+
 
         {/* Layer 1: Solid Text Behind the Headset */}
         {isIdle && <IdleHeadline variant="solid" />}
