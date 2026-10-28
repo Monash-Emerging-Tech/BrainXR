@@ -162,20 +162,17 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
           />
         )}
 
-        {/* Top-Left Onboarding Link Button in Idle Mode */}
+        {/* Top-Center Origin Story Button in Idle Mode */}
         {isIdle && (
-          <div className="absolute top-4 left-4 z-40 pointer-events-auto">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 pointer-events-auto">
             <a
               href="/onboarding"
-              className="group flex items-center gap-2.5 rounded-full border border-slate-200/90 bg-white/90 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-800 shadow-md backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-indigo-400 hover:bg-white hover:text-indigo-600 hover:shadow-indigo-500/15 active:translate-y-0 active:scale-95 no-underline cursor-pointer"
-              title="Watch BrainXR Onboarding Story"
+              style={{ backgroundColor: "#1a1a1a" }}
+              className="group flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-black/20 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-white/30 hover:shadow-indigo-500/20 active:translate-y-0 active:scale-95 no-underline cursor-pointer"
+              title="Experience the BrainXR Origin Story"
             >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white transition-transform group-hover:scale-110 shadow-sm shadow-indigo-600/30">
-                <svg className="h-2.5 w-2.5 fill-current ml-0.5" viewBox="0 0 24 24">
-                  <path d="M4 2v20l17-10L4 2z" />
-                </svg>
-              </span>
-              <span>Onboarding</span>
+              <span className="text-sm leading-none transition-transform duration-200 group-hover:scale-115">🧠</span>
+              <span className="tracking-[0.12em]">Origin Story</span>
             </a>
           </div>
         )}
