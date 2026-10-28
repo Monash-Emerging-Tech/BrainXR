@@ -51,27 +51,7 @@ export const IdleActions: React.FC<IdleActionsProps> = ({ onStartDemo, onStartLi
       <div className="flex flex-col items-center gap-2">
         <div className="flex items-center gap-3">
           <a
-            href="/onboarding"
-            onClick={(e) => {
-              if (onStartStory && typeof window !== "undefined" && window.location.pathname === "/") {
-                e.preventDefault();
-                onStartStory();
-              }
-            }}
-            className="bg-white/90 hover:bg-white text-slate-800 font-semibold py-3 px-5 rounded-full transition-all shadow-md active:scale-[0.99] border border-slate-200/80 backdrop-blur-sm cursor-pointer flex items-center gap-2 text-sm no-underline"
-            title="Explore the Brain Onboarding Story"
-          >
-            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-            Onboarding
-          </a>
-          <a
             href="/demo"
-            onClick={(e) => {
-              if (typeof window !== "undefined" && window.location.pathname === "/") {
-                e.preventDefault();
-                onStartDemo();
-              }
-            }}
             className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-full transition-all shadow-md active:scale-[0.99] cursor-pointer no-underline text-sm"
           >
             Run Demo Mode

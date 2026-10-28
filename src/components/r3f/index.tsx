@@ -162,6 +162,24 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
           />
         )}
 
+        {/* Top-Left Onboarding Link Button in Idle Mode */}
+        {isIdle && (
+          <div className="absolute top-4 left-4 z-40 pointer-events-auto">
+            <a
+              href="/onboarding"
+              className="group flex items-center gap-2.5 rounded-full border border-slate-200/90 bg-white/90 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-800 shadow-md backdrop-blur-md transition-all hover:-translate-y-0.5 hover:border-indigo-400 hover:bg-white hover:text-indigo-600 hover:shadow-indigo-500/15 active:translate-y-0 active:scale-95 no-underline cursor-pointer"
+              title="Watch BrainXR Onboarding Story"
+            >
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white transition-transform group-hover:scale-110 shadow-sm shadow-indigo-600/30">
+                <svg className="h-2.5 w-2.5 fill-current ml-0.5" viewBox="0 0 24 24">
+                  <path d="M4 2v20l17-10L4 2z" />
+                </svg>
+              </span>
+              <span>Onboarding</span>
+            </a>
+          </div>
+        )}
+
         {/* Layer 1: Solid Text Behind the Headset */}
         {isIdle && <IdleHeadline variant="solid" />}
 
