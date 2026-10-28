@@ -24,8 +24,8 @@ export type { HistorySample } from "./history";
 
 const INITIAL_FRAME: Frame = idleSignalSource.getFrame(0);
 
-export function usePlaybackEngine(): PlaybackEngine {
-  const [mode, setMode] = useState<AppMode>({ kind: "idle" });
+export function usePlaybackEngine(initialMode: AppMode = { kind: "idle" }): PlaybackEngine {
+  const [mode, setMode] = useState<AppMode>(initialMode);
   const [selectedChannel, setSelectedChannel] = useState<ElectrodeName | null>(null);
   const [frame, setFrame] = useState<Frame>(INITIAL_FRAME);
   const [speed, setSpeed] = useState<number>(1);

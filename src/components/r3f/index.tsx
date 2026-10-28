@@ -35,14 +35,21 @@ function resolveStoryVersion(): "v1" | "v2" {
   return asked === "v1" || asked === "v2" ? asked : STORY_VERSION;
 }
 
-const R3F: React.FC = () => {
-  const engine = usePlaybackEngine();
+interface R3FProps {
+  initialMode?: "idle" | "demo";
+  forcePage?: "home" | "demo" | "onboarding";
+}
+
+const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
+  const engine = usePlaybackEngine({ kind: initialMode });
   const [hoveredChannel, setHoveredChannel] = useState<ElectrodeName | null>(null);
   const [highlightPrefrontal, setHighlightPrefrontal] = useState(false);
   const lastRewindRef = useRef<{ trial: number; time: number } | null>(null);
   const isIdle = engine.mode.kind === "idle";
   const [storyVersion] = useState(resolveStoryVersion);
   const [showStory, setShowStory] = useState(() => {
+    if (forcePage === "onboarding") return true;
+    if (forcePage === "home" || forcePage === "demo") return false;
     if (typeof window === "undefined") return false;
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("story") === "0" || urlParams.get("skipStory") === "1") return false;
@@ -84,6 +91,9 @@ const R3F: React.FC = () => {
   const disconnect = useCallback(() => {
     clearSelection();
     engine.disconnect();
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/demo")) {
+      window.location.href = "/";
+    }
   }, [clearSelection, engine.disconnect]);
 
   const previousTrack = useCallback(() => {
@@ -111,7 +121,11 @@ const R3F: React.FC = () => {
   if (showStory) {
     const done = () => {
       sessionStorage.setItem(STORY_SEEN_KEY, "1");
-      setShowStory(false);
+      if (typeof window !== "undefined" && window.location.pathname.startsWith("/onboarding")) {
+        window.location.href = "/";
+      } else {
+        setShowStory(false);
+      }
     };
     return storyVersion === "v2" ? (
       <Suspense fallback={<div className="w-full h-full bg-black" />}>
