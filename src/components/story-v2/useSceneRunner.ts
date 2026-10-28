@@ -92,28 +92,34 @@ export function useSceneRunner(onComplete: () => void, reducedMotion: boolean) {
   );
 
   const advance = useCallback(() => {
-    const { index, phase } = stateRef.current;
+    const { index, phase, fastForwarded, startedAt } = stateRef.current;
+    const played = performance.now() - startedAt;
 
     if (phase === "playing") {
-      // Long scenes can be skipped to their rest state; everything else
-      // swallows the gesture.
-      const scene = SCENES[index];
-      if (!scene.fastForwardable || stateRef.current.fastForwarded) return;
-      // ...but never before the scene has actually had a chance to play.
-      // Without this, a gesture that only just started the scene could
-      // also end it.
-      const played = performance.now() - stateRef.current.startedAt;
-      if (played < CFG.fastForwardAfterMs) {
-        if (DEBUG_SCENES) console.log("[v2] fast-forward too early", Math.round(played));
+      // If currently animating and not yet fast-forwarded:
+      // Snap immediately to rest state on first scroll
+      if (!fastForwarded && played >= CFG.fastForwardAfterMs) {
+        if (DEBUG_SCENES) console.log("[v2] fast-forward to rest state", index);
+        clearTimers();
+        setState((prev) => ({ ...prev, fastForwarded: true, phase: "idle" }));
+        beginCooldown();
         return;
       }
-      if (DEBUG_SCENES) console.log("[v2] fast-forward", index);
-      clearTimers();
-      setState((prev) => ({ ...prev, fastForwarded: true }));
-      beginCooldown();
+
+      // If already fastForwarded OR already played for a bit:
+      // Advance immediately to the next scene without swallowing input
+      if (fastForwarded || played > 180) {
+        clearTimers();
+        if (index >= SCENES.length - 1) {
+          if (DEBUG_SCENES) console.log("[v2] complete");
+          completeRef.current();
+          return;
+        }
+        playScene(index + 1);
+        return;
+      }
       return;
     }
-    if (phase === "cooldown") return;
 
     if (index >= SCENES.length - 1) {
       if (DEBUG_SCENES) console.log("[v2] complete");
@@ -124,8 +130,8 @@ export function useSceneRunner(onComplete: () => void, reducedMotion: boolean) {
   }, [beginCooldown, playScene]);
 
   const back = useCallback(() => {
-    const { index, phase } = stateRef.current;
-    if (phase !== "idle" || index === 0) return;
+    const { index } = stateRef.current;
+    if (index === 0) return;
     if (DEBUG_SCENES) console.log("[v2] back", index - 1);
     clearTimers();
     // Land on the previous scene's REST state, not a replay.
@@ -139,14 +145,6 @@ export function useSceneRunner(onComplete: () => void, reducedMotion: boolean) {
   }, []);
 
   // ---- input ----
-  //
-  // ONE GESTURE, ONE ACTION. A trackpad flick or a single notch of a mouse
-  // wheel does not produce one wheel event, it produces a burst of them
-  // over several hundred milliseconds. Anything arriving within
-  // `gestureGapMs` of the previous event is the tail of the gesture that
-  // has already been acted on, and is swallowed -- it still pushes the
-  // quiet timer out, so the burst keeps the machine locked until it has
-  // genuinely stopped.
   const lastInputAt = useRef(-Infinity);
 
   /** True if this event begins a NEW gesture rather than continuing one. */
@@ -165,16 +163,7 @@ export function useSceneRunner(onComplete: () => void, reducedMotion: boolean) {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       if (Math.abs(e.deltaY) < CFG.wheelThreshold) return;
-      // Mid-flick. Push the quiet timer out so the inertia cannot spill
-      // into the next scene, but do not act on it.
-      if (!isNewGesture()) {
-        if (stateRef.current.phase === "cooldown") beginCooldown();
-        return;
-      }
-      if (stateRef.current.phase === "cooldown") {
-        beginCooldown();
-        return;
-      }
+      if (!isNewGesture()) return;
       if (DEBUG_SCENES) console.log("[v2] wheel gesture", e.deltaY);
       if (e.deltaY > 0) advance();
       else back();
@@ -201,16 +190,21 @@ export function useSceneRunner(onComplete: () => void, reducedMotion: boolean) {
 
     const onKey = (e: KeyboardEvent) => {
       if (isInteractive(e.target)) return;
-      if ([" ", "Spacebar", "ArrowDown", "PageDown", "Enter"].includes(e.key)) {
+      if ([" ", "Spacebar", "ArrowDown", "ArrowRight", "PageDown", "Enter"].includes(e.key)) {
         e.preventDefault();
         // Key repeat is a held key, not a second gesture.
         if (e.repeat || !isNewGesture()) return;
         advance();
-      } else if (["ArrowUp", "PageUp"].includes(e.key)) {
+      } else if (["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key)) {
         e.preventDefault();
         if (e.repeat || !isNewGesture()) return;
         back();
       }
+    };
+
+    const onClick = (e: MouseEvent) => {
+      if (isInteractive(e.target)) return;
+      advance();
     };
 
     window.addEventListener("wheel", onWheel, { passive: false });
@@ -218,6 +212,7 @@ export function useSceneRunner(onComplete: () => void, reducedMotion: boolean) {
     window.addEventListener("touchmove", onTouchMove, { passive: false });
     window.addEventListener("touchend", onTouchEnd, { passive: true });
     window.addEventListener("keydown", onKey, { passive: false });
+    window.addEventListener("click", onClick);
 
     return () => {
       window.removeEventListener("wheel", onWheel);
@@ -225,8 +220,9 @@ export function useSceneRunner(onComplete: () => void, reducedMotion: boolean) {
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("click", onClick);
     };
-  }, [advance, back, beginCooldown, isNewGesture]);
+  }, [advance, back, isNewGesture]);
 
   useEffect(() => clearTimers, []);
 

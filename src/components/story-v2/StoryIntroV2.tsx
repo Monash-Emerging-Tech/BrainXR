@@ -131,8 +131,8 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
       setBrainStage("hidden");
       return;
     }
-    if (index > TO_BLACK_SCENE) {
-      // Arriving from a later scene: no staging, it is simply there.
+    if (index > TO_BLACK_SCENE || (index === TO_BLACK_SCENE && fastForwarded)) {
+      // Arriving from a later scene or fast-forwarded: no staging, it is simply there.
       setBrainStage("crisp");
       return;
     }
@@ -155,7 +155,7 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
       clearTimeout(arm);
       clearTimeout(sharpen);
     };
-  }, [showBrain, index, reducedMotion]);
+  }, [showBrain, index, reducedMotion, fastForwarded]);
 
   // ---- the white smoke the brain emerges from ----
   //
@@ -241,8 +241,8 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
       className={`storyv2-root ${onBlack ? "is-black" : ""}`}
       style={
         {
-          "--v2-black-ms": `${TB.fadeMs}ms`,
-          "--v2-text-blur": `${TB.textBlurPx}px`,
+          "--v2-black-ms": `${fastForwarded ? 120 : TB.fadeMs}ms`,
+          "--v2-text-blur": `${fastForwarded ? 0 : TB.textBlurPx}px`,
         } as React.CSSProperties
       }
     >
@@ -332,6 +332,7 @@ export default function StoryIntroV2({ onComplete }: StoryIntroV2Props) {
             beatIndex={beatIndex}
             layout={layout}
             reducedMotion={reducedMotion}
+            fastForwarded={fastForwarded}
           />
         </div>
       )}

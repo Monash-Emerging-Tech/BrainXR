@@ -38,6 +38,7 @@ export interface SceneBeatProps {
   beatIndex: number;
   layout: StageLayout;
   reducedMotion: boolean;
+  fastForwarded?: boolean;
 }
 
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
@@ -46,6 +47,7 @@ export default function SceneBeat({
   beatIndex,
   layout,
   reducedMotion,
+  fastForwarded = false,
 }: SceneBeatProps) {
   const layered = useMemo(() => prefersLayeredSwell(), []);
 
@@ -63,14 +65,12 @@ export default function SceneBeat({
   useEffect(() => {
     if (shown === beatIndex) return;
 
-    if (reducedMotion) {
-      setLeaving(true);
-      const swap = setTimeout(() => {
-        setShown(beatIndex);
-        setLeaving(false);
-        setRevealKey((k) => k + 1);
-      }, CFG.crossfadeMs);
-      return () => clearTimeout(swap);
+    if (reducedMotion || fastForwarded) {
+      setLeaving(false);
+      setSweeping(false);
+      setShown(beatIndex);
+      setRevealKey((k) => k + 1);
+      return;
     }
 
     // The pane sweeps; the outgoing text leaves under its leading edge, and
@@ -84,7 +84,7 @@ export default function SceneBeat({
       setRevealKey((k) => k + 1);
     }, CFG.panePassMs);
     return () => clearTimeout(swap);
-  }, [beatIndex, shown, reducedMotion]);
+  }, [beatIndex, shown, reducedMotion, fastForwarded]);
 
   // Retiring the pane lives in its own effect: folded into the swap above,
   // the swap's setShown re-runs that effect and its cleanup kills the very
@@ -99,10 +99,13 @@ export default function SceneBeat({
   // written to refs and inline styles, so a beat costs a handful of renders
   // rather than one per frame.
   useEffect(() => {
-    if (reducedMotion) {
+    if (reducedMotion || fastForwarded) {
       nameRef.current = 1;
       nameSwellRef.current = 1;
-      if (roleElRef.current) roleElRef.current.style.opacity = "1";
+      if (roleElRef.current) {
+        roleElRef.current.style.opacity = "1";
+        roleElRef.current.style.transform = "";
+      }
       return;
     }
     nameRef.current = 0;

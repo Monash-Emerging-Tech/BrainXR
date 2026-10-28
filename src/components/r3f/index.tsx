@@ -47,7 +47,7 @@ const R3F: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("story") === "0" || urlParams.get("skipStory") === "1") return false;
     if (urlParams.has("story")) return true;
-    return sessionStorage.getItem(STORY_SEEN_KEY) !== "1";
+    return false;
   });
 
   const storyStage = useSyncExternalStore(
@@ -181,10 +181,13 @@ const R3F: React.FC = () => {
         {/* Layer 3: Outline Text In Front of the Headset */}
         {isIdle && <IdleHeadline variant="outline" />}
 
-        {/* ======================================================== */}
-        {/* HOMEPAGE IDLE INTERFACE                                  */}
-        {/* ======================================================== */}
-        {isIdle && <IdleActions onStartDemo={startDemo} onStartLive={engine.startLive} />}
+        {isIdle && (
+          <IdleActions
+            onStartDemo={startDemo}
+            onStartLive={engine.startLive}
+            onStartStory={() => setShowStory(true)}
+          />
+        )}
 
         {engine.mode.kind === "demo" && (
           <>

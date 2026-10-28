@@ -154,15 +154,15 @@ export const TO_BLACK_MARKS = (() => {
 export const SCENES: readonly SceneDef[] = [
   { id: "landing", durationMs: 0 },
   { id: "question", durationMs: Q_MARKS.total, fastForwardable: true },
-  { id: "toBlack", durationMs: TO_BLACK_MARKS.total },
-  { id: "occipital", durationMs: 2700 },
-  { id: "parietal", durationMs: 2700 },
-  { id: "central", durationMs: 2700 },
-  { id: "temporal", durationMs: 2700 },
-  { id: "frontal", durationMs: 2700 },
-  { id: "finaleA", durationMs: 2700 },
-  { id: "finaleB", durationMs: 2700 },
-  { id: "closing", durationMs: 2700 },
+  { id: "toBlack", durationMs: TO_BLACK_MARKS.total, fastForwardable: true },
+  { id: "occipital", durationMs: 2700, fastForwardable: true },
+  { id: "parietal", durationMs: 2700, fastForwardable: true },
+  { id: "central", durationMs: 2700, fastForwardable: true },
+  { id: "temporal", durationMs: 2700, fastForwardable: true },
+  { id: "frontal", durationMs: 2700, fastForwardable: true },
+  { id: "finaleA", durationMs: 2700, fastForwardable: true },
+  { id: "finaleB", durationMs: 2700, fastForwardable: true },
+  { id: "closing", durationMs: 2700, fastForwardable: true },
 ];
 
 /** Index of the first scene that shows the brain and the beat panels. */
@@ -174,38 +174,27 @@ export const STORY_V2 = {
   /** Input handling. */
   input: {
     /**
-     * After a scene ends, input stays ignored until the wheel has been quiet
-     * for this long. One trackpad flick carries inertia for a few hundred ms,
-     * and without this it would trigger a second scene on its own.
+     * Debounce time before the machine accepts another gesture. Kept short so
+     * user gestures aren't swallowed, but long enough to filter instant jitter.
      */
-    quietMs: 400,
+    quietMs: 60,
     /**
-     * Two input events closer together than this belong to the SAME
-     * gesture and only the first one counts.
-     *
-     * THE BUG THIS FIXES: a wheel "flick" is not one event, it is a burst
-     * of twenty or more. The machine used to act on every one of them, so
-     * the first started scene 1 and the second -- arriving ~16ms later --
-     * hit the fastForwardable branch and threw the whole 13.9s opening
-     * straight to its rest state. The question appeared instantly and the
-     * swallow, the smoke and the formation were never seen.
+     * Minimum interval between discrete gestures.
      */
-    gestureGapMs: 420,
+    gestureGapMs: 90,
     /**
-     * A fast-forwardable scene cannot be skipped before this much of it has
-     * played, so a stray second gesture right on the heels of the first
-     * still cannot eat the opening.
+     * Time before a playing scene can be fast-forwarded to its rest state.
      */
-    fastForwardAfterMs: 900,
+    fastForwardAfterMs: 60,
     /** Minimum wheel delta that counts as a deliberate gesture. */
-    wheelThreshold: 8,
+    wheelThreshold: 6,
     /** Minimum vertical travel, in px, for a touch swipe to count. */
-    swipeThreshold: 44,
+    swipeThreshold: 24,
   },
 
   /** The "scroll" pill that follows the cursor while input is awaited. */
   cursorTag: {
-    label: "scroll",
+    label: "scroll or click",
     /** Offset from the pointer, bottom-right. */
     offsetX: 18,
     offsetY: 22,
@@ -213,7 +202,7 @@ export const STORY_V2 = {
     follow: 0.18,
     fadeMs: 260,
     /** Shown instead on touch devices, which have no pointer. */
-    touchLabel: "swipe up",
+    touchLabel: "swipe or tap",
   },
 
   /**

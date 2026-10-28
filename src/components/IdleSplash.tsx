@@ -42,13 +42,24 @@ export const IdleHeadline: React.FC<IdleHeadlineProps> = ({ variant }) => {
 interface IdleActionsProps {
   onStartDemo: () => void;
   onStartLive: () => void;
+  onStartStory?: () => void;
 }
 
-export const IdleActions: React.FC<IdleActionsProps> = ({ onStartDemo, onStartLive }) => (
+export const IdleActions: React.FC<IdleActionsProps> = ({ onStartDemo, onStartLive, onStartStory }) => (
   <div className="absolute inset-x-0 bottom-6 flex flex-col items-center justify-center z-30 px-6">
     <div className="backdrop-blur-md">
       <div className="flex flex-col items-center gap-2">
         <div className="flex items-center gap-3">
+          {onStartStory && (
+            <button
+              onClick={onStartStory}
+              className="bg-white/90 hover:bg-white text-slate-800 font-semibold py-3 px-5 rounded-full transition-all shadow-md active:scale-[0.99] border border-slate-200/80 backdrop-blur-sm cursor-pointer flex items-center gap-2 text-sm"
+              title="Explore the Brain Onboarding Story"
+            >
+              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              Brain Story
+            </button>
+          )}
           <button
             onClick={onStartDemo}
             className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-full transition-all shadow-md active:scale-[0.99] cursor-pointer"
