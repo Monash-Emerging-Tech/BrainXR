@@ -1,6 +1,6 @@
 // Composition root: wires the playback engine to the mode-derived layout and
 // renders whichever panels/overlays that layout calls for.
-import React, { useState, Suspense, lazy, useCallback, useRef, useSyncExternalStore } from "react";
+import React, { useState, Suspense, lazy, useCallback, useRef, useSyncExternalStore, useEffect } from "react";
 import { usePlaybackEngine } from "../../hooks/usePlaybackEngine";
 import { PREFRONTAL_ELECTRODES, type ElectrodeName } from "../../utils/signalSource";
 import { IdleHeadline, IdleActions } from "../IdleSplash";
@@ -12,6 +12,7 @@ import LoadingOverlay from "./LoadingOverlay";
 import DemoBottomControls from "./DemoBottomControls";
 import NodeDetailsBanner from "./NodeDetailsBanner";
 import { headsetPresentation } from "../../utils/headsetPresentation";
+import OnboardingFlow from "../onboarding/OnboardingFlow";
 
 const StoryIntroV2 = lazy(() => import("../story-v2/StoryIntroV2"));
 const StoryIntro = lazy(() => import("../story/StoryIntro"));
@@ -24,15 +25,10 @@ const Scene = lazy(() => import("../Scene"));
 // see it again.
 const STORY_SEEN_KEY = "brainxr:story-seen";
 
-// Which cut of the intro plays. v1 is the long scroll-driven version; v2
-// plays one scene per scroll gesture. Override per-load with ?story=v1 or
-// ?story=v2 to compare the two without editing this file.
-const STORY_VERSION: "v1" | "v2" = "v2";
-
-function resolveStoryVersion(): "v1" | "v2" {
-  if (typeof window === "undefined") return STORY_VERSION;
+function resolveLegacyStoryVersion(): "v1" | "v2" | null {
+  if (typeof window === "undefined") return null;
   const asked = new URLSearchParams(window.location.search).get("story");
-  return asked === "v1" || asked === "v2" ? asked : STORY_VERSION;
+  return asked === "v1" || asked === "v2" ? asked : null;
 }
 
 interface R3FProps {
@@ -44,18 +40,36 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
   const engine = usePlaybackEngine({ kind: initialMode });
   const [hoveredChannel, setHoveredChannel] = useState<ElectrodeName | null>(null);
   const [highlightPrefrontal, setHighlightPrefrontal] = useState(false);
+  const [headsetOpacity, setHeadsetOpacity] = useState(1);
+  const [homeFadeOpacity, setHomeFadeOpacity] = useState(1);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const lastRewindRef = useRef<{ trial: number; time: number } | null>(null);
   const isIdle = engine.mode.kind === "idle";
-  const [storyVersion] = useState(resolveStoryVersion);
+  const [legacyStoryVersion] = useState(resolveLegacyStoryVersion);
   const [showStory, setShowStory] = useState(() => {
     if (forcePage === "onboarding") return true;
     if (forcePage === "home" || forcePage === "demo") return false;
     if (typeof window === "undefined") return false;
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("story") === "0" || urlParams.get("skipStory") === "1") return false;
-    if (urlParams.has("story")) return true;
-    return false;
+    if (urlParams.has("story") || urlParams.has("onboarding") || window.location.pathname.startsWith("/onboarding")) return true;
+    const seen = sessionStorage.getItem(STORY_SEEN_KEY);
+    return !seen;
   });
+
+  // Keep story visibility synchronized with browser history back/forward
+  useEffect(() => {
+    const onPopState = () => {
+      const isStory =
+        window.location.pathname.startsWith("/onboarding") ||
+        new URLSearchParams(window.location.search).has("story") ||
+        new URLSearchParams(window.location.search).has("onboarding");
+      setShowStory(isStory);
+      if (isStory) setHeadsetOpacity(1);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   const storyStage = useSyncExternalStore(
     headsetPresentation.subscribe,
@@ -116,34 +130,60 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
     setHighlightPrefrontal((prev) => !prev);
   }, [engine.selectChannel]);
 
+  const handleStoryDone = useCallback(() => {
+    sessionStorage.setItem(STORY_SEEN_KEY, "1");
+    setShowStory(false);
+    setTheme("light");
+    setHeadsetOpacity(1);
+    headsetPresentation.setStage("showcase");
+    headsetPresentation.setStoryProgress(null);
+    setHighlightPrefrontal(false);
+    if (typeof window !== "undefined") {
+      if (window.location.pathname.startsWith("/onboarding")) {
+        window.history.replaceState(null, "", "/");
+      } else {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("story");
+        url.searchParams.delete("onboarding");
+        window.history.replaceState(null, "", url.pathname + (url.search ? url.search : ""));
+      }
+    }
+  }, []);
+
+  const startStory = useCallback(() => {
+    setHeadsetOpacity(1);
+    setTheme("light");
+    headsetPresentation.setStage("showcase");
+    headsetPresentation.setStoryProgress(0);
+    setHighlightPrefrontal(false);
+    setShowStory(true);
+    if (typeof window !== "undefined") {
+      window.history.pushState(null, "", "/onboarding");
+    }
+  }, []);
+
   useSpacebarToggle(engine.togglePlayPause);
 
-  if (showStory) {
-    const done = () => {
-      sessionStorage.setItem(STORY_SEEN_KEY, "1");
-      if (typeof window !== "undefined" && window.location.pathname.startsWith("/onboarding")) {
-        window.location.href = "/";
-      } else {
-        setShowStory(false);
-      }
-    };
-    return storyVersion === "v2" ? (
-      <Suspense fallback={<div className="w-full h-full bg-black" />}>
-        <StoryIntroV2 onComplete={done} />
+  if (showStory && legacyStoryVersion) {
+    return legacyStoryVersion === "v2" ? (
+      <Suspense fallback={<div className="w-full h-full bg-white" />}>
+        <StoryIntroV2 onComplete={handleStoryDone} />
       </Suspense>
     ) : (
-      <StoryIntro onComplete={done} />
+      <StoryIntro onComplete={handleStoryDone} />
     );
   }
 
   return (
-    <div className="w-full h-full flex flex-col md:flex-row relative bg-white overflow-hidden text-slate-800 font-sans">
+    <div className={`w-full h-full flex flex-col md:flex-row relative ${theme === "dark" ? "bg-[#0b0f17] text-slate-200" : "bg-white text-slate-800"} transition-colors duration-700 overflow-hidden font-sans`}>
       <BackgroundOscilloscopes
         historiesRef={engine.historiesRef}
         frameRef={engine.frameRef}
         selectedChannel={engine.selectedChannel}
         highlightedChannels={highlightPrefrontal ? PREFRONTAL_ELECTRODES : []}
         hoveredChannel={hoveredChannel}
+        theme={theme}
+        hideLabels={showStory && homeFadeOpacity < 0.5}
         onSelectChannel={selectChannel}
         onHoverChannel={setHoveredChannel}
       />
@@ -165,10 +205,22 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
 
 
         {/* Layer 1: Solid Text Behind the Headset */}
-        {isIdle && <IdleHeadline variant="solid" />}
+        {isIdle && (
+          <div
+            className="transition-opacity duration-300 pointer-events-none"
+            style={{ opacity: showStory ? homeFadeOpacity : 1 }}
+          >
+            <IdleHeadline variant="solid" onStartStory={startStory} />
+          </div>
+        )}
 
         {/* 3D R3F Canvas */}
-        <div className={`w-full h-full z-10 ${isIdle ? "translate-y-8" : ""}`}>
+        <div
+          className={`w-full h-full z-10 will-change-opacity transition-opacity duration-300 ${
+            isIdle ? "translate-y-8" : ""
+          }`}
+          style={{ opacity: showStory ? headsetOpacity : 1 }}
+        >
           <Suspense fallback={null}>
             <Scene
               frameRef={engine.frameRef}
@@ -195,13 +247,43 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
         {engine.isLoading && <LoadingOverlay />}
 
         {/* Layer 3: Outline Text In Front of the Headset */}
-        {isIdle && <IdleHeadline variant="outline" />}
+        {isIdle && (
+          <div
+            className="transition-opacity duration-300"
+            style={{
+              opacity: showStory ? homeFadeOpacity : 1,
+              pointerEvents: showStory && homeFadeOpacity < 0.5 ? "none" : "auto",
+            }}
+          >
+            <IdleHeadline variant="outline" onStartStory={startStory} />
+          </div>
+        )}
 
         {isIdle && (
-          <IdleActions
-            onStartDemo={startDemo}
-            onStartLive={engine.startLive}
-            onStartStory={() => setShowStory(true)}
+          <div
+            className="transition-opacity duration-300 z-45"
+            style={{
+              opacity: showStory ? homeFadeOpacity : 1,
+              pointerEvents: showStory && homeFadeOpacity < 0.5 ? "none" : "auto",
+            }}
+          >
+            <IdleActions
+              onStartDemo={startDemo}
+              onStartLive={engine.startLive}
+              onStartStory={startStory}
+            />
+          </div>
+        )}
+
+        {/* Unified Continuous Onboarding Flow */}
+        {showStory && !legacyStoryVersion && (
+          <OnboardingFlow
+            onComplete={handleStoryDone}
+            onHomeFade={setHomeFadeOpacity}
+            onHeadsetOpacity={setHeadsetOpacity}
+            onHighlightPrefrontal={setHighlightPrefrontal}
+            onSetPresentationStage={headsetPresentation.setStage}
+            onThemeChange={setTheme}
           />
         )}
 

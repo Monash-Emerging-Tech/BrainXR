@@ -12,7 +12,8 @@ export function render(
   histories: Record<ElectrodeName, HistorySample[]>,
   selectedChannel: ElectrodeName | null,
   hoveredChannel: ElectrodeName | null = null,
-  highlightedChannels: readonly ElectrodeName[] = []
+  highlightedChannels: readonly ElectrodeName[] = [],
+  theme: "light" | "dark" = "light"
 ): void {
   const { width, height } = resizeCanvasToDisplaySize(canvas, ctx);
   const layout = computeLaneLayout(width, height, ELECTRODE_DISPLAY_ORDER.length);
@@ -29,6 +30,7 @@ export function render(
       maxDeviation,
       isSelected: name === selectedChannel || highlightedChannels.includes(name),
       isHovered: name === hoveredChannel,
+      theme,
     });
   });
 }

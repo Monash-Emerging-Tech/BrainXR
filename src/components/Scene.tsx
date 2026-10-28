@@ -5,15 +5,16 @@
 // playback tick updates the HUD via state without re-rendering (and having
 // three.js reconcile) this whole subtree. The head animates off its own
 // useFrame loop reading frameRef.current.
-import React, { useSyncExternalStore } from "react";
-import { Canvas } from "@react-three/fiber";
+import React, { useSyncExternalStore, useRef, useEffect } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { XR } from "@react-three/xr";
 import HeadWrapper from "./HeadWrapper";
 import { xrStore } from "../utils/xrStore";
 import type { ElectrodeName, Frame } from "../utils/signalSource";
 import type { HistorySample } from "../hooks/usePlaybackEngine";
-import type { HeadsetPresentationStage } from "../utils/headsetPresentation";
+import { headsetPresentation, type HeadsetPresentationStage } from "../utils/headsetPresentation";
 
 // OrbitControls is a sibling of <XR>, not nested inside it, so the
 // context-based useXR() hook isn't reachable here - read presentation
@@ -46,6 +47,69 @@ interface SceneProps {
   audioError?: boolean;
 }
 
+function SpringOrbitControls({ enabled = true }: { enabled?: boolean }) {
+  const controlsRef = useRef<OrbitControlsImpl>(null);
+  const targetDistanceRef = useRef<number | null>(null);
+  const isInteractingRef = useRef(false);
+
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+
+    // Capture resting camera distance from the initial controls target
+    targetDistanceRef.current = controls.object.position.distanceTo(controls.target);
+
+    const onStart = () => {
+      isInteractingRef.current = true;
+    };
+    const onEnd = () => {
+      isInteractingRef.current = false;
+    };
+
+    controls.addEventListener("start", onStart);
+    controls.addEventListener("end", onEnd);
+    return () => {
+      controls.removeEventListener("start", onStart);
+      controls.removeEventListener("end", onEnd);
+    };
+  }, []);
+
+  useFrame((_, delta) => {
+    const controls = controlsRef.current;
+    const baseDistance = targetDistanceRef.current;
+    if (!controls || !baseDistance) return;
+
+    // When the user is not actively zooming/dragging, spring back to the default zoom distance
+    if (!isInteractingRef.current && enabled) {
+      const currentDist = controls.object.position.distanceTo(controls.target);
+      const diff = baseDistance - currentDist;
+      if (Math.abs(diff) > 0.001) {
+        // Smooth critically damped exponential decay towards target distance
+        const t = 1 - Math.exp(-6 * Math.min(delta, 0.1));
+        const newDist = currentDist + diff * t;
+        const scale = newDist / currentDist;
+
+        controls.object.position.x = controls.target.x + (controls.object.position.x - controls.target.x) * scale;
+        controls.object.position.y = controls.target.y + (controls.object.position.y - controls.target.y) * scale;
+        controls.object.position.z = controls.target.z + (controls.object.position.z - controls.target.z) * scale;
+        controls.update();
+      }
+    }
+  });
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      enableDamping
+      dampingFactor={0.05}
+      minDistance={3}
+      maxDistance={20}
+      enabled={enabled}
+      makeDefault
+    />
+  );
+}
+
 const Scene: React.FC<SceneProps> = ({
   frameRef,
   historiesRef,
@@ -66,6 +130,7 @@ const Scene: React.FC<SceneProps> = ({
   audioError = false,
 }) => {
   const isXRPresenting = useIsXRPresenting();
+  const isStoryActive = headsetPresentation.getStoryProgress() !== null;
 
   return (
     <Canvas
@@ -104,15 +169,7 @@ const Scene: React.FC<SceneProps> = ({
         />
       </XR>
 
-      {!isXRPresenting && (
-        <OrbitControls
-          enableDamping
-          dampingFactor={0.05}
-          minDistance={3}
-          maxDistance={20}
-          makeDefault
-        />
-      )}
+      {!isXRPresenting && <SpringOrbitControls enabled={!isStoryActive} />}
     </Canvas>
   );
 };

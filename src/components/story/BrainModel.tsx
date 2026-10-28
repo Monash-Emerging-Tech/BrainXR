@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { BRAIN_REGIONS, STORY_PACING, type BrainRegionId } from "./storyContent";
+import VRHeadset from "../onboarding/VRHeadset";
 
 /**
  * The real segmented brain.
@@ -33,6 +34,28 @@ export interface BrainModelProps {
   /** Finale beat B: breathe the prefrontal glow. */
   pulse?: boolean;
   reducedMotion?: boolean;
+  /** Override color for prefrontal cortex (defaults to region color or emerald #10b981). */
+  prefrontalColor?: string;
+  /** Custom yaw angle override to control orientation from parent rigs. */
+  customYaw?: number;
+  /** Ref to dynamic custom yaw angle override for 60fps/120fps sync. */
+  customYawRef?: React.RefObject<number>;
+  /** Whether to place the VR headset onto the brain. */
+  showVRHeadset?: boolean;
+  /** Mounting progress of the VR headset (0..1). */
+  vrHeadsetMount?: number;
+  /** Ref to dynamic VR headset mounting progress for frame-rate synchronized sliding. */
+  vrHeadsetMountRef?: React.RefObject<number>;
+  /** Optional children mounted directly inside the rotating rotor group for exact mechanical lockstep. */
+  children?: React.ReactNode;
+  /** Ref to dynamic opacity multiplier (0..1) for smooth entrance & dissolve. */
+  stageOpacityRef?: React.RefObject<number>;
+  /** Whether materials write to the depth buffer for physical 3D occlusion inside headsets. */
+  depthWrite?: boolean;
+  /** Ref to dynamic depthWrite flag for frame-rate synchronized depth buffer transitions. */
+  depthWriteRef?: React.RefObject<boolean>;
+  /** Ref to dynamic prefrontal glow flag for frame-rate synchronized transitions. */
+  prefrontalRef?: React.RefObject<boolean>;
 }
 
 interface LobeEntry {
@@ -153,6 +176,17 @@ export default function BrainModel({
   prefrontal = false,
   pulse = false,
   reducedMotion = false,
+  prefrontalColor,
+  customYaw,
+  customYawRef,
+  showVRHeadset = false,
+  vrHeadsetMount = 1,
+  vrHeadsetMountRef,
+  children,
+  stageOpacityRef,
+  depthWrite = false,
+  depthWriteRef,
+  prefrontalRef,
 }: BrainModelProps) {
   const { scene } = useGLTF(CFG.modelUrl);
   const rotorRef = useRef<THREE.Group>(null);
@@ -316,12 +350,20 @@ export default function BrainModel({
     const active = built.lobes[activeIndex];
     const activeRegion = BRAIN_REGIONS[activeIndex];
 
-    // ---- rotation: turn the active region toward the camera ----
+    // ---- rotation: turn toward target yaw ----
     const rotor = rotorRef.current;
-    if (rotor && active) {
-      let diff = active.yaw - rotor.rotation.y;
-      diff = ((diff + Math.PI) % (Math.PI * 2)) - Math.PI;
-      rotor.rotation.y += diff * k;
+    if (rotor) {
+      if (customYawRef && customYawRef.current !== undefined) {
+        // Direct sync with parent scroll rig via ref
+        rotor.rotation.y = customYawRef.current;
+      } else if (customYaw !== undefined) {
+        // Direct sync with parent scroll rig for instant 1:1 responsiveness
+        rotor.rotation.y = customYaw;
+      } else if (active) {
+        let diff = active.yaw - rotor.rotation.y;
+        diff = ((diff + Math.PI) % (Math.PI * 2)) - Math.PI;
+        rotor.rotation.y += diff * k;
+      }
     }
 
     // ---- breathing pulse on the prefrontal glow ----
@@ -331,23 +373,29 @@ export default function BrainModel({
       pulseScale = 1 - CFG.pulseDepth * (0.5 - 0.5 * Math.cos(t * Math.PI * 2));
     }
 
+    const isPrefrontal = prefrontalRef ? (prefrontalRef.current ?? prefrontal) : prefrontal;
+    const wantsDepthWrite = depthWriteRef ? (depthWriteRef.current ?? depthWrite) : depthWrite;
+
     for (let i = 0; i < built.lobes.length; i++) {
       const lobe = built.lobes[i];
       if (!lobe.material) continue;
       const region = BRAIN_REGIONS[i];
-      const isActive = i === activeIndex && !prefrontal;
+      const isActive = i === activeIndex && !isPrefrontal;
 
-      // In the finale everything except the frontal lobe dims further.
-      const dimmed = prefrontal && region.id !== "frontal";
+      // In the finale everything except the frontal lobe dims slightly, but stays clearly visible as a human brain
+      const dimmed = isPrefrontal && region.id !== "frontal";
       const targetOpacity = dimmed
-        ? CFG.restOpacity * 0.5
+        ? CFG.restOpacity * 1.2
         : isActive
           ? CFG.activeOpacity
           : CFG.restOpacity;
 
+      const fade = stageOpacityRef ? (stageOpacityRef.current ?? 1) : 1;
+      lobe.material.depthWrite = wantsDepthWrite;
+      lobe.material.opacity += (targetOpacity * fade - lobe.material.opacity) * k;
+
       tmpColor.set(isActive ? region.color : CFG.restColor);
       lobe.material.color.lerp(tmpColor, k);
-      lobe.material.opacity += (targetOpacity - lobe.material.opacity) * k;
 
       tmpColor.set(isActive ? region.color : "#000000");
       lobe.material.emissive.lerp(tmpColor, k);
@@ -360,7 +408,7 @@ export default function BrainModel({
         const wantsBand =
           activeRegion?.id === "central" &&
           (region.id === "frontal" || region.id === "parietal") &&
-          !prefrontal;
+          !isPrefrontal;
         const bandColor = lobe.uniforms.uBandColor as
           | { value: THREE.Color }
           | undefined;
@@ -373,15 +421,20 @@ export default function BrainModel({
       // ---- prefrontal glow, frontal lobe only ----
       const frontU = lobe.uniforms.uFront as { value: number } | undefined;
       if (frontU) {
-        const wants = prefrontal && region.id === "frontal";
+        const wants = isPrefrontal && region.id === "frontal";
         const target = wants ? CFG.prefrontalEmissive * pulseScale : 0;
         frontU.value += (target - frontU.value) * k;
         const frontColor = lobe.uniforms.uFrontColor as
           | { value: THREE.Color }
           | undefined;
-        if (frontColor) frontColor.value.set(BRAIN_REGIONS[4].color);
+        // Soft, balanced emerald tone: #34d399 instead of neon #10b981
+        if (frontColor) frontColor.value.set(prefrontalColor ?? "#34d399");
       }
     }
+
+    const fade = stageOpacityRef ? (stageOpacityRef.current ?? 1) : 1;
+    built.restMaterial.depthWrite = wantsDepthWrite;
+    built.restMaterial.opacity = CFG.restOpacity * 0.8 * fade;
   });
 
   if (!built) return null;
@@ -397,6 +450,13 @@ export default function BrainModel({
         ]}
         scale={built.scale}
       />
+      {showVRHeadset && (
+        <VRHeadset
+          mountProgress={vrHeadsetMount}
+          mountProgressRef={vrHeadsetMountRef}
+        />
+      )}
+      {children}
     </group>
   );
 }

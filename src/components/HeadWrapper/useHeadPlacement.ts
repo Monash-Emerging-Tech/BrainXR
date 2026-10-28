@@ -6,7 +6,10 @@ import {
   getElectrodeFocusQuaternion,
   DEFAULT_HEADSET_QUATERNION,
 } from "../eegHead/electrodeNodes";
-import type { HeadsetPresentationStage } from "../../utils/headsetPresentation";
+import {
+  headsetPresentation,
+  type HeadsetPresentationStage,
+} from "../../utils/headsetPresentation";
 
 interface Params {
   groupRef: React.RefObject<THREE.Group | null>;
@@ -50,6 +53,9 @@ export function useHeadPlacement({
     const group = groupRef.current;
     if (!group) return;
 
+    // Track live home headset orientation for continuous cross-canvas quaternion synchronization
+    headsetPresentation.setHomeQuaternion(group.quaternion);
+
     const slerpFactor = 1 - Math.exp(-5 * Math.min(delta, 0.1));
     const effectiveFocusChannel =
       selectedChannel ??
@@ -88,8 +94,48 @@ export function useHeadPlacement({
       // Dynamically scale model to occupy exactly 1/3 of the viewport height.
       // Model height is approx 22 units in Blender local space.
       const targetScale = state.viewport.height / 66;
+      const storyProgress = headsetPresentation.getStoryProgress();
 
-      if (presentationStage === "hidden") {
+      if (storyProgress !== null) {
+        // --- Single Headset Onboarding Presentation ---
+        const topOffset = Math.max(5.5, state.viewport.height * 1.1);
+
+        if (storyProgress < 0.71) {
+          // Prepared off-screen above the viewport top [invisible during Beats 2 & 3]
+          // Oriented at side profile (Math.PI / 2) matching Beat 3's brain angle
+          tempFocusQuat.setFromEuler(new THREE.Euler(0.05, Math.PI / 2, 0, "YXZ"));
+          const headUp = tempWorldUp.clone().applyQuaternion(tempFocusQuat);
+          tempTargetPosition.set(0, -11 * targetScale, 0).addScaledVector(headUp, topOffset);
+          tempTargetScale.setScalar(0.0001);
+          group.position.copy(tempTargetPosition);
+          group.scale.copy(tempTargetScale);
+          group.quaternion.copy(tempFocusQuat);
+        } else {
+          // Beat 4 (Intensity section, 0.71 -> 0.89) & Finale (0.89 -> 1.0):
+          // 1. Headset translates smoothly down along the head axis from the top of the screen onto the brain [WITHOUT ANY SCALING]
+          // 2. Headset rotates in sync with the brain as it slots in (side profile Math.PI / 2 -> front 0.0)
+          // 3. Prefrontal electrodes glow across the forehead
+          // 4. Fully synchronizes with DEFAULT_HEADSET_QUATERNION of the home page
+          const mountT = Math.min(1, Math.max(0, (storyProgress - 0.71) / 0.07));
+          const smoothMount = mountT * mountT * (3 - 2 * mountT);
+          const yOffset = (1 - smoothMount) * topOffset;
+
+          const t4 = Math.max(0, Math.min(1, (storyProgress - 0.71) / 0.16));
+          const smoothT4 = t4 * t4 * (3 - 2 * t4);
+          const headsetYaw = (1 - smoothT4) * (Math.PI / 2);
+          const pitch = 0.05 + (Math.PI / 32 - 0.05) * smoothT4;
+
+          tempFocusQuat.setFromEuler(new THREE.Euler(pitch, headsetYaw, 0, "YXZ"));
+          const headUp = tempWorldUp.clone().applyQuaternion(tempFocusQuat);
+          tempTargetPosition.set(0, -11 * targetScale, 0).addScaledVector(headUp, yOffset);
+
+          tempTargetScale.setScalar(targetScale);
+
+          group.position.copy(tempTargetPosition);
+          group.scale.copy(tempTargetScale);
+          group.quaternion.copy(tempFocusQuat);
+        }
+      } else if (presentationStage === "hidden") {
         tempTargetPosition.set(0, -11 * targetScale, 0);
         tempTargetScale.setScalar(0.0001);
         group.position.lerp(tempTargetPosition, slerpFactor);

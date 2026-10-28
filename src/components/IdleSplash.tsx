@@ -19,9 +19,10 @@ const SpannedText: React.FC<SpannedTextProps> = ({ text, className = "" }) => (
 
 interface IdleHeadlineProps {
   variant: "solid" | "outline";
+  onStartStory?: () => void;
 }
 
-export const IdleHeadline: React.FC<IdleHeadlineProps> = ({ variant }) => {
+export const IdleHeadline: React.FC<IdleHeadlineProps> = ({ variant, onStartStory }) => {
   const textClass = variant === "solid" ? "text-slate-900" : "text-transparent text-stroke-slate";
   const zClass = variant === "solid" ? "z-0" : "z-20";
 
@@ -33,6 +34,12 @@ export const IdleHeadline: React.FC<IdleHeadlineProps> = ({ variant }) => {
           <div className="pointer-events-auto mb-3">
             <a
               href="/onboarding"
+              onClick={(e) => {
+                if (onStartStory) {
+                  e.preventDefault();
+                  onStartStory();
+                }
+              }}
               className="group inline-flex items-center justify-center gap-2 rounded-full bg-slate-900/80 pl-3 pr-3.5 py-1.5 text-xs font-offbit tracking-wide text-white border border-slate-700/60 backdrop-blur-md hover:bg-slate-900 hover:border-slate-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 transition-all shadow-sm cursor-pointer no-underline"
               title="Experience the BrainXR Origin Story"
             >

@@ -22,7 +22,7 @@ interface EEGHeadProps extends React.ComponentPropsWithoutRef<"group"> {
 const BLACK_COLOR = new THREE.Color(0x000000);
 
 const EEGHead = forwardRef<THREE.Group, EEGHeadProps>(
-  ({ frameRef, selectedChannel, hoveredChannel, highlightPrefrontal = false, highlightAllElectrodes = false, onChannelSelect, onChannelHover, ...props }, ref) => {
+  ({ frameRef, selectedChannel, hoveredChannel, highlightPrefrontal = false, highlightAllElectrodes = false, onChannelSelect, onChannelHover, children, ...props }, ref) => {
     const { nodes, materials } = useGLTF("/digitalTwin.glb") as unknown as GLTFResult;
     const { meshRefs, getRefCallback } = useElectrodeMeshRefs();
 
@@ -94,6 +94,7 @@ const EEGHead = forwardRef<THREE.Group, EEGHeadProps>(
             scale={0.161}
           />
         )}
+        {children}
       </group>
     );
   }

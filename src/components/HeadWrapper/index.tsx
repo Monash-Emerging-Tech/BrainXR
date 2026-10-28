@@ -1,14 +1,19 @@
 import * as THREE from "three";
-import React, { useRef } from "react";
+import React, { useRef, Suspense } from "react";
 import { useThree } from "@react-three/fiber";
 import EEGHead from "../eegHead";
 import XRConsole from "../XRConsole";
+import BrainModel from "../story/BrainModel";
+import { STORY_V2 } from "../story-v2/storyContentV2";
 import type { ElectrodeName, Frame } from "../../utils/signalSource";
 import type { HistorySample } from "../../hooks/usePlaybackEngine";
 import { useXRDragInteraction } from "./useXRDragInteraction";
 import { useHeadPlacement } from "./useHeadPlacement";
 import { resolveHeadPosition } from "./spatialCollision";
-import type { HeadsetPresentationStage } from "../../utils/headsetPresentation";
+import { headsetPresentation, type HeadsetPresentationStage } from "../../utils/headsetPresentation";
+import { OnboardingBrainRig } from "../onboarding/OnboardingBrainStage";
+
+const BRAIN_FIT = STORY_V2.act3.brainFit;
 
 interface HeadWrapperProps {
   frameRef: React.RefObject<Frame>;
@@ -83,6 +88,9 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
     onExitXR?.() || gl.xr.getSession()?.end();
   };
 
+  const isStoryActive = headsetPresentation.getStoryProgress() !== null;
+  const showBrain = !isStoryActive && (presentationStage === "prefrontal" || highlightPrefrontal);
+
   return (
     <group>
       <group onPointerMove={handlePointerMove}>
@@ -95,8 +103,28 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
           highlightAllElectrodes={presentationStage === "electrodes"}
           onChannelSelect={onChannelSelect}
           onChannelHover={onChannelHover}
-        />
+        >
+          {showBrain && (
+            <group
+              position={[BRAIN_FIT.x, BRAIN_FIT.y, BRAIN_FIT.z]}
+              scale={BRAIN_FIT.scale}
+            >
+              <Suspense fallback={null}>
+                <BrainModel
+                  activeIndex={4}
+                  prefrontal={true}
+                  pulse={true}
+                  reducedMotion={false}
+                />
+              </Suspense>
+            </group>
+          )}
+        </EEGHead>
       </group>
+
+      {/* Render the onboarding brain in the exact same 3D scene for true physical depth buffer testing */}
+      <OnboardingBrainRig />
+
       {/* Render 3D Spatial Dashboard in WebXR Mode only */}
       <XRConsole
         frameRef={frameRef}

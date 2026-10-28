@@ -14,6 +14,8 @@ interface BackgroundOscilloscopesProps {
   selectedChannel: ElectrodeName | null;
   highlightedChannels?: readonly ElectrodeName[];
   hoveredChannel?: ElectrodeName | null;
+  theme?: "light" | "dark";
+  hideLabels?: boolean;
   onSelectChannel?: (name: ElectrodeName) => void;
   onHoverChannel?: (name: ElectrodeName | null) => void;
 }
@@ -24,6 +26,8 @@ const BackgroundOscilloscopes: React.FC<BackgroundOscilloscopesProps> = ({
   selectedChannel,
   highlightedChannels = [],
   hoveredChannel,
+  theme = "light",
+  hideLabels = false,
   onSelectChannel,
   onHoverChannel,
 }) => {
@@ -69,7 +73,7 @@ const BackgroundOscilloscopes: React.FC<BackgroundOscilloscopesProps> = ({
       if (needsRedraw || currentFrame !== lastFrame) {
         lastFrame = currentFrame;
         needsRedraw = false;
-        render(ctx, canvas, histories, selectedChannel, hoveredChannel, highlightedChannels);
+        render(ctx, canvas, histories, selectedChannel, hoveredChannel, highlightedChannels, theme);
 
         // Update superscript voltage values directly
         if (currentFrame?.channels) {
@@ -94,7 +98,7 @@ const BackgroundOscilloscopes: React.FC<BackgroundOscilloscopesProps> = ({
 
     raf = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(raf);
-  }, [historiesRef, frameRef, selectedChannel, hoveredChannel, highlightedChannels]);
+  }, [historiesRef, frameRef, selectedChannel, hoveredChannel, highlightedChannels, theme]);
 
   return (
     <>
@@ -104,7 +108,7 @@ const BackgroundOscilloscopes: React.FC<BackgroundOscilloscopesProps> = ({
       />
 
       {/* Dedicated interactive left margin corridor at z-30 for neomorphic electrode labels */}
-      {layout && (
+      {!hideLabels && layout && (
         <div
           className="absolute top-0 bottom-0 left-0 z-30 pointer-events-auto"
           style={{ width: `${layout.paddingLeft + 12}px` }}
