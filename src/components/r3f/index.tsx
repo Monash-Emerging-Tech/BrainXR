@@ -339,7 +339,6 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
             <IdleActions
               onStartDemo={startDemo}
               onStartLive={startLive}
-              onStartStory={startStory}
               onEnterVR={handleEnterVR}
             />
           </div>

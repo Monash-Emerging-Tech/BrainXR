@@ -1,5 +1,5 @@
 import { useCallback, type RefObject } from "react";
-import type { ElectrodeName, Frame, SignalSource } from "../../utils/signalSource";
+import type { Frame, SignalSource } from "../../utils/signalSource";
 import type { AppMode } from "../../utils/appMode";
 import { simulateHeadsetConnection } from "../../utils/connectionFlow";
 import { clearHistories, type Histories } from "./history";

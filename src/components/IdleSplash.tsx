@@ -74,11 +74,10 @@ export const IdleHeadline: React.FC<IdleHeadlineProps> = ({ variant, onStartStor
 interface IdleActionsProps {
   onStartDemo: () => void;
   onStartLive: () => void;
-  onStartStory?: () => void;
   onEnterVR?: () => void;
 }
 
-export const IdleActions: React.FC<IdleActionsProps> = ({ onStartDemo, onStartLive, onStartStory, onEnterVR }) => (
+export const IdleActions: React.FC<IdleActionsProps> = ({ onStartDemo, onStartLive, onEnterVR }) => (
   <div className="absolute inset-x-0 bottom-6 flex flex-col items-center justify-center z-30 px-6">
     <div className="backdrop-blur-md">
       <div className="flex flex-col items-center gap-2">

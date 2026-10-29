@@ -77,7 +77,6 @@ export const XRControlBar: React.FC<XRControlBarProps> = ({
   const currentTrial = frame?.trialIndex ?? 0;
   const trialElapsed = frame?.trialElapsed ?? 0;
   const isBaseline = frame?.phase === "baseline";
-  const phase = frame?.phase ?? "idle";
   const currentFocus = frame?.focus !== undefined && frame?.focus !== null ? frame.focus : null;
   const focusAvg = frame?.focus_avg;
 

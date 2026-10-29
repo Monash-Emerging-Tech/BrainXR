@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { ElectrodeName, Frame } from "../../utils/signalSource";
 import { ELECTRODE_DISPLAY_ORDER } from "../../utils/electrodeDisplayOrder";
 import type { HistorySample } from "../../hooks/usePlaybackEngine";

@@ -1,5 +1,4 @@
 import React, { useMemo } from "react";
-import * as THREE from "three";
 import { createCheckerboardFloorTexture, createGridWallTexture } from "./textures";
 
 export const AimlabsArena: React.FC = () => {

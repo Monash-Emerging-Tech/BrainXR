@@ -1,5 +1,4 @@
 import React from "react";
-import * as THREE from "three";
 import { Text } from "@react-three/drei";
 import type { CognitiveRoundType } from "./types";
 

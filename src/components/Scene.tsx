@@ -6,7 +6,7 @@
 // three.js reconcile) this whole subtree. The head animates off its own
 // useFrame loop reading frameRef.current.
 import React, { useSyncExternalStore, useRef, useEffect } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { XR } from "@react-three/xr";

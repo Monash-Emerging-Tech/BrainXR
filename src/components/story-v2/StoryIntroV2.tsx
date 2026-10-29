@@ -19,7 +19,6 @@ import {
   STORY_V2,
   TO_BLACK_MARKS,
   TO_BLACK_SCENE,
-  V2_COPY,
 } from "./storyContentV2";
 
 /**
