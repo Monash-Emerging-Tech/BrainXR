@@ -14,135 +14,135 @@ const SpannedText: React.FC<SpannedTextProps> = ({ text, className = "" }) => (
   </div>
 );
 
-// High-contrast, edge-concentrated 3D rendered spheres & cubes with realistic shading, glow, floating animation, and pulse
+// Muted, sophisticated edge-concentrated 3D rendered spheres & cubes matching BrainXR neurotech aesthetic
 const ModalDecorativeField: React.FC = () => {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden select-none z-0">
       {/* ================= LEFT EDGE CLUSTER ================= */}
-      {/* Top-Left: Large Vibrant Glowing Cyan Sphere */}
+      {/* Top-Left: Soft Slate-Cyan Sphere */}
       <div
-        className="absolute -top-12 -left-12 w-56 h-56 rounded-full shadow-[0_0_60px_rgba(0,240,255,0.45)] border border-cyan-300/60 animate-pulse transition-transform duration-1000 ease-in-out"
+        className="absolute -top-12 -left-12 w-56 h-56 rounded-full shadow-[0_0_35px_rgba(8,145,178,0.12)] border border-cyan-800/25 animate-pulse transition-transform duration-1000 ease-in-out opacity-45"
         style={{
-          background: "radial-gradient(circle at 35% 30%, #a5f3fc 0%, #22d3ee 30%, #0891b2 70%, #083344 100%)",
-          animationDuration: "5s",
-        }}
-      />
-
-      {/* Top-Left: Vivid Isometric Crimson Box (floating drift) */}
-      <div
-        className="absolute top-28 -left-4 w-20 h-20 rounded-xl shadow-[0_0_35px_rgba(244,63,94,0.5)] border border-rose-300/60 transform rotate-18 -skew-y-12 animate-bounce"
-        style={{
-          background: "linear-gradient(135deg, #fb7185 0%, #e11d48 50%, #881337 100%)",
-          animationDuration: "6s",
-        }}
-      />
-
-      {/* Mid-Left: High-contrast Cyan Sphere (slow breath) */}
-      <div
-        className="absolute top-1/2 -left-8 -translate-y-1/2 w-32 h-32 rounded-full shadow-[0_0_45px_rgba(0,240,255,0.4)] border border-cyan-400/70 animate-pulse"
-        style={{
-          background: "radial-gradient(circle at 38% 32%, #cffafe 0%, #06b6d4 40%, #0e7490 80%, #082f49 100%)",
-          animationDuration: "4s",
-        }}
-      />
-
-      {/* Mid-Left lower: Angled Floating Red Box */}
-      <div
-        className="absolute top-[65%] left-10 w-16 h-16 rounded-xl shadow-[0_0_30px_rgba(244,63,94,0.45)] border border-rose-400/70 transform -rotate-25 skew-x-6 animate-pulse"
-        style={{
-          background: "linear-gradient(145deg, #fda4af 0%, #f43f5e 45%, #9f1239 100%)",
-          animationDuration: "4.5s",
-        }}
-      />
-
-      {/* Bottom-Left: Dense Bold Red Cube */}
-      <div
-        className="absolute bottom-6 -left-6 w-36 h-36 rounded-2xl shadow-[0_0_55px_rgba(244,63,94,0.5)] border border-rose-300/60 transform rotate-35 animate-bounce"
-        style={{
-          background: "linear-gradient(135deg, #f43f5e 0%, #be123c 60%, #4c0519 100%)",
+          background: "radial-gradient(circle at 35% 30%, #38bdf8 0%, #0369a1 40%, #0f172a 80%)",
           animationDuration: "7s",
         }}
       />
 
-      {/* Bottom-Left outer: Cyan Sphere */}
+      {/* Top-Left: Muted Rose-Slate Box (floating drift) */}
       <div
-        className="absolute -bottom-10 left-24 w-28 h-28 rounded-full shadow-[0_0_40px_rgba(0,240,255,0.4)] border border-cyan-300/50 animate-pulse"
+        className="absolute top-28 -left-4 w-20 h-20 rounded-xl shadow-[0_0_20px_rgba(159,18,57,0.15)] border border-rose-900/30 transform rotate-18 -skew-y-12 animate-bounce opacity-40"
         style={{
-          background: "radial-gradient(circle at 35% 30%, #e0f2fe 0%, #38bdf8 45%, #0369a1 85%, #082f49 100%)",
-          animationDuration: "5.5s",
+          background: "linear-gradient(135deg, #be123c 0%, #4c0519 55%, #0f172a 100%)",
+          animationDuration: "8s",
         }}
       />
 
-      {/* ================= RIGHT EDGE CLUSTER ================= */}
-      {/* Top-Right: Heavy Angled Crimson Cube */}
+      {/* Mid-Left: Muted Cyan Sphere */}
       <div
-        className="absolute -top-10 -right-8 w-44 h-44 rounded-2xl shadow-[0_0_60px_rgba(244,63,94,0.55)] border border-rose-300/60 transform -rotate-20 skew-y-6 animate-pulse"
+        className="absolute top-1/2 -left-8 -translate-y-1/2 w-32 h-32 rounded-full shadow-[0_0_25px_rgba(8,145,178,0.1)] border border-cyan-800/25 animate-pulse opacity-40"
         style={{
-          background: "linear-gradient(135deg, #fda4af 0%, #f43f5e 45%, #9f1239 85%, #4c0519 100%)",
-          animationDuration: "5.2s",
+          background: "radial-gradient(circle at 38% 32%, #7dd3fc 0%, #0284c7 45%, #0c4a6e 75%, #0f172a 100%)",
+          animationDuration: "6s",
         }}
       />
 
-      {/* Top-Right inner: Bright Cyan Sphere */}
+      {/* Mid-Left lower: Angled Floating Rose Box */}
       <div
-        className="absolute top-28 right-16 w-24 h-24 rounded-full shadow-[0_0_45px_rgba(0,240,255,0.5)] border border-cyan-200/70 animate-bounce"
+        className="absolute top-[65%] left-10 w-16 h-16 rounded-xl shadow-[0_0_16px_rgba(159,18,57,0.12)] border border-rose-900/25 transform -rotate-25 skew-x-6 animate-pulse opacity-35"
         style={{
-          background: "radial-gradient(circle at 35% 30%, #ecfeff 0%, #00f0ff 40%, #0891b2 80%, #083344 100%)",
+          background: "linear-gradient(145deg, #e11d48 0%, #881337 55%, #1e1b4b 100%)",
           animationDuration: "6.5s",
         }}
       />
 
-      {/* Mid-Right: Dynamic Diamond Tilted Red Box */}
+      {/* Bottom-Left: Muted Rose-Burgundy Cube */}
       <div
-        className="absolute top-1/2 -right-10 -translate-y-1/2 w-32 h-32 rounded-2xl shadow-[0_0_50px_rgba(244,63,94,0.5)] border border-rose-400/60 transform rotate-45 animate-pulse"
+        className="absolute bottom-6 -left-6 w-36 h-36 rounded-2xl shadow-[0_0_30px_rgba(159,18,57,0.15)] border border-rose-900/30 transform rotate-35 animate-bounce opacity-45"
         style={{
-          background: "linear-gradient(125deg, #fb7185 0%, #e11d48 55%, #881337 100%)",
-          animationDuration: "4.8s",
+          background: "linear-gradient(135deg, #9f1239 0%, #4c0519 65%, #020617 100%)",
+          animationDuration: "9s",
+        }}
+      />
+
+      {/* Bottom-Left outer: Soft Cyan Sphere */}
+      <div
+        className="absolute -bottom-10 left-24 w-28 h-28 rounded-full shadow-[0_0_20px_rgba(8,145,178,0.1)] border border-cyan-800/20 animate-pulse opacity-35"
+        style={{
+          background: "radial-gradient(circle at 35% 30%, #38bdf8 0%, #0369a1 50%, #082f49 85%, #020617 100%)",
+          animationDuration: "7.5s",
+        }}
+      />
+
+      {/* ================= RIGHT EDGE CLUSTER ================= */}
+      {/* Top-Right: Muted Crimson-Slate Cube */}
+      <div
+        className="absolute -top-10 -right-8 w-44 h-44 rounded-2xl shadow-[0_0_30px_rgba(159,18,57,0.15)] border border-rose-900/30 transform -rotate-20 skew-y-6 animate-pulse opacity-45"
+        style={{
+          background: "linear-gradient(135deg, #be123c 0%, #881337 50%, #30030f 85%, #0f172a 100%)",
+          animationDuration: "7.2s",
+        }}
+      />
+
+      {/* Top-Right inner: Soft Cyan Sphere */}
+      <div
+        className="absolute top-28 right-16 w-24 h-24 rounded-full shadow-[0_0_22px_rgba(8,145,178,0.12)] border border-cyan-800/25 animate-bounce opacity-40"
+        style={{
+          background: "radial-gradient(circle at 35% 30%, #7dd3fc 0%, #0284c7 45%, #0e7490 80%, #0f172a 100%)",
+          animationDuration: "8.5s",
+        }}
+      />
+
+      {/* Mid-Right: Diamond Tilted Rose Box */}
+      <div
+        className="absolute top-1/2 -right-10 -translate-y-1/2 w-32 h-32 rounded-2xl shadow-[0_0_25px_rgba(159,18,57,0.14)] border border-rose-900/30 transform rotate-45 animate-pulse opacity-40"
+        style={{
+          background: "linear-gradient(125deg, #be123c 0%, #881337 55%, #1e1b4b 100%)",
+          animationDuration: "6.8s",
         }}
       />
 
       {/* Mid-Right inner: Cyan Floating Sphere */}
       <div
-        className="absolute top-[62%] right-12 w-16 h-16 rounded-full shadow-[0_0_35px_rgba(0,240,255,0.45)] border border-cyan-300/60 animate-bounce"
+        className="absolute top-[62%] right-12 w-16 h-16 rounded-full shadow-[0_0_16px_rgba(8,145,178,0.12)] border border-cyan-800/25 animate-bounce opacity-35"
         style={{
-          background: "radial-gradient(circle at 35% 30%, #a5f3fc 0%, #22d3ee 45%, #0e7490 90%, #082f49 100%)",
-          animationDuration: "5.8s",
+          background: "radial-gradient(circle at 35% 30%, #38bdf8 0%, #0369a1 50%, #0f172a 90%)",
+          animationDuration: "7.8s",
         }}
       />
 
-      {/* Bottom-Right: Massive Radiant Cyan Sphere */}
+      {/* Bottom-Right: Deep Soft Cyan Sphere */}
       <div
-        className="absolute -bottom-14 -right-14 w-60 h-60 rounded-full shadow-[0_0_75px_rgba(0,240,255,0.55)] border border-cyan-200/70 animate-pulse"
+        className="absolute -bottom-14 -right-14 w-60 h-60 rounded-full shadow-[0_0_35px_rgba(8,145,178,0.14)] border border-cyan-800/25 animate-pulse opacity-45"
         style={{
-          background: "radial-gradient(circle at 32% 28%, #ffffff 0%, #67e8f9 25%, #06b6d4 60%, #164e63 90%, #082f49 100%)",
-          animationDuration: "6s",
+          background: "radial-gradient(circle at 32% 28%, #7dd3fc 0%, #0369a1 45%, #075985 75%, #020617 100%)",
+          animationDuration: "8s",
         }}
       />
 
-      {/* Bottom-Right inner: Tilted Red Box */}
+      {/* Bottom-Right inner: Tilted Rose Box */}
       <div
-        className="absolute bottom-24 right-28 w-18 h-18 rounded-xl shadow-[0_0_30px_rgba(244,63,94,0.45)] border border-rose-300/60 transform -rotate-15 animate-bounce"
+        className="absolute bottom-24 right-28 w-18 h-18 rounded-xl shadow-[0_0_16px_rgba(159,18,57,0.12)] border border-rose-900/25 transform -rotate-15 animate-bounce opacity-35"
         style={{
-          background: "linear-gradient(145deg, #fda4af 0%, #e11d48 50%, #9f1239 100%)",
-          animationDuration: "7.2s",
+          background: "linear-gradient(145deg, #e11d48 0%, #881337 55%, #0f172a 100%)",
+          animationDuration: "9.2s",
         }}
       />
 
       {/* Top Center Edge: Small Cyan Sphere accent */}
       <div
-        className="absolute -top-6 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full shadow-[0_0_25px_rgba(0,240,255,0.35)] border border-cyan-300/40 animate-pulse"
+        className="absolute -top-6 left-1/2 -translate-x-1/2 w-14 h-14 rounded-full shadow-[0_0_12px_rgba(8,145,178,0.1)] border border-cyan-800/20 animate-pulse opacity-30"
         style={{
-          background: "radial-gradient(circle at 35% 30%, #a5f3fc 0%, #22d3ee 50%, #0891b2 100%)",
-          animationDuration: "4s",
+          background: "radial-gradient(circle at 35% 30%, #38bdf8 0%, #0369a1 55%, #020617 100%)",
+          animationDuration: "6s",
         }}
       />
 
-      {/* Bottom Center Edge: Angled Red Box accent */}
+      {/* Bottom Center Edge: Angled Rose Box accent */}
       <div
-        className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-16 h-16 rounded-lg shadow-[0_0_25px_rgba(244,63,94,0.35)] border border-rose-400/40 transform rotate-12 animate-pulse"
+        className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-16 h-16 rounded-lg shadow-[0_0_12px_rgba(159,18,57,0.1)] border border-rose-900/20 transform rotate-12 animate-pulse opacity-30"
         style={{
-          background: "linear-gradient(135deg, #fb7185 0%, #e11d48 60%, #881337 100%)",
-          animationDuration: "5s",
+          background: "linear-gradient(135deg, #be123c 0%, #4c0519 65%, #020617 100%)",
+          animationDuration: "7s",
         }}
       />
     </div>
@@ -152,7 +152,6 @@ const ModalDecorativeField: React.FC = () => {
 interface AimlabsModalsProps {
   status: GameStatus;
   countdown: number;
-  round: number;
   round1Metrics: RoundMetrics | null;
   round2Metrics: RoundMetrics | null;
   onStartGame: () => void;
@@ -164,7 +163,6 @@ interface AimlabsModalsProps {
 export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
   status,
   countdown,
-  round,
   round1Metrics,
   round2Metrics,
   onStartGame,
@@ -177,7 +175,6 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Mount trigger for smooth fade-in
     const t = setTimeout(() => setMounted(true), 20);
     return () => clearTimeout(t);
   }, [status]);
@@ -187,80 +184,20 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
     setTimeout(() => {
       setIsFadingOut(false);
       callback();
-    }, 320); // 320ms smooth fade-out duration
+    }, 320);
   };
 
-  // Countdown overlay with Round Title & High-Visibility Rules
+  // Countdown overlay
   if (status === "countdown") {
-    const isRound1 = round === 1;
-
     return (
-      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md pointer-events-none select-none transition-opacity duration-300">
-        {/* Round Badge & Title */}
-        <div className="flex flex-col items-center mb-6 animate-pulse">
-          <div className="px-3.5 py-1 rounded-full bg-slate-900/90 border border-white/15 text-[11px] font-mono uppercase tracking-widest text-slate-300 mb-2">
-            {isRound1 ? "Round 1" : "Round 2"}
-          </div>
-          <div className="text-3xl sm:text-4xl font-black font-offbit uppercase tracking-wider text-white">
-            {isRound1 ? "CPT · Continuous Performance" : "SART · Response Inversion"}
-          </div>
-        </div>
-
-        {/* Big Giant Countdown Digit */}
-        <div className="relative flex items-center justify-center my-2">
-          <div className="text-8xl md:text-9xl font-offbit text-white tracking-widest drop-shadow-[0_0_30px_rgba(34,211,238,0.6)]">
+      <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md pointer-events-none select-none transition-opacity duration-300">
+        <div className="flex flex-col items-center">
+          <div className="text-8xl md:text-9xl font-offbit text-white tracking-widest drop-shadow-[0_0_24px_rgba(34,211,238,0.5)]">
             {countdown > 0 ? countdown : "GO"}
           </div>
-        </div>
-
-        {/* Prominent Quick Rules Showcase (Equal-width Pills) */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 w-full max-w-lg px-4 justify-center">
-          {isRound1 ? (
-            <>
-              {/* Cyan Sphere -> PRESS */}
-              <div className="flex-1 w-full flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-cyan-950/80 border border-cyan-400/60 shadow-[0_0_20px_rgba(0,240,255,0.3)] backdrop-blur-md">
-                <span className="w-5 h-5 shrink-0 rounded-full bg-cyan-400 shadow-[0_0_12px_#00f0ff] animate-pulse" />
-                <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold leading-none mb-0.5">CYAN SPHERE</span>
-                  <span className="text-sm font-offbit uppercase font-bold text-white tracking-widest leading-none">PRESS</span>
-                </div>
-              </div>
-
-              {/* Red Box -> DO NOT PRESS */}
-              <div className="flex-1 w-full flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-rose-950/70 border border-rose-500/50 shadow-[0_0_15px_rgba(244,63,94,0.25)] backdrop-blur-md">
-                <span className="w-5 h-5 shrink-0 rounded-xs bg-rose-500 shadow-[0_0_10px_#f43f5e]" />
-                <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-rose-300 font-semibold leading-none mb-0.5">RED BOX</span>
-                  <span className="text-sm font-offbit uppercase font-bold text-rose-300 tracking-widest leading-none">DO NOT PRESS</span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Red Box -> PRESS */}
-              <div className="flex-1 w-full flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-rose-950/80 border border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.3)] backdrop-blur-md">
-                <span className="w-5 h-5 shrink-0 rounded-xs bg-rose-500 shadow-[0_0_12px_#f43f5e] animate-pulse" />
-                <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-rose-300 font-semibold leading-none mb-0.5">RED BOX</span>
-                  <span className="text-sm font-offbit uppercase font-bold text-white tracking-widest leading-none">PRESS</span>
-                </div>
-              </div>
-
-              {/* Cyan Sphere -> DO NOT PRESS */}
-              <div className="flex-1 w-full flex items-center justify-center gap-3 px-6 py-3 rounded-full bg-cyan-950/70 border border-cyan-400/50 shadow-[0_0_15px_rgba(0,240,255,0.25)] backdrop-blur-md">
-                <span className="w-5 h-5 shrink-0 rounded-full bg-cyan-400 shadow-[0_0_10px_#00f0ff]" />
-                <div className="flex flex-col text-left">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-300 font-semibold leading-none mb-0.5">CYAN SPHERE</span>
-                  <span className="text-sm font-offbit uppercase font-bold text-cyan-300 tracking-widest leading-none">DO NOT PRESS</span>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Small fixation instruction */}
-        <div className="mt-6 text-xs font-mono uppercase tracking-[0.25em] text-slate-400">
-          Fixate center cross
+          <div className="mt-4 text-xs font-mono uppercase tracking-[0.25em] text-cyan-400">
+            Fixate center cross
+          </div>
         </div>
       </div>
     );
@@ -300,7 +237,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
           {/* Side-by-Side Dual Round Cards Layout */}
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-2 text-left font-mono">
             {/* Round 1 Card */}
-            <div className="p-4 rounded-2xl border border-cyan-500/30 bg-slate-950/85 backdrop-blur-md flex flex-col justify-between shadow-2xl transition-transform hover:scale-[1.01] duration-200">
+            <div className="p-4 rounded-2xl border border-cyan-500/20 bg-slate-950/85 backdrop-blur-md flex flex-col justify-between shadow-2xl transition-transform hover:scale-[1.01] duration-200">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-amber-400 uppercase font-bold tracking-wider">
@@ -313,23 +250,23 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
 
               <div className="space-y-2.5 mt-4 pt-3 border-t border-slate-800 text-xs">
                 {/* Cyan Sphere -> Press */}
-                <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/60 border border-cyan-500/40 shadow-sm">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 shadow-sm">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] animate-pulse" />
+                    <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
                     <span className="text-slate-200">Cyan Sphere</span>
                   </div>
-                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/90 text-cyan-300 border border-cyan-400/60 font-bold tracking-wider">
+                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
                     PRESS
                   </span>
                 </div>
 
                 {/* Red Box -> Avoid */}
-                <div className="flex items-center justify-between p-2 rounded-xl bg-rose-950/40 border border-rose-500/35 shadow-sm">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-rose-950/30 border border-rose-500/25 shadow-sm">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-3.5 h-3.5 rounded-xs bg-rose-500 shadow-[0_0_6px_#f43f5e]" />
+                    <span className="w-3.5 h-3.5 rounded-xs bg-rose-600 shadow-[0_0_5px_rgba(225,29,72,0.5)]" />
                     <span className="text-slate-300">Red Box</span>
                   </div>
-                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-rose-950/90 text-rose-300 border border-rose-500/60 font-bold tracking-wider">
+                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/40 font-bold tracking-wider">
                     DO NOT PRESS
                   </span>
                 </div>
@@ -337,7 +274,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
             </div>
 
             {/* Round 2 Card */}
-            <div className="p-4 rounded-2xl border border-violet-500/30 bg-slate-950/85 backdrop-blur-md flex flex-col justify-between shadow-2xl transition-transform hover:scale-[1.01] duration-200">
+            <div className="p-4 rounded-2xl border border-violet-500/20 bg-slate-950/85 backdrop-blur-md flex flex-col justify-between shadow-2xl transition-transform hover:scale-[1.01] duration-200">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] text-cyan-400 uppercase font-bold tracking-wider">
@@ -350,23 +287,23 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
 
               <div className="space-y-2.5 mt-4 pt-3 border-t border-slate-800 text-xs">
                 {/* Red Box -> Press */}
-                <div className="flex items-center justify-between p-2 rounded-xl bg-rose-950/60 border border-rose-500/40 shadow-sm">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-rose-950/40 border border-rose-500/30 shadow-sm">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-3.5 h-3.5 rounded-xs bg-rose-500 shadow-[0_0_8px_#f43f5e]" />
+                    <span className="w-3.5 h-3.5 rounded-xs bg-rose-600 shadow-[0_0_6px_rgba(225,29,72,0.6)]" />
                     <span className="text-slate-200">Red Box</span>
                   </div>
-                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-rose-950/90 text-rose-300 border border-rose-500/60 font-bold tracking-wider">
+                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/40 font-bold tracking-wider">
                     PRESS
                   </span>
                 </div>
 
                 {/* Cyan Sphere -> Avoid */}
-                <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/40 border border-cyan-500/35 shadow-sm">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/25 shadow-sm">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff]" />
+                    <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_5px_rgba(6,182,212,0.5)]" />
                     <span className="text-slate-300">Cyan Sphere</span>
                   </div>
-                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/90 text-cyan-300 border border-cyan-400/60 font-bold tracking-wider">
+                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
                     DO NOT PRESS
                   </span>
                 </div>
@@ -395,7 +332,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
               Back to EEG
             </button>
             <button
-              onClick={onStartGame}
+              onClick={() => handleAction(onStartGame)}
               className="flex-2 py-3 px-6 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs font-mono uppercase tracking-wider shadow-lg hover:shadow-indigo-500/30 active:scale-95 transition-all cursor-pointer border border-indigo-400/40"
             >
               Start Assessment →
@@ -476,7 +413,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
           </div>
 
           <button
-            onClick={onStartRound2}
+            onClick={() => handleAction(onStartRound2)}
             className="w-full mt-4 py-3.5 px-6 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-rose-500/30 active:scale-95 transition-all cursor-pointer border border-rose-400/40"
           >
             Start Round 2 (SART) →

@@ -1,6 +1,8 @@
 import React, { useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import type { ThreeEvent } from "@react-three/fiber";
+import { triggerXRHaptic } from "../../utils/xrHaptics";
 import type { TargetType } from "./types";
 
 interface AimlabsTargetProps {
@@ -28,20 +30,21 @@ export const AimlabsTarget: React.FC<AimlabsTargetProps> = ({
     }
   });
 
+  const handleTargetHit = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    if (!visible) return;
+    triggerXRHaptic(e, 0.6, 25);
+    onClick?.();
+  };
+
   if (!visible) return null;
 
   return (
     <group
       ref={groupRef}
       position={position}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (visible) onClick?.();
-      }}
-      onPointerDown={(e) => {
-        e.stopPropagation();
-        if (visible) onClick?.();
-      }}
+      onClick={handleTargetHit}
+      onPointerDown={handleTargetHit}
     >
       {isSphere ? (
         <mesh>

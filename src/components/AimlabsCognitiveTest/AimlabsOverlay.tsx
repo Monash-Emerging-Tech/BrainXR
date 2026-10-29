@@ -32,7 +32,6 @@ export const AimlabsOverlay: React.FC<AimlabsOverlayProps> = ({
         <AimlabsModals
           status={state.status}
           countdown={state.countdown}
-          round={state.round}
           round1Metrics={state.round1Metrics}
           round2Metrics={state.round2Metrics}
           onStartGame={() => aimlabsStore.startGame()}
