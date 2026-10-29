@@ -7,6 +7,9 @@ import { headsetPresentation, type HeadsetPresentationStage } from "../../../uti
 
 interface OnboardingFlowProps {
   onComplete: () => void;
+  onRouteToOnboarding?: () => void;
+  onInterrupt?: () => void;
+  hasRoutedToOnboarding?: boolean;
   onHomeFade?: (opacity: number) => void;
   onHeadsetOpacity?: (opacity: number) => void;
   onHighlightPrefrontal?: (active: boolean) => void;
@@ -16,6 +19,9 @@ interface OnboardingFlowProps {
 
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   onComplete,
+  onRouteToOnboarding,
+  onInterrupt,
+  hasRoutedToOnboarding = false,
   onHomeFade,
   onHeadsetOpacity,
   onHighlightPrefrontal,
@@ -26,6 +32,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   const [introElapsed, setIntroElapsed] = useState(0);
   const reachRef = useRef(0.01);
   const densityRef = useRef(0.0);
+  const hasTriggeredRouteRef = useRef(hasRoutedToOnboarding);
 
   useEffect(() => {
     let frame = 0;
@@ -96,15 +103,33 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   }, [p, hasBlinked]);
 
   useEffect(() => {
+    if (hasRoutedToOnboarding) {
+      hasTriggeredRouteRef.current = true;
+    }
+  }, [hasRoutedToOnboarding]);
+
+  // Route to /onboarding as soon as the intro transition commits (home fades away or user scrolls)
+  useEffect(() => {
+    if (!hasTriggeredRouteRef.current && (effectiveProgress >= 0.45 || p >= 0.04)) {
+      hasTriggeredRouteRef.current = true;
+      onRouteToOnboarding?.();
+    }
+  }, [effectiveProgress, p, onRouteToOnboarding]);
+
+  useEffect(() => {
     onThemeChange?.(isDarkPhase ? "dark" : "light");
   }, [isDarkPhase, onThemeChange]);
 
   useEffect(() => {
-    headsetPresentation.setStoryProgress(p);
+    if (!hasRoutedToOnboarding && effectiveProgress < 0.45 && p < 0.04) {
+      headsetPresentation.setStoryProgress(null);
+    } else {
+      headsetPresentation.setStoryProgress(p);
+    }
     return () => {
       headsetPresentation.setStoryProgress(null);
     };
-  }, [p]);
+  }, [p, effectiveProgress, hasRoutedToOnboarding]);
 
   useEffect(() => {
     onHomeFade?.(homeOpacity);
@@ -127,7 +152,19 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         <div className="fixed inset-0 pointer-events-none z-35 animate-blink-invert" />
       )}
 
-      <div ref={containerRef} onScroll={handleScroll} className="fixed inset-0 z-40 overflow-y-auto overscroll-none scroll-smooth select-none">
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        onClick={(e) => {
+          if (!hasRoutedToOnboarding && !hasTriggeredRouteRef.current && onInterrupt) {
+            const target = e.target as HTMLElement;
+            if (!target.closest("button") && !target.closest("a")) {
+              onInterrupt();
+            }
+          }
+        }}
+        className="fixed inset-0 z-40 overflow-y-auto overscroll-none scroll-smooth select-none"
+      >
         <div className="h-[520vh] w-full relative">
           <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
             <BeatContent progress={p} introFadeProgress={introFadeProgress} isDark={isDarkPhase} />

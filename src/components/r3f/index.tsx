@@ -13,6 +13,8 @@ import DemoBottomControls from "./DemoBottomControls";
 import NodeDetailsBanner from "./NodeDetailsBanner";
 import { headsetPresentation } from "../../utils/headsetPresentation";
 import OnboardingFlow from "../onboarding/OnboardingFlow";
+import { launchExperience } from "../../utils/webxrDetector";
+import { aimlabsStore, AimlabsOverlay } from "../AimlabsCognitiveTest";
 
 const StoryIntroV2 = lazy(() => import("../story-v2/StoryIntroV2"));
 const StoryIntro = lazy(() => import("../story/StoryIntro"));
@@ -57,6 +59,14 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
     return !seen;
   });
 
+  const [hasRoutedToOnboarding, setHasRoutedToOnboarding] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.location.pathname.startsWith("/onboarding") ||
+      new URLSearchParams(window.location.search).has("onboarding")
+    );
+  });
+
   // Keep story visibility synchronized with browser history back/forward
   useEffect(() => {
     const onPopState = () => {
@@ -65,6 +75,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
         new URLSearchParams(window.location.search).has("story") ||
         new URLSearchParams(window.location.search).has("onboarding");
       setShowStory(isStory);
+      setHasRoutedToOnboarding(window.location.pathname.startsWith("/onboarding"));
       if (isStory) setHeadsetOpacity(1);
     };
     window.addEventListener("popstate", onPopState);
@@ -78,7 +89,77 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
   );
   const presentationStage = isIdle ? storyStage : "interactive";
 
+  const aimlabsState = useSyncExternalStore(
+    aimlabsStore.subscribe,
+    aimlabsStore.getSnapshot,
+    aimlabsStore.getServerSnapshot
+  );
+
+  const cancelOnboarding = useCallback(() => {
+    sessionStorage.setItem(STORY_SEEN_KEY, "1");
+    setShowStory(false);
+    setHasRoutedToOnboarding(false);
+    setTheme("light");
+    setHeadsetOpacity(1);
+    setHomeFadeOpacity(1);
+    headsetPresentation.setStage("showcase");
+    headsetPresentation.setStoryProgress(null);
+    setHighlightPrefrontal(false);
+    if (typeof window !== "undefined") {
+      if (window.location.pathname.startsWith("/onboarding")) {
+        window.history.replaceState(null, "", "/");
+      } else {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has("story") || url.searchParams.has("onboarding")) {
+          url.searchParams.delete("story");
+          url.searchParams.delete("onboarding");
+          window.history.replaceState(null, "", url.pathname + (url.search ? url.search : ""));
+        }
+      }
+    }
+  }, []);
+
+  const handleRouteToOnboarding = useCallback(() => {
+    setHasRoutedToOnboarding(true);
+    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/onboarding")) {
+      window.history.pushState(null, "", "/onboarding");
+    }
+  }, []);
+
+  // Global Escape key cancels onboarding before (or during) routing to /onboarding
+  useEffect(() => {
+    if (!showStory) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" || e.code === "Escape") {
+        cancelOnboarding();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showStory, cancelOnboarding]);
+
+  const handleEnterVR = useCallback(() => {
+    if (showStory) cancelOnboarding();
+    launchExperience({
+      onStartXR: () => {
+        aimlabsStore.launch(true);
+      },
+      onStartDesktop: () => {
+        aimlabsStore.launch(false);
+      },
+    });
+  }, [showStory, cancelOnboarding]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("aimlabs") || params.has("test") || params.has("cpt")) {
+      handleEnterVR();
+    }
+  }, [handleEnterVR]);
+
   const selectChannel = useCallback((channel: ElectrodeName) => {
+    if (showStory) cancelOnboarding();
     // A guided group highlight is only context for that guided step. Once the
     // visitor chooses any individual node, the inspection follows that node.
     setHighlightPrefrontal(false);
@@ -88,13 +169,19 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
     }
     if (isIdle) engine.startDemo();
     engine.selectChannel(channel);
-  }, [engine.selectedChannel, engine.selectChannel, engine.startDemo, isIdle]);
+  }, [showStory, cancelOnboarding, engine.selectedChannel, engine.selectChannel, engine.startDemo, isIdle]);
 
   const startDemo = useCallback(() => {
+    if (showStory) cancelOnboarding();
     setHighlightPrefrontal(false);
     engine.selectChannel(null);
     engine.startDemo();
-  }, [engine.selectChannel, engine.startDemo]);
+  }, [showStory, cancelOnboarding, engine.selectChannel, engine.startDemo]);
+
+  const startLive = useCallback(() => {
+    if (showStory) cancelOnboarding();
+    engine.startLive();
+  }, [showStory, cancelOnboarding, engine.startLive]);
 
   const clearSelection = useCallback(() => {
     setHighlightPrefrontal(false);
@@ -130,39 +217,20 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
     setHighlightPrefrontal((prev) => !prev);
   }, [engine.selectChannel]);
 
-  const handleStoryDone = useCallback(() => {
-    sessionStorage.setItem(STORY_SEEN_KEY, "1");
-    setShowStory(false);
-    setTheme("light");
-    setHeadsetOpacity(1);
-    headsetPresentation.setStage("showcase");
-    headsetPresentation.setStoryProgress(null);
-    setHighlightPrefrontal(false);
-    if (typeof window !== "undefined") {
-      if (window.location.pathname.startsWith("/onboarding")) {
-        window.history.replaceState(null, "", "/");
-      } else {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("story");
-        url.searchParams.delete("onboarding");
-        window.history.replaceState(null, "", url.pathname + (url.search ? url.search : ""));
-      }
-    }
-  }, []);
+  const handleStoryDone = cancelOnboarding;
 
   const startStory = useCallback(() => {
     setHeadsetOpacity(1);
     setTheme("light");
+    setHomeFadeOpacity(1);
+    setHasRoutedToOnboarding(false);
     headsetPresentation.setStage("showcase");
-    headsetPresentation.setStoryProgress(0);
+    headsetPresentation.setStoryProgress(null);
     setHighlightPrefrontal(false);
     setShowStory(true);
-    if (typeof window !== "undefined") {
-      window.history.pushState(null, "", "/onboarding");
-    }
   }, []);
 
-  useSpacebarToggle(engine.togglePlayPause);
+  useSpacebarToggle(engine.togglePlayPause, !aimlabsState.isActive);
 
   if (showStory && legacyStoryVersion) {
     return legacyStoryVersion === "v2" ? (
@@ -193,19 +261,20 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
       {/* ======================================================== */}
       <div className="flex-1 flex flex-col relative bg-transparent">
         {engine.audioError && <AudioErrorToast />}
-        {!isIdle && (
+        {!isIdle && !aimlabsState.isActive && (
           <TopHudBar
             engine={engine}
             onBack={disconnect}
             focusSensorsActive={highlightPrefrontal}
             onShowPrefrontal={togglePrefrontal}
+            onEnterVR={handleEnterVR}
           />
         )}
 
 
 
         {/* Layer 1: Solid Text Behind the Headset */}
-        {isIdle && (
+        {isIdle && !aimlabsState.isActive && (
           <div
             className="transition-opacity duration-300 pointer-events-none"
             style={{ opacity: showStory ? homeFadeOpacity : 1 }}
@@ -217,7 +286,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
         {/* 3D R3F Canvas */}
         <div
           className={`w-full h-full z-10 will-change-opacity transition-opacity duration-300 ${
-            isIdle ? "translate-y-8" : ""
+            isIdle && !aimlabsState.isActive ? "translate-y-8" : ""
           }`}
           style={{ opacity: showStory ? headsetOpacity : 1 }}
         >
@@ -233,7 +302,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
               onChannelHover={setHoveredChannel}
               onClearSelection={clearSelection}
               onStartDemo={startDemo}
-              onStartLive={engine.startLive}
+              onStartLive={startLive}
               onTrialSelect={engine.selectTrial}
               onTogglePlayPause={engine.togglePlayPause}
               onSetSpeed={engine.setSpeed}
@@ -247,9 +316,9 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
         {engine.isLoading && <LoadingOverlay />}
 
         {/* Layer 3: Outline Text In Front of the Headset */}
-        {isIdle && (
+        {isIdle && !aimlabsState.isActive && (
           <div
-            className="transition-opacity duration-300"
+            className="transition-opacity duration-300 z-45"
             style={{
               opacity: showStory ? homeFadeOpacity : 1,
               pointerEvents: showStory && homeFadeOpacity < 0.5 ? "none" : "auto",
@@ -259,7 +328,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
           </div>
         )}
 
-        {isIdle && (
+        {isIdle && !aimlabsState.isActive && (
           <div
             className="transition-opacity duration-300 z-45"
             style={{
@@ -269,16 +338,20 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
           >
             <IdleActions
               onStartDemo={startDemo}
-              onStartLive={engine.startLive}
+              onStartLive={startLive}
               onStartStory={startStory}
+              onEnterVR={handleEnterVR}
             />
           </div>
         )}
 
         {/* Unified Continuous Onboarding Flow */}
-        {showStory && !legacyStoryVersion && (
+        {showStory && !legacyStoryVersion && !aimlabsState.isActive && (
           <OnboardingFlow
-            onComplete={handleStoryDone}
+            onComplete={cancelOnboarding}
+            onRouteToOnboarding={handleRouteToOnboarding}
+            onInterrupt={cancelOnboarding}
+            hasRoutedToOnboarding={hasRoutedToOnboarding}
             onHomeFade={setHomeFadeOpacity}
             onHeadsetOpacity={setHeadsetOpacity}
             onHighlightPrefrontal={setHighlightPrefrontal}
@@ -287,7 +360,13 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
           />
         )}
 
-        {engine.mode.kind === "demo" && (
+        {/* Aimlabs Cognitive Assessment Overlay (2D HUD & Modals) */}
+        <AimlabsOverlay
+          state={aimlabsState}
+          onExit={() => aimlabsStore.exit()}
+        />
+
+        {engine.mode.kind === "demo" && !aimlabsState.isActive && (
           <>
             {/* Animated guidance signifier & node details: floats above bottom controls when unfocused, moves below audio unavailable toast when a node is clicked */}
             <div

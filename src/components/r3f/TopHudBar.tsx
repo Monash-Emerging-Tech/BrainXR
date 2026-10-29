@@ -8,11 +8,12 @@ interface TopHudBarProps {
   onBack: () => void;
   focusSensorsActive: boolean;
   onShowPrefrontal: () => void;
+  onEnterVR?: () => void;
 }
 
 // Top HUD nav bar: exit button (left), focus sensors monitor (center),
 // Enter VR button (right). Hidden entirely in idle mode by the caller.
-const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, focusSensorsActive, onShowPrefrontal }) => {
+const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, focusSensorsActive, onShowPrefrontal, onEnterVR }) => {
   const isBaseline = engine.frame.phase === "baseline";
   const focusPercent = engine.frame.focus == null ? null : Math.round(engine.frame.focus * 100);
 
@@ -64,7 +65,7 @@ const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, focusSensorsActiv
 
       <div className="flex items-center gap-3 pointer-events-auto">
         <button
-          onClick={() => xrStore.enterVR()}
+          onClick={onEnterVR ?? (() => xrStore.enterVR())}
           className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-indigo-600/72 text-white shadow-lg shadow-indigo-500/15 backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-white/45 hover:bg-indigo-500/88 hover:shadow-indigo-500/30 active:translate-y-0 active:scale-95 md:h-9 md:w-9"
           title="Enter VR"
           aria-label="Enter VR"

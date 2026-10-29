@@ -75,21 +75,28 @@ interface IdleActionsProps {
   onStartDemo: () => void;
   onStartLive: () => void;
   onStartStory?: () => void;
+  onEnterVR?: () => void;
 }
 
-export const IdleActions: React.FC<IdleActionsProps> = ({ onStartDemo, onStartLive, onStartStory }) => (
+export const IdleActions: React.FC<IdleActionsProps> = ({ onStartDemo, onStartLive, onStartStory, onEnterVR }) => (
   <div className="absolute inset-x-0 bottom-6 flex flex-col items-center justify-center z-30 px-6">
     <div className="backdrop-blur-md">
       <div className="flex flex-col items-center gap-2">
         <div className="flex items-center gap-3">
           <a
             href="/demo"
+            onClick={(e) => {
+              if (onStartDemo && typeof window !== "undefined" && (window.location.pathname === "/" || window.location.pathname.startsWith("/onboarding"))) {
+                e.preventDefault();
+                onStartDemo();
+              }
+            }}
             className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-full transition-all shadow-md active:scale-[0.99] cursor-pointer no-underline text-sm"
           >
             Run Demo Mode
           </a>
           <button
-            onClick={() => xrStore.enterVR()}
+            onClick={onEnterVR ?? (() => xrStore.enterVR())}
             className="flex items-center justify-center w-12 h-12 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-lg hover:shadow-indigo-500/30 active:scale-95 transition-all cursor-pointer border border-indigo-400/40 group"
             title="Enter VR"
             aria-label="Enter VR"

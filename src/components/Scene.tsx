@@ -15,6 +15,7 @@ import { xrStore } from "../utils/xrStore";
 import type { ElectrodeName, Frame } from "../utils/signalSource";
 import type { HistorySample } from "../hooks/usePlaybackEngine";
 import { headsetPresentation, type HeadsetPresentationStage } from "../utils/headsetPresentation";
+import { AimlabsScene, aimlabsStore } from "./AimlabsCognitiveTest";
 
 // OrbitControls is a sibling of <XR>, not nested inside it, so the
 // context-based useXR() hook isn't reachable here - read presentation
@@ -131,6 +132,16 @@ const Scene: React.FC<SceneProps> = ({
 }) => {
   const isXRPresenting = useIsXRPresenting();
   const isStoryActive = headsetPresentation.getStoryProgress() !== null;
+  const aimlabsState = useSyncExternalStore(
+    aimlabsStore.subscribe,
+    aimlabsStore.getSnapshot,
+    aimlabsStore.getServerSnapshot
+  );
+
+  const handleExitAimlabs = () => {
+    aimlabsStore.exit();
+    xrStore.getState().session?.end();
+  };
 
   return (
     <Canvas
@@ -149,27 +160,35 @@ const Scene: React.FC<SceneProps> = ({
       <pointLight position={[0, -10, 0]} intensity={Math.PI / 2} />
 
       <XR store={xrStore}>
-        <HeadWrapper
-          frameRef={frameRef}
-          historiesRef={historiesRef}
-          selectedChannel={selectedChannel}
-          hoveredChannel={hoveredChannel}
-          highlightPrefrontal={highlightPrefrontal}
-          presentationStage={presentationStage}
-          onChannelSelect={onChannelSelect}
-          onChannelHover={onChannelHover}
-          onStartDemo={onStartDemo}
-          onStartLive={onStartLive}
-          onTrialSelect={onTrialSelect}
-          onTogglePlayPause={onTogglePlayPause}
-          onSetSpeed={onSetSpeed}
-          speed={speed}
-          isPaused={isPaused}
-          audioError={audioError}
-        />
+        {aimlabsState.isActive ? (
+          <AimlabsScene
+            state={aimlabsState}
+            isXR={isXRPresenting}
+            onExit={handleExitAimlabs}
+          />
+        ) : (
+          <HeadWrapper
+            frameRef={frameRef}
+            historiesRef={historiesRef}
+            selectedChannel={selectedChannel}
+            hoveredChannel={hoveredChannel}
+            highlightPrefrontal={highlightPrefrontal}
+            presentationStage={presentationStage}
+            onChannelSelect={onChannelSelect}
+            onChannelHover={onChannelHover}
+            onStartDemo={onStartDemo}
+            onStartLive={onStartLive}
+            onTrialSelect={onTrialSelect}
+            onTogglePlayPause={onTogglePlayPause}
+            onSetSpeed={onSetSpeed}
+            speed={speed}
+            isPaused={isPaused}
+            audioError={audioError}
+          />
+        )}
       </XR>
 
-      {!isXRPresenting && <SpringOrbitControls enabled={!isStoryActive} />}
+      {!isXRPresenting && !aimlabsState.isActive && <SpringOrbitControls enabled={!isStoryActive} />}
     </Canvas>
   );
 };
