@@ -8,8 +8,7 @@ import {
 import { AimlabsArena } from "./AimlabsArena";
 import { AimlabsTarget } from "./AimlabsTarget";
 import { AimlabsShatters } from "./AimlabsShatters";
-import { AimlabsXROverlay } from "./AimlabsXROverlay";
-import { AimlabsXRModals } from "./AimlabsXRModals";
+import { XRCanvasScreen } from "./XRCanvasScreen";
 import { aimlabsStore, type AimlabsState } from "./aimlabsStore";
 import { triggerXRHaptic } from "../../utils/xrHaptics";
 
@@ -160,27 +159,10 @@ export const AimlabsScene: React.FC<AimlabsSceneProps> = ({
         onRemoveBurst={(id) => aimlabsStore.removeShatter(id)}
       />
 
-      {/* WebXR in-headset HUD (visible during test rounds) */}
-      {isXR && (state.status === "round1" || state.status === "round2") && (
-        <AimlabsXROverlay
-          score={state.score}
-          accuracy={state.accuracy}
-          round={state.round}
-          recentFeedback={state.recentFeedback}
-          onExit={onExit}
-        />
-      )}
-
-      {/* WebXR In-Headset Modals (Briefing, Countdown, Intermission, Battery Complete Report) */}
+      {/* High-DPI Virtual Screen Canvas Texture (Modals & HUD in WebXR) */}
       {isXR && (
-        <AimlabsXRModals
-          status={state.status}
-          countdown={state.countdown}
-          round1Metrics={state.round1Metrics}
-          round2Metrics={state.round2Metrics}
-          onStartGame={() => aimlabsStore.startGame()}
-          onStartRound2={() => aimlabsStore.startRound2()}
-          onRestart={() => aimlabsStore.restart()}
+        <XRCanvasScreen
+          state={state}
           onExit={onExit}
         />
       )}
