@@ -9,7 +9,8 @@ import { AimlabsArena } from "./AimlabsArena";
 import { AimlabsTarget } from "./AimlabsTarget";
 import { AimlabsShatters } from "./AimlabsShatters";
 import { AimlabsXROverlay } from "./AimlabsXROverlay";
-import { AimlabsXRModals } from "./AimlabsXRModals";
+import { XRCountdownModal } from "./AimlabsXRModals/XRCountdownModal";
+import { XRCanvasScreen } from "./XRCanvasScreen";
 import { aimlabsStore, type AimlabsState } from "./aimlabsStore";
 import { triggerXRHaptic } from "../../utils/xrHaptics";
 
@@ -160,7 +161,7 @@ export const AimlabsScene: React.FC<AimlabsSceneProps> = ({
         onRemoveBurst={(id) => aimlabsStore.removeShatter(id)}
       />
 
-      {/* WebXR in-headset HUD (visible during test rounds) */}
+      {/* 1. Spatial Visor HUD (floating in sightline during active rounds) */}
       {isXR && (state.status === "round1" || state.status === "round2") && (
         <AimlabsXROverlay
           score={state.score}
@@ -171,19 +172,18 @@ export const AimlabsScene: React.FC<AimlabsSceneProps> = ({
         />
       )}
 
-      {/* WebXR In-Headset Modals (Briefing, Countdown, Intermission, Battery Complete Report) */}
-      {isXR && (
-        <AimlabsXRModals
-          status={state.status}
-          countdown={state.countdown}
-          round1Metrics={state.round1Metrics}
-          round2Metrics={state.round2Metrics}
-          onStartGame={() => aimlabsStore.startGame()}
-          onStartRound2={() => aimlabsStore.startRound2()}
-          onRestart={() => aimlabsStore.restart()}
-          onExit={onExit}
-        />
+      {/* 2. 3D Countdown Digits (pulsing directly in front of fixation cross) */}
+      {isXR && state.status === "countdown" && (
+        <XRCountdownModal countdown={state.countdown} />
       )}
+
+      {/* 3. High-DPI Virtual Console Tablet (for Briefing, Intermission, and Results table) */}
+      {isXR &&
+        (state.status === "ready" ||
+          state.status === "intermission" ||
+          state.status === "finished") && (
+          <XRCanvasScreen state={state} onExit={onExit} />
+        )}
     </group>
   );
 };
