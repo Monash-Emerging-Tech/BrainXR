@@ -101,7 +101,8 @@ function makeLobeMaterial(forwardLocal: THREE.Vector3, depth: number, centreAlon
     /** 0..1 prefrontal glow amount. */
     uFront: { value: 0 },
     uFrontColor: { value: new THREE.Color("#ffffff") },
-    uFrontSpan: { value: CFG.prefrontalSpan },
+    /** Prefrontal finale: how far back along the front axis the glow reaches. */
+    uFrontSpan: { value: 0.85 },
     /** 0..1 central-band glow amount. */
     uBand: { value: 0 },
     uBandColor: { value: new THREE.Color("#ffffff") },
@@ -422,7 +423,8 @@ export default function BrainModel({
       const frontU = lobe.uniforms.uFront as { value: number } | undefined;
       if (frontU) {
         const wants = isPrefrontal && region.id === "frontal";
-        const target = wants ? CFG.prefrontalEmissive * pulseScale : 0;
+        // When prefrontal is illuminated, give it a rich, full emissive brightness
+        const target = wants ? CFG.prefrontalEmissive * 1.5 * pulseScale : 0;
         frontU.value += (target - frontU.value) * k;
         const frontColor = lobe.uniforms.uFrontColor as
           | { value: THREE.Color }

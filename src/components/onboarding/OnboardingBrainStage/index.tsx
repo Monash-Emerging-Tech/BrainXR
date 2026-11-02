@@ -45,7 +45,20 @@ export const OnboardingBrainRig: React.FC = () => {
     stageOpacityRef.current = fade;
 
     // Prefrontal highlight glow & depth write:
-    prefrontalRef.current = progress < 0.53 || progress >= 0.71;
+    // Scrollimated blink: flashes 3 times between grey (off) and green (on) over [0.385, 0.425], then locks ON
+    let isPrefrontalActive = false;
+    if (progress >= 0.385 && progress < 0.53) {
+      if (progress < 0.425) {
+        // Precise scrollimation blink in perfect lockstep with the UI badge
+        const blinkCycle = Math.sin(((progress - 0.385) / 0.04) * Math.PI * 6) > 0;
+        isPrefrontalActive = blinkCycle;
+      } else {
+        isPrefrontalActive = true;
+      }
+    } else if (progress >= 0.71) {
+      isPrefrontalActive = true;
+    }
+    prefrontalRef.current = isPrefrontalActive;
     depthWriteRef.current = progress >= 0.71 && progress < 0.88;
 
     // Scale calculation:

@@ -89,18 +89,21 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
     return 4;               // Intensity
   }, [p]);
 
-  // Transition between 1st segment (Focus, ending ~0.28-0.33) and 2nd segment (Vector / Meditating, starting ~0.33)
-  // Blinking effect occurs around 0.28 - 0.33, then background stays dark until after Intensity (p >= 0.88) flows back to light Home
+  // Transition between 1st segment (Focus, ending ~0.26-0.31) and 2nd segment (Vector / Meditating, starting ~0.31)
+  // Scrollimated light flickering / strobe effect strictly driven by scroll position between 0.26 and 0.31.
   const isDarkPhase = p >= 0.31 && p < 0.88;
-  const isBlinkingPhase = p >= 0.27 && p < 0.32;
 
-  // Track triggered blink effect so that scrolling past 0.52 plays a cinematic multi-strobe blink
-  const [hasBlinked, setHasBlinked] = useState(false);
-  useEffect(() => {
-    if (p >= 0.52 && !hasBlinked) {
-      setHasBlinked(true);
-    }
-  }, [p, hasBlinked]);
+  // Strobe/flicker scrub calculation (progress from 0 to 1 across [0.26, 0.31]):
+  // Creates rapid, alternating pulses of darkness and light tied directly to the user's scroll.
+  let flickerOverlayOpacity = 0;
+  if (p >= 0.26 && p < 0.31) {
+    const strobeProgress = (p - 0.26) / 0.05; // 0.0 to 1.0
+    // Multi-cycle flicker oscillation that intensifies into solid darkness (base tone #0b0f17 / rgb(11, 15, 23))
+    const oscillations = Math.sin(strobeProgress * Math.PI * 7); // ~3.5 cycles of rapid flickering
+    const baseRamp = Math.pow(strobeProgress, 1.5);
+    const pulse = (oscillations * 0.5 + 0.5) * (1 - strobeProgress * 0.4);
+    flickerOverlayOpacity = Math.min(1, Math.max(0, baseRamp * 0.7 + pulse * 0.6));
+  }
 
   useEffect(() => {
     if (hasRoutedToOnboarding) {
@@ -147,9 +150,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         </div>
       )}
 
-      {/* Blinking strobe overlay between Segment 1 and Segment 2 */}
-      {isBlinkingPhase && (
-        <div className="fixed inset-0 pointer-events-none z-35 animate-blink-invert" />
+      {/* Scrollimated light flickering / strobe overlay between Segment 1 and Segment 2 */}
+      {flickerOverlayOpacity > 0.005 && (
+        <div
+          className="fixed inset-0 pointer-events-none z-35 bg-[#0b0f17] will-change-opacity"
+          style={{ opacity: flickerOverlayOpacity }}
+        />
       )}
 
       <div

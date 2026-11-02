@@ -50,6 +50,43 @@ body {
   animation: blink-white-black 0.75s ease-in-out forwards;
 }
 
+@keyframes badge-activate-blink {
+  0% {
+    color: rgb(148, 163, 184);
+    border-color: rgba(100, 116, 139, 0.3);
+    background-color: transparent;
+  }
+  20% {
+    color: rgb(110, 231, 183);
+    border-color: rgba(16, 185, 129, 0.6);
+    background-color: rgba(16, 185, 129, 0.18);
+  }
+  40% {
+    color: rgb(148, 163, 184);
+    border-color: rgba(100, 116, 139, 0.3);
+    background-color: transparent;
+  }
+  60% {
+    color: rgb(110, 231, 183);
+    border-color: rgba(16, 185, 129, 0.6);
+    background-color: rgba(16, 185, 129, 0.18);
+  }
+  80% {
+    color: rgb(148, 163, 184);
+    border-color: rgba(100, 116, 139, 0.3);
+    background-color: transparent;
+  }
+  100% {
+    color: rgba(110, 231, 183, 0.9);
+    border-color: rgba(16, 185, 129, 0.25);
+    background-color: rgba(16, 185, 129, 0.05);
+  }
+}
+
+.animate-badge-blink {
+  animation: badge-activate-blink 0.65s ease-in-out forwards;
+}
+
 @keyframes slideDown {
   from {
     transform: translateY(-100px);
