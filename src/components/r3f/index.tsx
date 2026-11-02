@@ -52,30 +52,24 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
     if (forcePage === "onboarding") return true;
     if (forcePage === "home" || forcePage === "demo") return false;
     if (typeof window === "undefined") return false;
+    if (window.location.pathname.startsWith("/onboarding")) return true;
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("story") === "0" || urlParams.get("skipStory") === "1") return false;
-    if (urlParams.has("story") || urlParams.has("onboarding") || window.location.pathname.startsWith("/onboarding")) return true;
     const seen = sessionStorage.getItem(STORY_SEEN_KEY);
     return !seen;
   });
 
   const [hasRoutedToOnboarding, setHasRoutedToOnboarding] = useState(() => {
     if (typeof window === "undefined") return false;
-    return (
-      window.location.pathname.startsWith("/onboarding") ||
-      new URLSearchParams(window.location.search).has("onboarding")
-    );
+    return window.location.pathname.startsWith("/onboarding");
   });
 
   // Keep story visibility synchronized with browser history back/forward
   useEffect(() => {
     const onPopState = () => {
-      const isStory =
-        window.location.pathname.startsWith("/onboarding") ||
-        new URLSearchParams(window.location.search).has("story") ||
-        new URLSearchParams(window.location.search).has("onboarding");
+      const isStory = window.location.pathname.startsWith("/onboarding");
       setShowStory(isStory);
-      setHasRoutedToOnboarding(window.location.pathname.startsWith("/onboarding"));
+      setHasRoutedToOnboarding(isStory);
       if (isStory) setHeadsetOpacity(1);
     };
     window.addEventListener("popstate", onPopState);
@@ -108,13 +102,6 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
     if (typeof window !== "undefined") {
       if (window.location.pathname.startsWith("/onboarding")) {
         window.history.replaceState(null, "", "/");
-      } else {
-        const url = new URL(window.location.href);
-        if (url.searchParams.has("story") || url.searchParams.has("onboarding")) {
-          url.searchParams.delete("story");
-          url.searchParams.delete("onboarding");
-          window.history.replaceState(null, "", url.pathname + (url.search ? url.search : ""));
-        }
       }
     }
   }, []);
