@@ -35,7 +35,7 @@ function resolveLegacyStoryVersion(): "v1" | "v2" | null {
 
 interface R3FProps {
   initialMode?: "idle" | "demo";
-  forcePage?: "home" | "demo" | "onboarding";
+  forcePage?: "home" | "demo" | "onboarding" | "intensity" | "direction";
 }
 
 const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
@@ -50,9 +50,10 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
   const [legacyStoryVersion] = useState(resolveLegacyStoryVersion);
   const [showStory, setShowStory] = useState(() => {
     if (forcePage === "onboarding") return true;
-    if (forcePage === "home" || forcePage === "demo") return false;
+    if (forcePage === "home" || forcePage === "demo" || forcePage === "intensity" || forcePage === "direction") return false;
     if (typeof window === "undefined") return false;
     if (window.location.pathname.startsWith("/onboarding")) return true;
+    if (window.location.pathname.startsWith("/intensity") || window.location.pathname.startsWith("/direction") || window.location.pathname.startsWith("/demo")) return false;
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get("story") === "0" || urlParams.get("skipStory") === "1") return false;
     const seen = sessionStorage.getItem(STORY_SEEN_KEY);
@@ -139,11 +140,12 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const isDirectionRoute = forcePage === "direction" || window.location.pathname.startsWith("/direction");
     const params = new URLSearchParams(window.location.search);
-    if (params.has("aimlabs") || params.has("test") || params.has("cpt")) {
+    if (isDirectionRoute || params.has("aimlabs") || params.has("test") || params.has("cpt")) {
       handleEnterVR();
     }
-  }, [handleEnterVR]);
+  }, [forcePage, handleEnterVR]);
 
   const selectChannel = useCallback((channel: ElectrodeName) => {
     if (showStory) cancelOnboarding();
@@ -154,16 +156,14 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
       engine.selectChannel(null);
       return;
     }
-    if (isIdle) engine.startDemo();
     engine.selectChannel(channel);
-  }, [showStory, cancelOnboarding, engine.selectedChannel, engine.selectChannel, engine.startDemo, isIdle]);
+  }, [showStory, cancelOnboarding, engine.selectedChannel, engine.selectChannel]);
 
   const startDemo = useCallback(() => {
-    if (showStory) cancelOnboarding();
-    setHighlightPrefrontal(false);
-    engine.selectChannel(null);
-    engine.startDemo();
-  }, [showStory, cancelOnboarding, engine.selectChannel, engine.startDemo]);
+    if (typeof window !== "undefined") {
+      window.location.href = "/intensity";
+    }
+  }, []);
 
   const startLive = useCallback(() => {
     if (showStory) cancelOnboarding();
@@ -179,7 +179,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
   const disconnect = useCallback(() => {
     clearSelection();
     engine.disconnect();
-    if (typeof window !== "undefined" && window.location.pathname.startsWith("/demo")) {
+    if (typeof window !== "undefined" && (window.location.pathname.startsWith("/demo") || window.location.pathname.startsWith("/intensity") || window.location.pathname.startsWith("/direction"))) {
       window.location.href = "/";
     }
   }, [clearSelection, engine.disconnect]);
@@ -350,7 +350,12 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
         {/* Aimlabs Cognitive Assessment Overlay (2D HUD & Modals) */}
         <AimlabsOverlay
           state={aimlabsState}
-          onExit={() => aimlabsStore.exit()}
+          onExit={() => {
+            aimlabsStore.exit();
+            if (typeof window !== "undefined" && window.location.pathname.startsWith("/direction")) {
+              window.location.href = "/";
+            }
+          }}
         />
 
         {engine.mode.kind === "demo" && !aimlabsState.isActive && (
