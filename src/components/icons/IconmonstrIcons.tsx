@@ -42,3 +42,39 @@ export const XMark1Icon: React.FC<IconProps> = ({ className }) => (
     <path d="M4.83 0 12 7.17 19.17 0 24 4.83 16.83 12 24 19.17 19.17 24 12 16.83 4.83 24 0 19.17 7.17 12 0 4.83 4.83 0Z" />
   </svg>
 );
+
+export const SpeakerOnIcon: React.FC<IconProps> = ({ className, style }) => (
+  <svg
+    className={className}
+    style={style}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+  </svg>
+);
+
+export const SpeakerOffIcon: React.FC<IconProps> = ({ className, style }) => (
+  <svg
+    className={className}
+    style={style}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" />
+    <line x1="23" y1="9" x2="17" y2="15" />
+    <line x1="17" y1="9" x2="23" y2="15" />
+  </svg>
+);

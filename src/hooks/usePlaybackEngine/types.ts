@@ -19,5 +19,7 @@ export interface PlaybackEngine {
   startLive: () => void;
   disconnect: () => void;
   selectTrial: (index: number, startOffset?: number) => void;
+  isMuted: boolean;
+  toggleMute: () => void;
   audioError: boolean;
 }

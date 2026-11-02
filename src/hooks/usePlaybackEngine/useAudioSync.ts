@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback, type RefObject } from "react";
 import type { AppMode } from "../../utils/appMode";
+import type { SignalSource } from "../../utils/signalSource";
 import { TRIAL_SECONDS } from "./useFrameTick";
 
 interface Params {
@@ -7,12 +8,15 @@ interface Params {
   isPaused: boolean;
   speed: number;
   timeRef: RefObject<number>;
+  sourceRef: RefObject<SignalSource>;
 }
 
 export interface AudioController {
   audioRef: RefObject<HTMLAudioElement | null>;
   audioHasErrorRef: RefObject<boolean>;
   audioError: boolean;
+  isMuted: boolean;
+  toggleMute: () => void;
   syncTrialAudio: (trialIndex: number, startOffset?: number) => void;
   playStimulusAudio: () => void;
   pauseAudio: () => void;
@@ -20,11 +24,25 @@ export interface AudioController {
 
 // Manages the demo-mode <audio> element lifecycle and serves as the audio master
 // clock controller for useFrameTick. Surfaces `audioError` when the expected asset fails to load.
-export function useAudioSync({ mode, isPaused, speed, timeRef }: Params): AudioController {
+export function useAudioSync({ mode, isPaused, speed, timeRef, sourceRef }: Params): AudioController {
   const [audioError, setAudioError] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const isMutedRef = useRef(true);
+  isMutedRef.current = isMuted;
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioHasErrorRef = useRef(false);
   const currentTrialIndexRef = useRef<number | null>(null);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      const next = !prev;
+      if (audioRef.current) {
+        audioRef.current.muted = next || speed === 10;
+      }
+      return next;
+    });
+  }, [speed]);
 
   // Load or switch audio track for the given trial
   const loadTrack = useCallback((trialIndex: number) => {
@@ -35,6 +53,7 @@ export function useAudioSync({ mode, isPaused, speed, timeRef }: Params): AudioC
     if (!audioRef.current) {
       const audio = new Audio(expectedSrc);
       audio.preload = "auto";
+      audio.muted = isMutedRef.current || speed === 10;
       audio.onerror = () => {
         audioHasErrorRef.current = true;
         setAudioError(true);
@@ -46,12 +65,13 @@ export function useAudioSync({ mode, isPaused, speed, timeRef }: Params): AudioC
     } else if (audioRef.current.src && !audioRef.current.src.endsWith(expectedSrc)) {
       audioRef.current.pause();
       audioRef.current.src = expectedSrc;
+      audioRef.current.muted = isMutedRef.current || speed === 10;
       audioHasErrorRef.current = false;
       setAudioError(false);
       audioRef.current.load();
     }
     currentTrialIndexRef.current = trialIndex;
-  }, [mode.kind]);
+  }, [mode.kind, speed, sourceRef]);
 
   const syncTrialAudio = useCallback((trialIndex: number, startOffset = 0) => {
     loadTrack(trialIndex);
@@ -87,13 +107,13 @@ export function useAudioSync({ mode, isPaused, speed, timeRef }: Params): AudioC
     }
   }, []);
 
-  // Update speed & muted whenever speed changes
+  // Update speed & muted whenever speed or isMuted changes
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.playbackRate = speed;
-      audioRef.current.muted = speed === 10;
+      audioRef.current.muted = isMuted || speed === 10;
     }
-  }, [speed]);
+  }, [speed, isMuted]);
 
   // Handle mode switches & pause toggles
   useEffect(() => {
@@ -139,6 +159,8 @@ export function useAudioSync({ mode, isPaused, speed, timeRef }: Params): AudioC
     audioRef,
     audioHasErrorRef,
     audioError,
+    isMuted,
+    toggleMute,
     syncTrialAudio,
     playStimulusAudio,
     pauseAudio,

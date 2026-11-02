@@ -13,6 +13,7 @@ clock controller for [[useFrameTick]].
   transitions, seeks, and play/pause controls.
 - `speed === 10` mutes audio (10x has no meaningful audio) but still sets
   `playbackRate`.
+- Starts muted by default (`isMuted: true`), with `toggleMute` allowing the user to unmute/mute playback.
 - `audioError` latches true on the element's `error` event (e.g. missing
   asset) and blocks further auto-play attempts until the src changes.
 

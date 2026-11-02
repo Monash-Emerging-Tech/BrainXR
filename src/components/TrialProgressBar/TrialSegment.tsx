@@ -41,30 +41,6 @@ const TrialSegment: React.FC<TrialSegmentProps> = ({
       {isActive ? (
         /* Unified Shape for Active Trial: Baseline Circle + Tapered Bridge + Emerald Bar */
         <div className="flex items-center w-full min-w-0 relative">
-          {/* Solitary Phase Indicator Badge hovering directly above the active trial segment (aligned to baseline or stimulus bar) */}
-          <div
-            className={`absolute -top-6 flex items-center pointer-events-none select-none z-30 transition-all duration-500 ease-in-out ${
-              phase === "stimulus" ? "left-4" : "left-0"
-            }`}
-          >
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider border shadow-md backdrop-blur-xl whitespace-nowrap transition-all duration-300 ${
-                phase === "stimulus"
-                  ? "border-emerald-400/60 bg-slate-950/90 text-emerald-300 shadow-emerald-950/40"
-                  : "border-indigo-400/60 bg-slate-950/90 text-indigo-300 shadow-indigo-950/40"
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  phase === "stimulus"
-                    ? "bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse"
-                    : "bg-indigo-400 shadow-[0_0_8px_#818cf8] animate-pulse"
-                }`}
-              />
-              {phase === "stimulus" ? "Stimulus Phase" : "Baseline Phase"}
-            </span>
-          </div>
-
           {/* 1. Baseline Circle Component */}
           <button
             onClick={() => onTrialSelect(index, 0)}

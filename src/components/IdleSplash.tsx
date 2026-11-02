@@ -157,9 +157,18 @@ interface IdleActionsProps {
   onStartLive: () => void;
   onStartStory?: () => void;
   onEnterVR?: () => void;
+  isHeadsetConnected?: boolean;
+  onToggleConnectHeadset?: () => void;
 }
 
-export const IdleActions: React.FC<IdleActionsProps> = ({ onStartDemo, onStartLive, onStartStory, onEnterVR }) => (
+export const IdleActions: React.FC<IdleActionsProps> = ({
+  onStartDemo,
+  onStartLive,
+  onStartStory,
+  onEnterVR,
+  isHeadsetConnected = false,
+  onToggleConnectHeadset,
+}) => (
   <div className="absolute inset-x-0 bottom-6 flex flex-col items-center justify-center z-30 px-6">
     <div className="flex flex-col items-center gap-2.5">
       {/* Section Heading */}
@@ -206,13 +215,13 @@ export const IdleActions: React.FC<IdleActionsProps> = ({ onStartDemo, onStartLi
         </a>
       </div>
       <button
-        onClick={onStartLive}
+        onClick={onToggleConnectHeadset ?? onStartLive}
         className="group inline-flex items-center gap-2 text-slate-600 hover:text-slate-800 text-sm font-semibold mt-1 transition-colors cursor-pointer"
       >
         <input
           type="checkbox"
-          readOnly
-          tabIndex={-1}
+          checked={isHeadsetConnected}
+          onChange={() => {}}
           className="w-3.5 h-3.5 rounded border-slate-400 text-indigo-600 focus:ring-0 cursor-pointer pointer-events-none"
         />
         <span className="group-hover:underline">Connect your headset</span>

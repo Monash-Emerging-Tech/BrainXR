@@ -26,6 +26,7 @@ const Scene = lazy(() => import("../Scene"));
 // within the same tab session. Clear sessionStorage (or open a new tab) to
 // see it again.
 const STORY_SEEN_KEY = "brainxr:story-seen";
+const CONNECT_HEADSET_KEY = "brainxr:connect-headset";
 
 function resolveLegacyStoryVersion(): "v1" | "v2" | null {
   if (typeof window === "undefined") return null;
@@ -48,6 +49,10 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
   const lastRewindRef = useRef<{ trial: number; time: number } | null>(null);
   const isIdle = engine.mode.kind === "idle";
   const [legacyStoryVersion] = useState(resolveLegacyStoryVersion);
+  const [isHeadsetConnected, setIsHeadsetConnected] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(CONNECT_HEADSET_KEY) === "1";
+  });
   const [showStory, setShowStory] = useState(() => {
     if (forcePage === "onboarding") return true;
     if (forcePage === "home" || forcePage === "demo" || forcePage === "intensity" || forcePage === "direction") return false;
@@ -170,6 +175,20 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
     engine.startLive();
   }, [showStory, cancelOnboarding, engine.startLive]);
 
+  const toggleConnectHeadset = useCallback(() => {
+    setIsHeadsetConnected((prev) => {
+      const next = !prev;
+      if (typeof window !== "undefined") {
+        if (next) {
+          localStorage.setItem(CONNECT_HEADSET_KEY, "1");
+        } else {
+          localStorage.removeItem(CONNECT_HEADSET_KEY);
+        }
+      }
+      return next;
+    });
+  }, []);
+
   const clearSelection = useCallback(() => {
     setHighlightPrefrontal(false);
     setHoveredChannel(null);
@@ -254,7 +273,6 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
             onBack={disconnect}
             focusSensorsActive={highlightPrefrontal}
             onShowPrefrontal={togglePrefrontal}
-            onEnterVR={handleEnterVR}
           />
         )}
 
@@ -328,6 +346,8 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
               onStartLive={startLive}
               onStartStory={startStory}
               onEnterVR={handleEnterVR}
+              isHeadsetConnected={isHeadsetConnected}
+              onToggleConnectHeadset={toggleConnectHeadset}
             />
           </div>
         )}
@@ -360,19 +380,27 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
 
         {engine.mode.kind === "demo" && !aimlabsState.isActive && (
           <>
-            {/* Animated guidance signifier & node details: floats above bottom controls when unfocused, moves below audio unavailable toast when a node is clicked */}
+            {/* Guidance signifier & node details: permanently positioned at the top below the HUD / audio toast */}
             <div
-              className={`pointer-events-none absolute left-1/2 -translate-x-1/2 z-30 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] select-none text-center px-4 w-full max-w-[52rem] flex flex-col items-center ${
-                Boolean(engine.selectedChannel || highlightPrefrontal)
-                  ? engine.audioError
-                    ? "top-32"
-                    : "top-20"
-                  : "bottom-32"
+              className={`pointer-events-none absolute left-1/2 -translate-x-1/2 z-30 select-none text-center px-4 w-full max-w-[52rem] flex flex-col items-center ${
+                engine.audioError ? "top-36" : "top-24"
               }`}
             >
               <span className="eeg-node-gradient-text font-mono text-[11px] md:text-xs font-black uppercase tracking-[0.22em] leading-relaxed drop-shadow-sm whitespace-nowrap">
                 pinch and click nodes to explore what EEG headsets do
               </span>
+
+              {/* Rubber stamp badge & recording audio text: displayed if "Connect your headset" is unticked on the homescreen and no node is selected */}
+              {!isHeadsetConnected && !engine.selectedChannel && !highlightPrefrontal && (
+                <div className="mt-10 flex flex-col items-center pointer-events-none select-none">
+                  <span className="stamp-demo-badge text-xl sm:text-2xl md:text-3xl">
+                    SIMULATED DEMO
+                  </span>
+                  <span className="mt-8 text-red-700/80 font-serif italic text-sm sm:text-base tracking-wide max-w-lg leading-relaxed text-center drop-shadow-xs">
+                    EEG recording for participant listening to audio file video-{String((engine.frame.trialIndex ?? 0) + 1).padStart(2, "0")}.m4a
+                  </span>
+                </div>
+              )}
 
               {Boolean(engine.selectedChannel || highlightPrefrontal) && (
                 <NodeDetailsBanner

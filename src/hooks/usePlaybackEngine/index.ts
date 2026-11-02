@@ -42,7 +42,7 @@ export function usePlaybackEngine(initialMode: AppMode = { kind: "idle" }): Play
   const modeRef = useRef<AppMode>(mode);
   modeRef.current = mode;
 
-  const audioController = useAudioSync({ mode, isPaused, speed, timeRef });
+  const audioController = useAudioSync({ mode, isPaused, speed, timeRef, sourceRef });
 
   useSignalSourceSwitch({ mode, timeRef, sourceRef, historiesRef, setSpeed, setIsPaused, setIsLoading });
   useFrameTick({
@@ -91,6 +91,8 @@ export function usePlaybackEngine(initialMode: AppMode = { kind: "idle" }): Play
     startLive,
     disconnect,
     selectTrial,
+    isMuted: audioController.isMuted,
+    toggleMute: audioController.toggleMute,
     audioError: audioController.audioError,
   };
 }
