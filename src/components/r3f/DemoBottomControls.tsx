@@ -13,10 +13,10 @@ interface DemoBottomControlsProps {
 }
 
 // Floating bottom-of-screen Demo Mode controls: the trial timeline (left,
-// stretching across) and the rotary trial dial (bottom-right).
+// stretching across), play/pause scrubber, and a direct link to Direction of Focus.
 const DemoBottomControls: React.FC<DemoBottomControlsProps> = ({ frame, onTrialSelect, isPaused, onTogglePlayPause, onPrevious, onNext }) => (
   <>
-    <div className="absolute inset-x-0 bottom-5 z-30 flex flex-col items-center justify-center px-4 pointer-events-none">
+    <div className="absolute inset-x-0 bottom-5 z-30 flex flex-col items-center justify-center px-4 pointer-events-none gap-3">
       <div className="w-full max-w-[52rem] pointer-events-auto">
         <TrialProgressBar
           trialElapsed={frame.trialElapsed ?? 0}
@@ -39,6 +39,21 @@ const DemoBottomControls: React.FC<DemoBottomControlsProps> = ({ frame, onTrialS
           </button>
           </div>}
         />
+      </div>
+
+      {/* Button below EEG headset linking to Direction of Focus experience */}
+      <div className="pointer-events-auto">
+        <a
+          href="/direction"
+          className="group flex items-center gap-2.5 bg-indigo-600/90 hover:bg-indigo-600 text-white font-bold py-2.5 px-5 rounded-full shadow-lg shadow-indigo-950/20 hover:shadow-indigo-500/30 active:scale-95 transition-all cursor-pointer border border-indigo-400/40 text-xs sm:text-sm no-underline backdrop-blur-md"
+          title="Launch Direction of Focus XR Experience"
+          aria-label="Launch Direction of Focus XR Experience"
+        >
+          <span>Direction of Focus</span>
+          <svg className="w-4 h-4 fill-current transition-transform duration-200 group-hover:scale-110 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 7H3a2 2 0 00-2 2v6a2 2 0 002 2h4l2 2h6l2-2h4a2 2 0 002-2V9a2 2 0 00-2-2zM7.5 13a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm9 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" />
+          </svg>
+        </a>
       </div>
     </div>
   </>

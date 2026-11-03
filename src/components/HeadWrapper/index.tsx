@@ -10,6 +10,7 @@ import { useXRDragInteraction } from "./useXRDragInteraction";
 import { useHeadPlacement } from "./useHeadPlacement";
 import { headsetPresentation, type HeadsetPresentationStage } from "../../utils/headsetPresentation";
 import { OnboardingBrainRig } from "../onboarding/OnboardingBrainStage";
+import { XRNodeDetailsPanel } from "./XRNodeDetailsPanel";
 
 const BRAIN_FIT = STORY_V2.act3.brainFit;
 
@@ -99,6 +100,16 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
 
       {/* Render the onboarding brain in the exact same 3D scene for true physical depth buffer testing */}
       <OnboardingBrainRig />
+
+      {/* Baked high-DPI spatial node details panel & interaction prompt in XR */}
+      {gl.xr.isPresenting && (
+        <XRNodeDetailsPanel
+          channel={selectedChannel}
+          frameRef={frameRef}
+          onSelectChannel={(ch) => ch ? onChannelSelect(ch) : onChannelHover?.(null)}
+          headPositionRef={xrPositionRef}
+        />
+      )}
     </group>
   );
 };
