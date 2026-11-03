@@ -1,6 +1,35 @@
 import React, { useState, useEffect } from "react";
 import type { GameStatus, RoundMetrics, CognitiveRoundType } from "./types";
 
+// Color vision modes for the accessibility menu (eye icon). Each applies a
+// CSS filter to the whole rendered page — hue-rotate is the primary lever
+// (shifted off the red/green confusion axis for red-green types, and onto
+// a different axis for blue-yellow types), with saturate/contrast added to
+// help the remaining distinguishable colors read more clearly. These are
+// heuristic adjustments, not a scientific daltonization transform.
+type VisionMode =
+  | "standard"
+  | "protanomaly"
+  | "protanopia"
+  | "deuteranomaly"
+  | "deuteranopia"
+  | "tritanomaly"
+  | "tritanopia"
+  | "monochromacy";
+
+const VISION_MODES: { id: VisionMode; label: string; filter: string }[] = [
+  { id: "standard", label: "Standard", filter: "none" },
+  { id: "protanomaly", label: "Protanomaly", filter: "hue-rotate(-15deg) saturate(1.25)" },
+  { id: "protanopia", label: "Protanopia", filter: "hue-rotate(-30deg) saturate(1.45) contrast(1.05)" },
+  { id: "deuteranomaly", label: "Deuteranomaly", filter: "hue-rotate(15deg) saturate(1.25)" },
+  { id: "deuteranopia", label: "Deuteranopia", filter: "hue-rotate(30deg) saturate(1.45) contrast(1.05)" },
+  { id: "tritanomaly", label: "Tritanomaly", filter: "hue-rotate(60deg) saturate(1.2)" },
+  { id: "tritanopia", label: "Tritanopia", filter: "hue-rotate(90deg) saturate(1.35) contrast(1.05)" },
+  { id: "monochromacy", label: "Monochromacy", filter: "grayscale(1) contrast(1.15) brightness(0.95)" },
+];
+
+const VISION_MODE_KEY = "brainxr:vision-mode";
+
 interface SpannedTextProps {
   text: string;
   className?: string;
@@ -175,6 +204,22 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
   // Fade in / fade out transition state
   const [isFadingOut, setIsFadingOut] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [visionMode, setVisionMode] = useState<VisionMode>(() => {
+    if (typeof window === "undefined") return "standard";
+    const saved = localStorage.getItem(VISION_MODE_KEY) as VisionMode | null;
+    return saved && VISION_MODES.some((m) => m.id === saved) ? saved : "standard";
+  });
+
+  useEffect(() => {
+    const mode = VISION_MODES.find((m) => m.id === visionMode) ?? VISION_MODES[0];
+    document.body.style.filter = mode.filter === "none" ? "" : mode.filter;
+    try {
+      localStorage.setItem(VISION_MODE_KEY, visionMode);
+    } catch {
+      // ignore — storage may be unavailable (private mode, etc.)
+    }
+  }, [visionMode]);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 20);
@@ -405,7 +450,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3 w-full max-w-md">
+          <div className="relative z-10 flex items-center gap-3 w-full max-w-md">
             <button
               onClick={() => handleAction(onExit)}
               className="flex-1 py-3 px-5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 font-bold text-xs font-mono uppercase tracking-wider transition-all cursor-pointer active:scale-95 border border-slate-700/60 backdrop-blur-md"
@@ -418,7 +463,67 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
             >
               Play Now →
             </button>
+
+            {/* Color vision accessibility menu */}
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-label="Color vision settings"
+                className="p-3 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 transition-all cursor-pointer active:scale-95 border border-slate-700/60 backdrop-blur-md"
+              >
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${menuOpen ? "rotate-180" : ""}`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </button>
+
+              {menuOpen && (
+                <div
+                  role="menu"
+                  className="absolute bottom-full right-0 mb-2 w-52 max-h-80 overflow-y-auto rounded-2xl border border-slate-700/60 bg-slate-950/95 backdrop-blur-md shadow-2xl font-mono text-xs"
+                >
+                  <div className="px-4 py-2 text-[9px] text-slate-500 uppercase tracking-wider border-b border-slate-800">
+                    Color Vision
+                  </div>
+                  {VISION_MODES.map((mode) => (
+                    <button
+                      key={mode.id}
+                      role="menuitemradio"
+                      aria-checked={visionMode === mode.id}
+                      onClick={() => setVisionMode(mode.id)}
+                      className={`w-full flex items-center justify-between text-left px-4 py-2.5 uppercase tracking-wider transition-colors cursor-pointer border-t border-slate-800 ${
+                        visionMode === mode.id
+                          ? "bg-slate-800/80 text-white"
+                          : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                      }`}
+                    >
+                      {mode.label}
+                      {visionMode === mode.id && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+
+          {menuOpen && (
+            <div
+              className="fixed inset-0 z-0"
+              onClick={() => setMenuOpen(false)}
+            />
+          )}
         </div>
       </div>
     );
