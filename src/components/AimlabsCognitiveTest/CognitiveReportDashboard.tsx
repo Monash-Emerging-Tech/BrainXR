@@ -134,8 +134,8 @@ export const CognitiveReportDashboard: React.FC = () => {
     ? report.focusClassification === "Optimal Focus"
       ? FOCUS_CLASSIFICATION_INFO.optimal
       : report.focusClassification === "Steady Focus"
-      ? FOCUS_CLASSIFICATION_INFO.steady
-      : FOCUS_CLASSIFICATION_INFO.variable
+        ? FOCUS_CLASSIFICATION_INFO.steady
+        : FOCUS_CLASSIFICATION_INFO.variable
     : FOCUS_CLASSIFICATION_INFO.steady;
 
   const totalTrials = ((r1?.totalTrials || 187) + (r2?.totalTrials || 187));
@@ -334,7 +334,7 @@ export const CognitiveReportDashboard: React.FC = () => {
               <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-sans mb-3 font-normal max-w-3xl">
                 {classMeta.description}
               </p>
-              
+
               <div className="flex flex-wrap items-center gap-3">
                 {report.focusDescription && (
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/70 border border-white/10 text-xs font-mono text-[#F3DA66]">
@@ -380,27 +380,25 @@ export const CognitiveReportDashboard: React.FC = () => {
         </section>
 
         {/* Section Segmented Control / Tab Navigation: Polished Cyber-Glass Segmented Bar */}
-        <div 
-          role="tablist" 
-          aria-label="Report Sections" 
+        <div
+          role="tablist"
+          aria-label="Report Sections"
           className="p-1.5 rounded-2xl bg-slate-950/80 border border-slate-800/80 backdrop-blur-xl mb-6 font-mono text-xs flex items-center gap-1.5 overflow-x-auto shadow-xl print:hidden"
         >
           <button
             role="tab"
             aria-selected={selectedTab === "overview"}
             onClick={() => setSelectedTab("overview")}
-            className={`group relative flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all duration-200 cursor-pointer uppercase font-bold tracking-wider whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-500/80 ${
-              selectedTab === "overview"
+            className={`group relative flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all duration-200 cursor-pointer uppercase font-bold tracking-wider whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-500/80 ${selectedTab === "overview"
                 ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/50"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/70 border border-transparent"
-            }`}
+              }`}
           >
             <span
-              className={`w-2 h-2 rounded-full transition-all ${
-                selectedTab === "overview"
+              className={`w-2 h-2 rounded-full transition-all ${selectedTab === "overview"
                   ? "bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.9)] animate-pulse"
                   : "bg-slate-600 group-hover:bg-slate-400"
-              }`}
+                }`}
             />
             <span>Comparative Metrics</span>
           </button>
@@ -409,26 +407,23 @@ export const CognitiveReportDashboard: React.FC = () => {
             role="tab"
             aria-selected={selectedTab === "telemetry"}
             onClick={() => setSelectedTab("telemetry")}
-            className={`group relative flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all duration-200 cursor-pointer uppercase font-bold tracking-wider whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-500/80 ${
-              selectedTab === "telemetry"
+            className={`group relative flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all duration-200 cursor-pointer uppercase font-bold tracking-wider whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-500/80 ${selectedTab === "telemetry"
                 ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/50"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/70 border border-transparent"
-            }`}
+              }`}
           >
             <span
-              className={`w-2 h-2 rounded-full transition-all ${
-                selectedTab === "telemetry"
+              className={`w-2 h-2 rounded-full transition-all ${selectedTab === "telemetry"
                   ? "bg-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.9)] animate-pulse"
                   : "bg-slate-600 group-hover:bg-slate-400"
-              }`}
+                }`}
             />
             <span>Full Telemetry Log</span>
             <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-bold ml-1 transition-colors ${
-                selectedTab === "telemetry"
+              className={`text-[10px] px-2 py-0.5 rounded-full font-bold ml-1 transition-colors ${selectedTab === "telemetry"
                   ? "bg-white/20 text-white"
                   : "bg-slate-800 text-slate-400 group-hover:text-slate-300"
-              }`}
+                }`}
             >
               {fullTelemetry.length}
             </span>
@@ -438,18 +433,16 @@ export const CognitiveReportDashboard: React.FC = () => {
             role="tab"
             aria-selected={selectedTab === "science"}
             onClick={() => setSelectedTab("science")}
-            className={`group relative flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all duration-200 cursor-pointer uppercase font-bold tracking-wider whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-500/80 ${
-              selectedTab === "science"
+            className={`group relative flex items-center gap-2.5 px-5 py-3 rounded-xl transition-all duration-200 cursor-pointer uppercase font-bold tracking-wider whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-indigo-500/80 ${selectedTab === "science"
                 ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/25 border border-indigo-400/50"
                 : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/70 border border-transparent"
-            }`}
+              }`}
           >
             <span
-              className={`w-2 h-2 rounded-full transition-all ${
-                selectedTab === "science"
+              className={`w-2 h-2 rounded-full transition-all ${selectedTab === "science"
                   ? "bg-[#F3DA66] shadow-[0_0_8px_rgba(243,218,102,0.9)] animate-pulse"
                   : "bg-slate-600 group-hover:bg-slate-400"
-              }`}
+                }`}
             />
             <span>Focus Classification Science</span>
           </button>
@@ -725,11 +718,10 @@ export const CognitiveReportDashboard: React.FC = () => {
                       <button
                         key={r.key}
                         onClick={() => setTelemetryRound(r.key)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] uppercase font-bold cursor-pointer transition-all ${
-                          telemetryRound === r.key
+                        className={`px-2.5 py-1 rounded-lg text-[10px] uppercase font-bold cursor-pointer transition-all ${telemetryRound === r.key
                             ? "bg-slate-700 text-white shadow-sm"
                             : "text-slate-400 hover:text-slate-200"
-                        }`}
+                          }`}
                       >
                         {r.label}
                       </button>
@@ -751,11 +743,10 @@ export const CognitiveReportDashboard: React.FC = () => {
                       <button
                         key={f.key}
                         onClick={() => setTelemetryFilter(f.key)}
-                        className={`px-3 py-1 rounded-full uppercase tracking-wider text-[10px] cursor-pointer transition-all ${
-                          telemetryFilter === f.key
+                        className={`px-3 py-1 rounded-full uppercase tracking-wider text-[10px] cursor-pointer transition-all ${telemetryFilter === f.key
                             ? "bg-indigo-600 text-white font-bold border border-indigo-400/50 shadow-md"
                             : "bg-slate-900/90 text-slate-400 hover:text-white border border-slate-800"
-                        }`}
+                          }`}
                       >
                         {f.label}
                       </button>
@@ -799,11 +790,10 @@ export const CognitiveReportDashboard: React.FC = () => {
                             </td>
                             <td className="p-3.5">
                               <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                  t.targetType === "sphere"
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${t.targetType === "sphere"
                                     ? "bg-green-950/80 text-green-300 border border-green-500/40"
                                     : "bg-rose-950/80 text-rose-300 border border-rose-500/40"
-                                }`}
+                                  }`}
                               >
                                 <span
                                   className={`w-1.5 h-1.5 ${t.targetType === "sphere" ? "rounded-full bg-green-400" : "rounded-xs bg-rose-400"}`}
@@ -816,18 +806,16 @@ export const CognitiveReportDashboard: React.FC = () => {
                             </td>
                             <td className="p-3.5">
                               <span
-                                className={`font-bold ${
-                                  t.userResponded ? "text-cyan-300" : "text-slate-400"
-                                }`}
+                                className={`font-bold ${t.userResponded ? "text-cyan-300" : "text-slate-400"
+                                  }`}
                               >
                                 {t.userResponded ? "Hit" : "Avoided"}
                               </span>
                             </td>
                             <td className="p-3.5">
                               <span
-                                className={`inline-flex items-center gap-1 font-bold ${
-                                  t.isCorrect ? "text-emerald-400" : "text-rose-400"
-                                }`}
+                                className={`inline-flex items-center gap-1 font-bold ${t.isCorrect ? "text-emerald-400" : "text-rose-400"
+                                  }`}
                               >
                                 <span>{t.isCorrect ? "✓" : "✗"}</span>
                                 <span>{t.isCorrect ? "Correct" : "Incorrect"}</span>
@@ -874,11 +862,10 @@ export const CognitiveReportDashboard: React.FC = () => {
                           <button
                             key={pageNum}
                             onClick={() => setCurrentPage(pageNum)}
-                            className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                              currentPage === pageNum
+                            className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${currentPage === pageNum
                                 ? "bg-indigo-600 text-white"
                                 : "text-slate-400 hover:text-white hover:bg-slate-800"
-                            }`}
+                              }`}
                           >
                             {pageNum}
                           </button>
@@ -917,11 +904,10 @@ export const CognitiveReportDashboard: React.FC = () => {
                   return (
                     <div
                       key={info.tier}
-                      className={`p-5 rounded-2xl border transition-all ${
-                        isCurrent
+                      className={`p-5 rounded-2xl border transition-all ${isCurrent
                           ? `${info.bg} ${info.border} ring-2 ring-indigo-500/30`
                           : "bg-slate-900/60 border-slate-800 opacity-80"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center justify-between mb-2 font-mono">
                         <span className={`font-bold text-sm ${info.color}`}>{info.tier}</span>

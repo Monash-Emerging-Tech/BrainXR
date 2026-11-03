@@ -4,7 +4,6 @@ import { useFrame } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
 import { ELECTRODE_METADATA, type ElectrodeName } from "../../utils/signalSource";
 import { REGION_COLOR } from "../../utils/electrodeVisualState";
-import { triggerXRHaptic } from "../../utils/xrHaptics";
 
 interface ElectrodeNodeProps {
   name: ElectrodeName;
@@ -91,27 +90,17 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
     }
   });
 
-  // XR's grip/squeeze channel reports pointerType "grab" (a near-field
-  // proximity pointer — see useXRDragInteraction, now bound to grip for
-  // repositioning). Ignore it here so brushing a grabbing hand near a node
-  // never selects/hovers it; only the trigger ray ("ray") and desktop mouse
-  // ("mouse") drive selection.
   const handleClick = (e: ThreeEvent<PointerEvent>) => {
-    if (e.pointerType === "grab") return;
     e.stopPropagation();
-    triggerXRHaptic(e, 0.5, 25);
     onSelect?.(name);
   };
 
   const handlePointerEnter = (e: ThreeEvent<PointerEvent>) => {
-    if (e.pointerType === "grab") return;
     e.stopPropagation();
-    triggerXRHaptic(e, 0.2, 10);
     onHover?.(name);
   };
 
   const handlePointerLeave = (e: ThreeEvent<PointerEvent>) => {
-    if (e.pointerType === "grab") return;
     e.stopPropagation();
     onHover?.(null);
   };

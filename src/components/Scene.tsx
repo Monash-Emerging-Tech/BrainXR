@@ -159,34 +159,34 @@ const Scene: React.FC<SceneProps> = ({
       <pointLight position={[-10, 10, -5]} intensity={Math.PI / 2} />
       <pointLight position={[0, -10, 0]} intensity={Math.PI / 2} />
 
-      <XR store={xrStore}>
-        {aimlabsState.isActive ? (
+      {aimlabsState.isActive ? (
+        <XR store={xrStore}>
           <AimlabsScene
             state={aimlabsState}
             isXR={isXRPresenting}
             onExit={handleExitAimlabs}
           />
-        ) : (
-          <HeadWrapper
-            frameRef={frameRef}
-            historiesRef={historiesRef}
-            selectedChannel={selectedChannel}
-            hoveredChannel={hoveredChannel}
-            highlightPrefrontal={highlightPrefrontal}
-            presentationStage={presentationStage}
-            onChannelSelect={onChannelSelect}
-            onChannelHover={onChannelHover}
-            onStartDemo={onStartDemo}
-            onStartLive={onStartLive}
-            onTrialSelect={onTrialSelect}
-            onTogglePlayPause={onTogglePlayPause}
-            onSetSpeed={onSetSpeed}
-            speed={speed}
-            isPaused={isPaused}
-            audioError={audioError}
-          />
-        )}
-      </XR>
+        </XR>
+      ) : (
+        <HeadWrapper
+          frameRef={frameRef}
+          historiesRef={historiesRef}
+          selectedChannel={selectedChannel}
+          hoveredChannel={hoveredChannel}
+          highlightPrefrontal={highlightPrefrontal}
+          presentationStage={presentationStage}
+          onChannelSelect={onChannelSelect}
+          onChannelHover={onChannelHover}
+          onStartDemo={onStartDemo}
+          onStartLive={onStartLive}
+          onTrialSelect={onTrialSelect}
+          onTogglePlayPause={onTogglePlayPause}
+          onSetSpeed={onSetSpeed}
+          speed={speed}
+          isPaused={isPaused}
+          audioError={audioError}
+        />
+      )}
 
       {!isXRPresenting && !aimlabsState.isActive && <SpringOrbitControls enabled={!isStoryActive} />}
     </Canvas>

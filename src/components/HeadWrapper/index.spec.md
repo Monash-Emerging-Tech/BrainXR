@@ -1,11 +1,5 @@
 # HeadWrapper
 
-Wraps [[../eegHead/index|EEGHead]] with WebXR drag interaction and
-placement, and mounts [[../XRConsole/index|XRConsole]] alongside it.
+Wraps [[../eegHead/index|EEGHead]] for 2D desktop presentation.
 
-**Props**: `frameRef`, `historiesRef`, `selectedChannel`, `hoveredChannel`, `onChannelSelect`, `onChannelHover`, `onStartDemo`, `onStartLive`, `onTrialSelect`, `onTogglePlayPause`, `onSetSpeed`, `speed`, `isPaused`.
-
-Composed from [[useXRDragInteraction]] (pointer handlers + XR pose refs),
-[[useHeadPlacement]] (the per-frame position/scale/rotation logic for both
-XR and 2D desktop presentation), and [[spatialCollision]] (analytical anti-overlap constraints preventing the digital twin headset and floating control panel from colliding or intersecting).
-
+Composed from [[useHeadPlacement]] (smooth auto-focus on selected electrode, continuous idle showcase spin, and synchronized onboarding transitions).

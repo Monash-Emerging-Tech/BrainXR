@@ -2,7 +2,6 @@
 // (rendered twice, solid behind the headset and outlined in front of it) and
 // the bottom call-to-action buttons. Only ever shown in idle mode.
 import React from "react";
-import { xrStore } from "../utils/xrStore";
 
 interface SpannedTextProps {
   text: string;
