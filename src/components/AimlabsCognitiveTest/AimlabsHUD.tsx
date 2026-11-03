@@ -30,13 +30,13 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
   return (
     <div className="absolute inset-0 pointer-events-none select-none z-40 overflow-hidden font-sans">
       {/* Top Header Bar */}
-      <div className="absolute top-5 left-6 right-6 flex items-center justify-between">
+      <div className="absolute top-5 left-8 right-8 flex items-center justify-between">
         {/* Left Actions: Back, Pause */}
-        <div className="flex items-center gap-2 pointer-events-auto">
+        <div className="flex items-center gap-3 pointer-events-auto">
           {/* Back Button */}
           <button
             onClick={onExit}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0d0d10]/90 hover:bg-[#1a1a24] text-white border border-white/15 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-white/30 active:scale-95 cursor-pointer text-xs font-mono uppercase tracking-wider"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0d0d10]/90 hover:bg-[#1a1a24] text-white border border-white/15 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-white/30 active:scale-95 cursor-pointer text-xs font-mono uppercase tracking-wider"
             title="Back"
           >
             <span className="text-slate-400">←</span>
@@ -69,11 +69,11 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
         </div>
 
         {/* Right Actions & Live Telemetry Readout (Strictly: Mean, Accuracy, Precision) */}
-        <div className="flex items-center gap-2 pointer-events-auto">
+        <div className="flex items-center gap-3 pointer-events-auto">
           {/* Live Telemetry Pill */}
-          <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-lg bg-[#0d0d10]/90 border border-white/15 backdrop-blur-md shadow-lg text-xs font-mono">
+          <div className="flex items-center gap-4 px-6 py-2.5 rounded-lg bg-[#0d0d10]/90 border border-white/15 backdrop-blur-md shadow-lg text-xs font-mono">
             {/* Mean Reaction Time */}
-            <div className="flex items-center gap-1 text-slate-300">
+            <div className="flex items-center gap-1.5 text-slate-300">
               <span className="text-[10px] text-slate-400 uppercase font-semibold">Mean</span>
               <span className="font-bold text-cyan-300">
                 {liveFocusMetrics && liveFocusMetrics.meanRT > 0 ? `${liveFocusMetrics.meanRT}ms` : `${score}ms`}
@@ -83,7 +83,7 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
             <span className="text-white/20">|</span>
 
             {/* Accuracy */}
-            <div className="flex items-center gap-1 text-slate-300">
+            <div className="flex items-center gap-1.5 text-slate-300">
               <span className="text-[10px] text-slate-400 uppercase font-semibold">Acc</span>
               <span className="font-bold text-emerald-400">{Math.round(accuracy)}%</span>
             </div>
@@ -91,7 +91,7 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
             <span className="text-white/20">|</span>
 
             {/* Precision */}
-            <div className="flex items-center gap-1 text-slate-300">
+            <div className="flex items-center gap-1.5 text-slate-300">
               <span className="text-[10px] text-slate-400 uppercase font-semibold">Prec</span>
               <span className="font-bold text-purple-300">
                 {Math.round(liveFocusMetrics?.precision ?? 100)}%
@@ -101,7 +101,7 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
             <span className="text-white/20">|</span>
 
             {/* Omission Rate */}
-            <div className="flex items-center gap-1 text-slate-300">
+            <div className="flex items-center gap-1.5 text-slate-300">
               <span className="text-[10px] text-slate-400 uppercase font-semibold">Omit</span>
               <span className="font-bold text-rose-400">
                 {Math.round(liveFocusMetrics?.omissionRate ?? 0)}%

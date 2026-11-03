@@ -1,6 +1,5 @@
 import React from "react";
 import DoubleVisionFocusText from "../DoubleVisionFocusText";
-import DirectionalVectors from "../DirectionalVectors";
 import { calcEnvelope, clamp01 } from "./useOnboardingScroll";
 
 interface BeatContentProps {
@@ -163,10 +162,6 @@ export const BeatContent: React.FC<BeatContentProps> = ({ progress, introFadePro
         </div>
       )}
 
-      {/* Beat 3 Directional Gaze Reticle & Vectors overlay */}
-      {b3.opacity > 0.005 && (
-        <DirectionalVectors opacity={b3.opacity} isDark={isDark} />
-      )}
 
       {/* Beats 3 & 4 (Direction & Intensity): The surrounding text & badges fade naturally between beats,
           while BrainXR maintains a persistent, continuous 100% opacity without fading out during the transition */}

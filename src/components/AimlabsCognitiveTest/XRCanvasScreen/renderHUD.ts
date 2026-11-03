@@ -15,7 +15,7 @@ export function renderHUD(
   // 1. Back Button (Top Left)
   const backW = 110;
   const backH = 50;
-  const backX = 60;
+  const backX = 40;
   const isBackHover = state.hoverId === "exit";
 
   ctx.fillStyle = isBackHover ? "#334155" : "#0f172a";
@@ -35,7 +35,7 @@ export function renderHUD(
   // 2. Pause Button [SVG-style Icon only]
   const pauseW = 50;
   const pauseH = 50;
-  const pauseX = backX + backW + 12;
+  const pauseX = backX + backW + 14;
   const isPauseHover = state.hoverId === "toggle-pause";
   const isPaused = Boolean(state.isPaused);
 
@@ -74,9 +74,9 @@ export function renderHUD(
 
   // Telemetry Readout (Top Right: Strictly Mean, Accuracy, Precision, Omission Rate)
   const m = state.liveFocusMetrics;
-  const telW = 425;
+  const telW = 510;
   const telH = 50;
-  const telX = width - telW - 60;
+  const telX = width - telW - 40;
 
   ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
@@ -89,50 +89,50 @@ export function renderHUD(
   ctx.font = "12px monospace";
   ctx.fillStyle = "#94a3b8";
   ctx.textAlign = "left";
-  ctx.fillText("MEAN", telX + 16, topY + 30);
+  ctx.fillText("MEAN", telX + 24, topY + 30);
 
   ctx.font = "bold 15px monospace";
   ctx.fillStyle = "#22d3ee";
-  ctx.fillText(`${m && m.meanRT > 0 ? `${m.meanRT}ms` : `${state.score}ms`}`, telX + 54, topY + 30);
+  ctx.fillText(`${m && m.meanRT > 0 ? `${m.meanRT}ms` : `${state.score}ms`}`, telX + 64, topY + 30);
 
   // Divider 1
   ctx.font = "12px monospace";
   ctx.fillStyle = "#334155";
-  ctx.fillText("|", telX + 116, topY + 30);
+  ctx.fillText("|", telX + 136, topY + 30);
 
   // 2. Accuracy
   ctx.fillStyle = "#94a3b8";
-  ctx.fillText("ACC", telX + 128, topY + 30);
+  ctx.fillText("ACC", telX + 152, topY + 30);
 
   ctx.font = "bold 15px monospace";
   ctx.fillStyle = "#34d399";
-  ctx.fillText(`${Math.round(state.accuracy)}%`, telX + 158, topY + 30);
+  ctx.fillText(`${Math.round(state.accuracy)}%`, telX + 184, topY + 30);
 
   // Divider 2
   ctx.font = "12px monospace";
   ctx.fillStyle = "#334155";
-  ctx.fillText("|", telX + 208, topY + 30);
+  ctx.fillText("|", telX + 244, topY + 30);
 
   // 3. Precision
   ctx.fillStyle = "#94a3b8";
-  ctx.fillText("PREC", telX + 220, topY + 30);
+  ctx.fillText("PREC", telX + 260, topY + 30);
 
   ctx.font = "bold 15px monospace";
   ctx.fillStyle = "#a5b4fc";
-  ctx.fillText(`${Math.round(m?.precision ?? 100)}%`, telX + 258, topY + 30);
+  ctx.fillText(`${Math.round(m?.precision ?? 100)}%`, telX + 300, topY + 30);
 
   // Divider 3
   ctx.font = "12px monospace";
   ctx.fillStyle = "#334155";
-  ctx.fillText("|", telX + 312, topY + 30);
+  ctx.fillText("|", telX + 364, topY + 30);
 
   // 4. Omission Rate
   ctx.fillStyle = "#94a3b8";
-  ctx.fillText("OMIT", telX + 324, topY + 30);
+  ctx.fillText("OMIT", telX + 380, topY + 30);
 
   ctx.font = "bold 15px monospace";
   ctx.fillStyle = "#f43f5e";
-  ctx.fillText(`${Math.round(m?.omissionRate ?? 0)}%`, telX + 364, topY + 30);
+  ctx.fillText(`${Math.round(m?.omissionRate ?? 0)}%`, telX + 422, topY + 30);
 
   // Center Top Rule Badge Card
   const ruleW = 620;
@@ -164,11 +164,11 @@ export function renderHUD(
     ctx.fillText(state.recentFeedback.text, width / 2, height / 2 + 140);
   }
 
-  // Bottom Pause Quick Tip Badge in XR
-  const hintW = 320;
-  const hintH = 40;
+  // Bottom Pause Quick Tip Badge in XR: moved ~5 more rems down so it sits comfortably out of central focal gaze
+  const hintW = 380;
+  const hintH = 42;
   const hintX = (width - hintW) / 2;
-  const hintY = height - 60;
+  const hintY = height - 20;
 
   ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
@@ -181,7 +181,7 @@ export function renderHUD(
   ctx.font = "bold 15px monospace";
   ctx.fillStyle = "#cbd5e1";
   ctx.textAlign = "center";
-  ctx.fillText("Press [B] or [Y] to Pause", width / 2, hintY + 25);
+  ctx.fillText("Press [B] or [Y] to Pause", width / 2, hintY + 26);
 }
 
 function drawMiniRuleBadge(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, name: string, action: string, color: string, isPress: boolean) {
