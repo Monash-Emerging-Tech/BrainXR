@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import React, { useRef, Suspense } from "react";
+import { useThree } from "@react-three/fiber";
 import EEGHead from "../eegHead";
 import BrainModel from "../story/BrainModel";
 import { STORY_V2 } from "../story-v2/storyContentV2";
 import type { ElectrodeName, Frame } from "../../utils/signalSource";
 import type { HistorySample } from "../../hooks/usePlaybackEngine";
+import { useXRDragInteraction } from "./useXRDragInteraction";
 import { useHeadPlacement } from "./useHeadPlacement";
 import { headsetPresentation, type HeadsetPresentationStage } from "../../utils/headsetPresentation";
 import { OnboardingBrainRig } from "../onboarding/OnboardingBrainStage";
@@ -39,11 +41,23 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
   onChannelSelect,
   onChannelHover,
 }) => {
+  const { gl } = useThree();
   const groupRef = useRef<THREE.Group>(null);
+
+  const { isDraggingRef, xrPositionRef, xrRotationRef, handlePointerMove, resetToInitial } =
+    useXRDragInteraction({
+      gl,
+      groupRef,
+      initialPosition: [0, 1.25, -0.9],
+      initialRotation: [0, 0, 0],
+    });
 
   useHeadPlacement({
     groupRef,
     frameRef,
+    isDraggingRef,
+    xrPositionRef,
+    xrRotationRef,
     selectedChannel,
     highlightPrefrontal,
     presentationStage,
@@ -54,7 +68,7 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
 
   return (
     <group>
-      <group>
+      <group onPointerMove={handlePointerMove}>
         <EEGHead
           ref={groupRef}
           frameRef={frameRef}

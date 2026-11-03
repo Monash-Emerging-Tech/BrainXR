@@ -15,20 +15,27 @@ export async function isWebXRSupported(): Promise<boolean> {
 }
 
 /**
- * Unified entry handler for the Enter VR button:
- * - If on an XR device with WebXR immersive VR support: launches into WebXR.
+ * Unified entry handler for the Enter XR button:
+ * - Attempts to launch an immersive-ar passthrough session if supported, falling back to immersive-vr.
  * - Otherwise (desktop/non-XR): launches as a Three.js desktop experience.
  */
 export async function launchExperience(options: {
   onStartDesktop: () => void;
   onStartXR: () => void;
 }): Promise<void> {
-  const xrSupported = await isWebXRSupported();
+  const arSupported = typeof navigator !== "undefined" && navigator.xr
+    ? await navigator.xr.isSessionSupported("immersive-ar").catch(() => false)
+    : false;
+  const vrSupported = await isWebXRSupported();
 
-  if (xrSupported) {
+  if (arSupported || vrSupported) {
     options.onStartXR();
     try {
-      await xrStore.enterVR();
+      if (arSupported) {
+        await xrStore.enterAR();
+      } else {
+        await xrStore.enterVR();
+      }
     } catch (err) {
       console.warn("Could not initiate WebXR session, falling back to Three.js desktop:", err);
       options.onStartDesktop();

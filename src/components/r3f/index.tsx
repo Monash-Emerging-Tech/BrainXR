@@ -14,6 +14,7 @@ import NodeDetailsBanner from "./NodeDetailsBanner";
 import { headsetPresentation } from "../../utils/headsetPresentation";
 import OnboardingFlow from "../onboarding/OnboardingFlow";
 import { launchExperience } from "../../utils/webxrDetector";
+import { xrStore } from "../../utils/xrStore";
 import { aimlabsStore, AimlabsOverlay } from "../AimlabsCognitiveTest";
 
 const StoryIntroV2 = lazy(() => import("../story-v2/StoryIntroV2"));
@@ -142,6 +143,18 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
       },
     });
   }, [showStory, cancelOnboarding]);
+
+  // Cleanly synchronize state when native WebXR session ends (e.g. headset menu quit or taking off headset)
+  useEffect(() => {
+    const unsub = xrStore.subscribe((state, prevState) => {
+      if (prevState.session != null && state.session == null) {
+        if (aimlabsStore.getSnapshot().isActive) {
+          aimlabsStore.exit();
+        }
+      }
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

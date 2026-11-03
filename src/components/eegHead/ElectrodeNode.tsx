@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
 import { ELECTRODE_METADATA, type ElectrodeName } from "../../utils/signalSource";
 import { REGION_COLOR } from "../../utils/electrodeVisualState";
+import { triggerXRHaptic } from "../../utils/xrHaptics";
 
 interface ElectrodeNodeProps {
   name: ElectrodeName;
@@ -91,16 +92,21 @@ const ElectrodeNode: React.FC<ElectrodeNodeProps> = ({
   });
 
   const handleClick = (e: ThreeEvent<PointerEvent>) => {
+    if (e.pointerType === "grab") return;
     e.stopPropagation();
+    triggerXRHaptic(e, 0.45, 20);
     onSelect?.(name);
   };
 
   const handlePointerEnter = (e: ThreeEvent<PointerEvent>) => {
+    if (e.pointerType === "grab") return;
     e.stopPropagation();
+    triggerXRHaptic(e, 0.2, 10);
     onHover?.(name);
   };
 
   const handlePointerLeave = (e: ThreeEvent<PointerEvent>) => {
+    if (e.pointerType === "grab") return;
     e.stopPropagation();
     onHover?.(null);
   };
