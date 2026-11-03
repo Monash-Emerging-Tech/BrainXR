@@ -43,7 +43,7 @@ export const DirectionalVectors: React.FC<DirectionalVectorsProps> = ({ opacity,
         <circle cx="130" cy="170" r="3.5" fill="#67e8f9" opacity="0.9" />
 
         <text x="315" y="88" fill={isDark ? "#67e8f9" : "#0891b2"} className="font-mono text-[10px] tracking-widest uppercase font-bold">
-          DIRECTION OF ATTENTION [VECTOR]
+          DIRECTION OF FOCUS [VECTOR]
         </text>
         <text x="315" y="104" fill={isDark ? "#a5f3fc" : "#0e7490"} className="font-mono text-[8.5px] tracking-wider font-medium">
           FOV: 110° · GAZE: TRACKED

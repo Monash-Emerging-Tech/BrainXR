@@ -20,7 +20,7 @@ export const BeatContent: React.FC<BeatContentProps> = ({ progress, introFadePro
   const b3 = calcEnvelope(progress, 0.54, 0.58, 0.68, 0.72);
   const b4 = calcEnvelope(progress, 0.72, 0.76, 0.85, 0.88);
 
-  // Across Beats 3 and 4 (Direction & Intensity of attention: 0.54 -> 0.88):
+  // Across Beats 3 and 4 (Direction & Intensity of focus: 0.54 -> 0.88):
   // The BrainXR text stays completely stationary in place at 100% opacity throughout the entire transition.
   // It enters with Beat 3 (0.54 -> 0.58) and exits with Beat 4 (0.85 -> 0.88), but never slides/re-enters between beats.
   const showBrainXRShared = progress >= 0.54 && progress < 0.88;
@@ -170,7 +170,7 @@ export const BeatContent: React.FC<BeatContentProps> = ({ progress, introFadePro
           style={{ opacity: brainXROpacity, transform: `translateY(${brainXRY.toFixed(1)}px)` }}
         >
           <div className="relative max-w-2xl w-full flex flex-col items-center text-center">
-            {/* Beat 3 Badge & Lead-in text: Direction of Attention */}
+            {/* Beat 3 Badge & Lead-in text: Direction of Focus */}
             {b3.opacity > 0.005 && (
               <div
                 className="flex flex-col items-center text-center will-change-transform"
@@ -178,10 +178,10 @@ export const BeatContent: React.FC<BeatContentProps> = ({ progress, introFadePro
               >
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${isDark ? "border-cyan-500/30 text-cyan-300" : "border-cyan-300 text-cyan-700"} border font-mono text-xs uppercase tracking-wider mb-3 transition-colors duration-300`}>
                   <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                  Direction of Attention
+                  Direction of Focus
                 </div>
                 <p className={`${isDark ? "text-slate-200" : "text-slate-800"} font-offbit text-xl sm:text-2xl md:text-3xl font-light max-w-xl leading-relaxed transition-colors duration-300`}>
-                  we measure direction of attention using{" "}
+                  we track your focus inside the game of{" "}
                   <span className="invisible select-none">
                     Brain<span className="text-cyan-300">XR</span>
                   </span>
@@ -189,7 +189,7 @@ export const BeatContent: React.FC<BeatContentProps> = ({ progress, introFadePro
               </div>
             )}
 
-            {/* Beat 4 Badge & Lead-in text: Intensity of Attention */}
+            {/* Beat 4 Badge & Lead-in text: Intensity of Focus */}
             {b4.opacity > 0.005 && (
               <div
                 className="flex flex-col items-center text-center will-change-transform"
@@ -197,7 +197,7 @@ export const BeatContent: React.FC<BeatContentProps> = ({ progress, introFadePro
               >
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full ${isDark ? "border-violet-500/25 text-violet-300/90" : "border-violet-300 text-violet-700"} border font-mono text-xs uppercase tracking-wider mb-3 transition-colors duration-300`}>
                   <span className="w-1.5 h-1.5 rounded-full bg-violet-400/80 animate-pulse" />
-                  Intensity of Attention
+                  Intensity of Focus
                 </div>
                 <p className={`${isDark ? "text-slate-200" : "text-slate-800"} font-offbit text-xl sm:text-2xl md:text-3xl font-light max-w-xl leading-relaxed transition-colors duration-300`}>
                   we measure intensity using EEG headset on{" "}
@@ -212,7 +212,7 @@ export const BeatContent: React.FC<BeatContentProps> = ({ progress, introFadePro
             <div className="absolute bottom-0 inset-x-0 pointer-events-none flex justify-center text-center">
               <p className="font-offbit text-xl sm:text-2xl md:text-3xl font-light max-w-xl leading-relaxed">
                 <span className="invisible select-none">
-                  {progress < 0.70 ? "we measure direction of attention using " : "we measure intensity using EEG headset on "}
+                  we measure intensity using EEG headset on{" "}
                 </span>
                 <span className={`font-offbit uppercase font-bold tracking-wider ${isDark ? "text-white" : "text-slate-950"} transition-colors duration-300`}>
                   <span className={progress >= 0.70 ? (isDark ? "text-violet-300" : "text-violet-600") : ""}>Brain</span>

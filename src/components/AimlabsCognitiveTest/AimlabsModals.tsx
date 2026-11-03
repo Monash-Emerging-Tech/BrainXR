@@ -229,9 +229,9 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
             Brain<span className="text-cyan-400">XR</span>
           </h2>
 
-          {/* Direction of Attention Description */}
-          <p className="text-xs sm:text-sm text-slate-300 font-mono max-w-md leading-relaxed mb-6">
-            A cognitive test to measure the <span className="text-cyan-300 font-semibold">direction of attention</span>.
+          {/* Direction of Focus Description */}
+          <p className="text-xs sm:text-sm text-slate-300 font-mono whitespace-nowrap mb-6">
+            A cognitive game to measure the <span className="text-cyan-300 font-semibold">direction of focus</span>.
           </p>
 
           {/* Side-by-Side Dual Round Cards Layout */}
@@ -329,7 +329,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
               onClick={() => handleAction(onExit)}
               className="flex-1 py-3 px-5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-slate-300 font-bold text-xs font-mono uppercase tracking-wider transition-all cursor-pointer active:scale-95 border border-slate-700/60 backdrop-blur-md"
             >
-              Back to EEG
+              Back
             </button>
             <button
               onClick={() => handleAction(onStartGame)}

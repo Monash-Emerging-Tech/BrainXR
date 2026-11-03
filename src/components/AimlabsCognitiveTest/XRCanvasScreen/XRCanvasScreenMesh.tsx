@@ -27,37 +27,64 @@ export const XRCanvasScreenMesh: React.FC<XRCanvasScreenMeshProps> = ({
   const width = isGameplay ? 3.6 : 3.2;
   const height = isGameplay ? 2.025 : 1.8;
 
+  // Baked materials memoized for zero GC/allocation overhead during render cycles
+  const glassBackingMat = React.useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: "#020617",
+        transparent: true,
+        opacity: 0.65,
+        depthWrite: false,
+      }),
+    []
+  );
+
+  const screenMat = React.useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        toneMapped: false,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      }),
+    [texture]
+  );
+
+  const borderMat = React.useMemo(
+    () =>
+      new THREE.LineBasicMaterial({
+        color: "#38bdf8",
+        transparent: true,
+        opacity: 0.45,
+      }),
+    []
+  );
+
   return (
     <group position={position} name="xr-aimlabs-canvas-screen">
       {/* 1. Subtle Glass Backing */}
       {!isGameplay && (
-        <mesh position={[0, 0, -0.005]}>
+        <mesh position={[0, 0, -0.005]} material={glassBackingMat}>
           <planeGeometry args={[width + 0.04, height + 0.04]} />
-          <meshBasicMaterial color="#020617" transparent opacity={0.6} />
         </mesh>
       )}
 
       {/* 2. Main Canvas Texture Screen Plane */}
       <mesh
         position={[0, 0, 0]}
+        material={screenMat}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerOut={onPointerOut}
       >
         <planeGeometry args={[width, height]} />
-        <meshBasicMaterial
-          map={texture}
-          transparent
-          toneMapped={false}
-          side={THREE.DoubleSide}
-        />
       </mesh>
 
       {/* 3. Outer Neon Accent Border for Modals */}
       {!isGameplay && (
-        <lineSegments position={[0, 0, 0.002]}>
+        <lineSegments position={[0, 0, 0.002]} material={borderMat}>
           <edgesGeometry args={[new THREE.PlaneGeometry(width, height)]} />
-          <lineBasicMaterial color="#38bdf8" transparent opacity={0.4} />
         </lineSegments>
       )}
     </group>

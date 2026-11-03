@@ -392,12 +392,22 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
 
               {/* Rubber stamp badge & recording audio text: displayed if "Connect your headset" is unticked on the homescreen and no node is selected */}
               {!isHeadsetConnected && !engine.selectedChannel && !highlightPrefrontal && (
-                <div className="mt-10 flex flex-col items-center pointer-events-none select-none">
+                <div className="mt-8 flex flex-col items-center pointer-events-none select-none">
                   <span className="stamp-demo-badge text-xl sm:text-2xl md:text-3xl">
                     SIMULATED DEMO
                   </span>
-                  <span className="mt-8 text-red-700/80 font-serif italic text-sm sm:text-base tracking-wide max-w-lg leading-relaxed text-center drop-shadow-xs">
-                    EEG recording for participant listening to audio file video-{String((engine.frame.trialIndex ?? 0) + 1).padStart(2, "0")}.m4a
+                  <span className="mt-8 eeg-node-gradient-text font-offbit text-base sm:text-lg tracking-wide whitespace-nowrap leading-relaxed text-center drop-shadow-xs">
+                    EEG recording for{" "}
+                    <a
+                      href="https://ieeexplore.ieee.org/document/5871728/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="pointer-events-auto underline underline-offset-4 decoration-current hover:opacity-80 transition-opacity cursor-pointer"
+                      title="Read IEEE paper on DEAP dataset (opens in new tab)"
+                    >
+                      participant #7
+                    </a>{" "}
+                    listening to audio file `video-{String((engine.frame.trialIndex ?? 0) + 1).padStart(2, "0")}.m4a`
                   </span>
                 </div>
               )}

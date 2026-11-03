@@ -58,17 +58,21 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-weight: 900;
   letter-spacing: 0.16em;
-  color: #dc2626;
-  border: 4px solid #dc2626;
+  color: #38bdf8;
+  border: 4px solid #38bdf8;
+  border-image: linear-gradient(135deg, #818cf8, #c084fc, #60a5fa, #22d3ee, #34d399) 1;
   border-radius: 0.65rem;
   transform: rotate(-4.5deg);
+  background: linear-gradient(135deg, #818cf8 0%, #c084fc 25%, #60a5fa 50%, #22d3ee 75%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iODAiPjxmaWx0ZXIgaWQ9ImciPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjc1IiBudW1PY3RhdmVzPSI0IiByZXN1bHQ9Im5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ibWF0cml4IiB2YWx1ZXM9IjAgMCAwIDAgMCAgMCAwIDAgMCAwICAwIDAgMCAwIDAgIDAgMCAwIDE4IC02LjUiIHJlc3VsdD0ibWFzayIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9ImJsYWNrIiBmaWx0ZXI9InVybCgjZykiLz48L3N2Zz4=');
   -webkit-mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iODAiPjxmaWx0ZXIgaWQ9ImciPjxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjc1IiBudW1PY3RhdmVzPSI0IiByZXN1bHQ9Im5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ibWF0cml4IiB2YWx1ZXM9IjAgMCAwIDAgMCAgMCAwIDAgMCAwICAwIDAgMCAwIDAgIDAgMCAwIDE4IC02LjUiIHJlc3VsdD0ibWFzayIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9ImJsYWNrIiBmaWx0ZXI9InVybCgjZykiLz48L3N2Zz4=');
   mask-size: 140px 65px;
   -webkit-mask-size: 140px 65px;
   mask-repeat: repeat;
   -webkit-mask-repeat: repeat;
-  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.2), inset 0 0 0 1px rgba(220, 38, 38, 0.2);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
 }
 
 @keyframes badge-activate-blink {

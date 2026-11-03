@@ -33,7 +33,7 @@ export function renderReadyModal(
   ctx.letterSpacing = "0px";
   ctx.textAlign = "center";
   ctx.fillStyle = "#cbd5e1";
-  ctx.fillText("A cognitive test to measure the direction of attention.", cx, 270);
+  ctx.fillText("A cognitive game to measure the direction of focus.", cx, 270);
 
   // Draw Dual Round Cards
   const cardW = 580;
@@ -71,8 +71,8 @@ export function renderReadyModal(
   const btnY = 760;
   const btnH = 68;
 
-  // Back to EEG Button
-  const backW = 280;
+  // Back Button
+  const backW = 220;
   const backX = cx - backW - 20;
   const isBackHover = state.hoverId === "exit";
   ctx.fillStyle = isBackHover ? "#334155" : "#0f172a";
@@ -86,7 +86,7 @@ export function renderReadyModal(
   ctx.font = "bold 20px monospace";
   ctx.fillStyle = isBackHover ? "#ffffff" : "#cbd5e1";
   ctx.textAlign = "center";
-  ctx.fillText("Back to EEG", backX + backW / 2, btnY + 42);
+  ctx.fillText("Back", backX + backW / 2, btnY + 42);
   hitAreas.push({ id: "exit", type: "exit", x: backX, y: btnY, width: backW, height: btnH });
 
   // Start Assessment Button
