@@ -5,7 +5,7 @@ import { NODE_INSIGHTS } from "../../../utils/nodeInsights";
 import { ELECTRODE_DISPLAY_ORDER } from "../../../utils/electrodeDisplayOrder";
 
 export interface NodePanelHitArea {
-  id: "prev" | "next" | "close" | "direction";
+  id: "prev" | "next" | "close" | "direction" | "toggle-recording";
   x: number;
   y: number;
   width: number;
@@ -18,12 +18,15 @@ export const PANEL_HEIGHT = 800;
 /**
  * Draws the "Intensity of Focus" top pill component, identical to TopHudBar:
  * [ (pulsing indicator) INTENSITY OF FOCUS | XX% ]
+ * Registers hit area "toggle-recording" so users can click/pinch to toggle the simulated recording component.
  */
 function drawIntensityOfFocusPill(
   ctx: CanvasRenderingContext2D,
   centerX: number,
   y: number,
-  frame: Frame
+  frame: Frame,
+  hoverId: string | null,
+  hitAreas: NodePanelHitArea[]
 ) {
   const isBaseline = frame.phase === "baseline";
   const focusVal = frame.focus;
@@ -32,11 +35,18 @@ function drawIntensityOfFocusPill(
   const pillW = 280;
   const pillH = 46;
   const pillX = centerX - pillW / 2;
+  const isHovered = hoverId === "toggle-recording";
 
-  // Background pill
-  ctx.fillStyle = "rgba(11, 15, 23, 0.92)";
-  ctx.strokeStyle = isBaseline ? "rgba(99, 102, 241, 0.55)" : "rgba(16, 185, 129, 0.55)";
-  ctx.lineWidth = 1.5;
+  // Background pill (brightens slightly on hover to signify interactability)
+  ctx.fillStyle = isHovered
+    ? "rgba(30, 41, 59, 0.96)"
+    : "rgba(11, 15, 23, 0.92)";
+  ctx.strokeStyle = isHovered
+    ? "#38bdf8"
+    : isBaseline
+    ? "rgba(99, 102, 241, 0.55)"
+    : "rgba(16, 185, 129, 0.55)";
+  ctx.lineWidth = isHovered ? 2 : 1.5;
   ctx.beginPath();
   ctx.roundRect(pillX, y, pillW, pillH, pillH / 2);
   ctx.fill();
@@ -56,7 +66,7 @@ function drawIntensityOfFocusPill(
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   ctx.font = "900 11.5px monospace";
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = isHovered ? "#38bdf8" : "#ffffff";
   ctx.fillText("INTENSITY OF FOCUS", dotX + 14, dotY);
 
   // Readout badge on the right
@@ -77,6 +87,15 @@ function drawIntensityOfFocusPill(
   ctx.font = "900 13px monospace";
   ctx.fillStyle = isBaseline ? "#c7d2fe" : "#a7f3d0";
   ctx.fillText(focusPercent == null ? "--" : `${focusPercent}%`, badgeX + badgeW / 2, y + pillH / 2);
+
+  // Push hit area for interactive toggle
+  hitAreas.push({
+    id: "toggle-recording",
+    x: pillX,
+    y,
+    width: pillW,
+    height: pillH,
+  });
 }
 
 /**
@@ -104,7 +123,8 @@ export function renderNodeDetailsCanvas(
   channel: ElectrodeName | null,
   frame: Frame,
   hoverId: string | null,
-  hitAreas: NodePanelHitArea[]
+  hitAreas: NodePanelHitArea[],
+  showSimulatedRecording = false
 ): void {
   hitAreas.length = 0;
   // Clear full canvas so there is NO big bounding card - only floating pills!
@@ -115,16 +135,16 @@ export function renderNodeDetailsCanvas(
   // =========================================================================
   // STATE A: IDLE (NO ELECTRODE SELECTED)
   // Balanced floating pills framing the headset:
-  // 1. TOP OF HEADSET (Y: 28): Intensity of Focus pill readout
+  // 1. TOP OF HEADSET (Y: 28): Intensity of Focus pill readout (toggles simulated recording)
   // 2. BELOW HEADSET (Y: 580): XR Interaction Prompt [ PINCH NODE TO INSPECT | HOLD GRIP TO MOVE ]
-  // 3. BELOW HEADSET (Y: 646): Simulated Recording pill [ SIMULATED RECORDING | Participant #7 · video-01.m4a ]
-  // 4. BELOW HEADSET (Y: 712): Primary CTA pill [ Track Your Focus ✦ ]
+  // 3. BELOW HEADSET (Y: 646, CONDITIONAL): Simulated Recording pill [ SIMULATED RECORDING | Participant #7 · video-01.m4a ]
+  // 4. BELOW HEADSET: Primary CTA pill [ Track Your Focus ✦ ]
   // =========================================================================
   if (!channel) {
     ctx.textBaseline = "middle";
 
     // 1. TOP OF HEADSET: Intensity of Focus Value Component (Y: 28)
-    drawIntensityOfFocusPill(ctx, centerX, 28, frame);
+    drawIntensityOfFocusPill(ctx, centerX, 28, frame, hoverId, hitAreas);
 
     // 2. BELOW HEADSET: XR Interaction Prompt Pill (Y: 580)
     const promptW = 560;
@@ -163,44 +183,47 @@ export function renderNodeDetailsCanvas(
     ctx.fillStyle = "#cbd5e1";
     ctx.fillText("To reposition", promptX + 338, promptY + promptH / 2);
 
-    // 3. BELOW HEADSET: Simulated Recording Context Pill (Y: 646)
-    const trialNum = String((frame.trialIndex ?? 0) + 1).padStart(2, "0");
-    const infoPillW = 570;
-    const infoPillH = 42;
-    const infoPillX = centerX - infoPillW / 2;
-    const infoPillY = 646;
+    // 3. BELOW HEADSET: Simulated Recording Context Pill (RENDERED CONDITIONALLY ON TOGGLE)
+    if (showSimulatedRecording) {
+      const trialNum = String((frame.trialIndex ?? 0) + 1).padStart(2, "0");
+      const infoPillW = 570;
+      const infoPillH = 42;
+      const infoPillX = centerX - infoPillW / 2;
+      const infoPillY = 646;
 
-    ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
-    ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.roundRect(infoPillX, infoPillY, infoPillW, infoPillH, infoPillH / 2);
-    ctx.fill();
-    ctx.stroke();
+      ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
+      ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.roundRect(infoPillX, infoPillY, infoPillW, infoPillH, infoPillH / 2);
+      ctx.fill();
+      ctx.stroke();
 
-    // Small glowing dot
-    ctx.beginPath();
-    ctx.arc(infoPillX + 22, infoPillY + infoPillH / 2, 4, 0, Math.PI * 2);
-    ctx.fillStyle = "#10b981";
-    ctx.fill();
+      // Small glowing dot
+      ctx.beginPath();
+      ctx.arc(infoPillX + 22, infoPillY + infoPillH / 2, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#10b981";
+      ctx.fill();
 
-    ctx.font = "bold 12px monospace";
-    ctx.fillStyle = "#94a3b8";
-    ctx.textAlign = "left";
-    ctx.fillText("SIMULATED RECORDING", infoPillX + 36, infoPillY + infoPillH / 2);
+      ctx.font = "bold 12px monospace";
+      ctx.fillStyle = "#94a3b8";
+      ctx.textAlign = "left";
+      ctx.fillText("SIMULATED RECORDING", infoPillX + 36, infoPillY + infoPillH / 2);
 
-    ctx.fillStyle = "#475569";
-    ctx.fillText("|", infoPillX + 196, infoPillY + infoPillH / 2);
+      ctx.fillStyle = "#475569";
+      ctx.fillText("|", infoPillX + 196, infoPillY + infoPillH / 2);
 
-    ctx.font = "13px monospace";
-    ctx.fillStyle = "#e2e8f0";
-    ctx.fillText(`Participant #7 · video-${trialNum}.m4a`, infoPillX + 212, infoPillY + infoPillH / 2);
+      ctx.font = "13px monospace";
+      ctx.fillStyle = "#e2e8f0";
+      ctx.fillText(`Participant #7 · video-${trialNum}.m4a`, infoPillX + 212, infoPillY + infoPillH / 2);
+    }
 
-    // 4. BELOW HEADSET: Primary Action CTA Pill: [ Track Your Focus ✦ ] (Y: 712)
+    // 4. BELOW HEADSET: Primary Action CTA Pill: [ Track Your Focus ✦ ]
+    // Sits at 646 when simulated recording is hidden, or 712 when visible!
     const btnW = 320;
     const btnH = 52;
     const btnX = centerX - btnW / 2;
-    const btnY = 712;
+    const btnY = showSimulatedRecording ? 712 : 646;
     const isHovered = hoverId === "direction";
 
     ctx.fillStyle = isHovered ? "#4f46e5" : "rgba(30, 27, 75, 0.92)";
@@ -230,11 +253,12 @@ export function renderNodeDetailsCanvas(
   // =========================================================================
   // STATE B: ELECTRODE SELECTED
   // Spatially balanced pills surrounding the headset:
-  // 1. TOP OF HEADSET (Y: 18): Intensity of Focus pill readout
+  // 1. TOP OF HEADSET (Y: 18): Intensity of Focus pill readout (toggles simulated recording)
   // 2. TOP OF HEADSET (Y: 76): Selected Node Telemetry pill [ REGION CORTEX | NODE (FULL NAME) | RAW: +X.XX µV ]
   // 3. FLANKING SIDES (Y: 370): Left [ ← PREV ] & Right [ NEXT → ] navigation pills
-  // 4. BELOW HEADSET (Y: 580): Insight container [ MEASURES: COGNITIVE METRIC | description ]
-  // 5. BELOW HEADSET (Y: 712): Action pills [ ✕ Deselect Node ] and [ Track Your Focus ✦ ]
+  // 4. BELOW HEADSET (Y: 570): Insight container [ MEASURES: COGNITIVE METRIC | description ]
+  // 5. BELOW HEADSET (Y: 682, CONDITIONAL): Simulated Recording pill
+  // 6. BELOW HEADSET: Action pills [ ✕ Deselect Node ] and [ Track Your Focus ✦ ]
   // =========================================================================
   const meta = getElectrodeMetadata(channel);
   const insight = NODE_INSIGHTS[channel];
@@ -256,7 +280,7 @@ export function renderNodeDetailsCanvas(
   ctx.textBaseline = "middle";
 
   // 1. TOP OF HEADSET: Intensity of Focus Value Component (Y: 18)
-  drawIntensityOfFocusPill(ctx, centerX, 18, frame);
+  drawIntensityOfFocusPill(ctx, centerX, 18, frame, hoverId, hitAreas);
 
   // -------------------------------------------------------------------------
   // 2. Selected Node Telemetry Header Pill (Y: 76)
@@ -430,10 +454,46 @@ export function renderNodeDetailsCanvas(
   }
 
   // -------------------------------------------------------------------------
-  // 5. Bottom Action Pills (Y: 712)
+  // 5. Conditional Simulated Recording Pill during Inspection Mode
+  // -------------------------------------------------------------------------
+  if (showSimulatedRecording) {
+    const trialNum = String((frame.trialIndex ?? 0) + 1).padStart(2, "0");
+    const recW = 540;
+    const recH = 38;
+    const recX = centerX - recW / 2;
+    const recY = 684;
+
+    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+    ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(recX, recY, recW, recH, recH / 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(recX + 20, recY + recH / 2, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "#10b981";
+    ctx.fill();
+
+    ctx.font = "bold 11px monospace";
+    ctx.fillStyle = "#94a3b8";
+    ctx.textAlign = "left";
+    ctx.fillText("SIMULATED RECORDING", recX + 32, recY + recH / 2);
+
+    ctx.fillStyle = "#475569";
+    ctx.fillText("|", recX + 180, recY + recH / 2);
+
+    ctx.font = "12px monospace";
+    ctx.fillStyle = "#e2e8f0";
+    ctx.fillText(`Participant #7 · video-${trialNum}.m4a`, recX + 194, recY + recH / 2);
+  }
+
+  // -------------------------------------------------------------------------
+  // 6. Bottom Action Pills
   // Two discrete pill buttons: [ ✕ Deselect Node ] and [ Track Your Focus ✦ ]
   // -------------------------------------------------------------------------
-  const actionY = 712;
+  const actionY = showSimulatedRecording ? 732 : 696;
   const actionH = 50;
 
   // Deselect Node Pill Button

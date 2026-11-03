@@ -30,6 +30,7 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
 }) => {
   const hitAreasRef = useRef<NodePanelHitArea[]>([]);
   const [hoverId, setHoverId] = useState<string | null>(null);
+  const [showSimulatedRecording, setShowSimulatedRecording] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const textureRef = useRef<THREE.CanvasTexture | null>(null);
   const groupRef = useRef<THREE.Group>(null);
@@ -71,7 +72,8 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
           channel,
           frameRef.current,
           hoverId,
-          hitAreasRef.current
+          hitAreasRef.current,
+          showSimulatedRecording
         );
         texture.needsUpdate = true;
       }
@@ -122,6 +124,12 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
     if (!match) return;
 
     triggerXRHaptic(e, 0.5, 25);
+
+    // Toggle simulated recording component on clicking Intensity of Focus pill
+    if (match.id === "toggle-recording") {
+      setShowSimulatedRecording((prev) => !prev);
+      return;
+    }
 
     // Launch Direction of Focus seamlessly inside VR itself!
     if (match.id === "direction") {
