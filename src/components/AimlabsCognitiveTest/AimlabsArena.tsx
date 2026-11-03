@@ -1,7 +1,6 @@
 import React, { useRef, useMemo, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { Reflector } from "three-stdlib";
 
 /**
  * Palette for the white-themed portal experience.
@@ -287,57 +286,6 @@ function RoomSegment({
   );
 }
 
-interface MirrorWallProps {
-  position: [number, number, number];
-  rotation: [number, number, number];
-  width: number;
-  height: number;
-}
-
-const MirrorWall: React.FC<MirrorWallProps> = ({ position, rotation, width, height }) => {
-  const reflector = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(width, height);
-    const ref = new Reflector(geo, {
-      clipBias: 0.003,
-      textureWidth: 1024,
-      textureHeight: 1024,
-      color: new THREE.Color("#666666"),
-    });
-
-    // Temporarily bypass scene fog during the mirror's virtual camera render pass.
-    // Otherwise, because the virtual camera is placed far beyond the mirror (e.g. z = -180m),
-    // any scene fog (which reached 100% black at 85m) completely blacks out the reflected scene before it can be drawn.
-    const originalOnBeforeRender = ref.onBeforeRender;
-    ref.onBeforeRender = function (renderer: any, scene: any, camera: any) {
-      const prevFog = scene.fog;
-      scene.fog = null;
-      originalOnBeforeRender.call(this, renderer, scene, camera);
-      scene.fog = prevFog;
-    };
-
-    return ref;
-  }, [width, height]);
-
-  useEffect(() => {
-    return () => {
-      reflector.geometry.dispose();
-      if (reflector.material instanceof THREE.Material) {
-        reflector.material.dispose();
-      }
-      reflector.getRenderTarget().dispose();
-    };
-  }, [reflector]);
-
-  return (
-    <primitive
-      object={reflector}
-      position={position}
-      rotation={rotation}
-      raycast={() => null}
-    />
-  );
-};
-
 interface AimlabsArenaProps {
   speed?: number;
   width?: number;
@@ -409,12 +357,6 @@ export const AimlabsArena: React.FC<AimlabsArenaProps> = ({
         Extends 120m in length with seamless wrapping behind the viewer.
       */}
       <group position={[0, 1.6, 0]}>
-        {/* Reflective mirror end wall (far horizon behind targets) */}
-        <MirrorWall position={[0, 0, -90]} rotation={[0, 0, 0]} width={width + 4} height={height + 4} />
-
-        {/* Reflective mirror start wall (behind player/viewer) */}
-        <MirrorWall position={[0, 0, 31]} rotation={[0, Math.PI, 0]} width={width + 4} height={height + 4} />
-
         <RoomSegment initialZ={15} depthSegment={30} totalLength={120} speed={speed} width={width} height={height} />
         <RoomSegment initialZ={-15} depthSegment={30} totalLength={120} speed={speed} width={width} height={height} />
         <RoomSegment initialZ={-45} depthSegment={30} totalLength={120} speed={speed} width={width} height={height} />
