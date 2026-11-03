@@ -13,27 +13,70 @@ export interface NodePanelHitArea {
 }
 
 export const PANEL_WIDTH = 1100;
-export const PANEL_HEIGHT = 650;
+export const PANEL_HEIGHT = 800;
 
-function drawRoundedRect(
+/**
+ * Draws the "Intensity of Focus" top pill component, identical to TopHudBar:
+ * [ (pulsing indicator) INTENSITY OF FOCUS | XX% ]
+ */
+function drawIntensityOfFocusPill(
   ctx: CanvasRenderingContext2D,
-  x: number,
+  centerX: number,
   y: number,
-  w: number,
-  h: number,
-  r: number
+  frame: Frame
 ) {
+  const isBaseline = frame.phase === "baseline";
+  const focusVal = frame.focus;
+  const focusPercent = focusVal == null ? null : Math.round(focusVal * 100);
+
+  const pillW = 280;
+  const pillH = 46;
+  const pillX = centerX - pillW / 2;
+
+  // Background pill
+  ctx.fillStyle = "rgba(11, 15, 23, 0.92)";
+  ctx.strokeStyle = isBaseline ? "rgba(99, 102, 241, 0.55)" : "rgba(16, 185, 129, 0.55)";
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
+  ctx.roundRect(pillX, y, pillW, pillH, pillH / 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Pulsing dot indicator
+  const dotX = pillX + 22;
+  const dotY = y + pillH / 2;
+  const dotColor = isBaseline ? "#818cf8" : "#34d399";
+  
+  ctx.beginPath();
+  ctx.arc(dotX, dotY, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = dotColor;
+  ctx.fill();
+
+  // Label text
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = "900 11.5px monospace";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText("INTENSITY OF FOCUS", dotX + 14, dotY);
+
+  // Readout badge on the right
+  const badgeW = 54;
+  const badgeH = 30;
+  const badgeX = pillX + pillW - badgeW - 8;
+  const badgeY = y + (pillH - badgeH) / 2;
+
+  ctx.fillStyle = isBaseline ? "rgba(49, 46, 129, 0.7)" : "rgba(6, 78, 59, 0.7)";
+  ctx.strokeStyle = isBaseline ? "rgba(129, 140, 248, 0.35)" : "rgba(52, 211, 153, 0.35)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(badgeX, badgeY, badgeW, badgeH, badgeH / 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.textAlign = "center";
+  ctx.font = "900 13px monospace";
+  ctx.fillStyle = isBaseline ? "#c7d2fe" : "#a7f3d0";
+  ctx.fillText(focusPercent == null ? "--" : `${focusPercent}%`, badgeX + badgeW / 2, y + pillH / 2);
 }
 
 /**
@@ -72,56 +115,60 @@ export function renderNodeDetailsCanvas(
   // =========================================================================
   // STATE A: IDLE (NO ELECTRODE SELECTED)
   // Balanced floating pills framing the headset:
-  // 1. Top HUD pill: [ PINCH NODE TO INSPECT | HOLD GRIP TO MOVE ]
-  // 2. Middle badge pill: [ SIMULATED DEMO · PARTICIPANT #7 · VIDEO-01.M4A ]
-  // 3. Bottom primary action pill: [ Measure Your Focus ✦ ]
+  // 1. TOP OF HEADSET (Y: 28): Intensity of Focus pill readout
+  // 2. BELOW HEADSET (Y: 580): XR Interaction Prompt [ PINCH NODE TO INSPECT | HOLD GRIP TO MOVE ]
+  // 3. BELOW HEADSET (Y: 646): Simulated Recording pill [ SIMULATED RECORDING | Participant #7 · video-01.m4a ]
+  // 4. BELOW HEADSET (Y: 712): Primary CTA pill [ Track Your Focus ✦ ]
   // =========================================================================
   if (!channel) {
     ctx.textBaseline = "middle";
 
-    // 1. Top HUD Guidance Pill (Y: 28)
-    const topPillW = 560;
-    const topPillH = 50;
-    const topPillX = centerX - topPillW / 2;
-    const topPillY = 28;
+    // 1. TOP OF HEADSET: Intensity of Focus Value Component (Y: 28)
+    drawIntensityOfFocusPill(ctx, centerX, 28, frame);
+
+    // 2. BELOW HEADSET: XR Interaction Prompt Pill (Y: 580)
+    const promptW = 560;
+    const promptH = 48;
+    const promptX = centerX - promptW / 2;
+    const promptY = 580;
 
     ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
     ctx.strokeStyle = "rgba(51, 65, 85, 0.75)";
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(topPillX, topPillY, topPillW, topPillH, topPillH / 2);
+    ctx.roundRect(promptX, promptY, promptW, promptH, promptH / 2);
     ctx.fill();
     ctx.stroke();
 
-    // Trigger segment
+    // Pinch trigger segment
     ctx.font = "bold 12px monospace";
     ctx.fillStyle = "#38bdf8";
     ctx.textAlign = "left";
-    ctx.fillText("PINCH", topPillX + 24, topPillY + topPillH / 2);
+    ctx.fillText("PINCH", promptX + 24, promptY + promptH / 2);
 
     ctx.font = "13px monospace";
     ctx.fillStyle = "#cbd5e1";
-    ctx.fillText("Node to inspect", topPillX + 74, topPillY + topPillH / 2);
+    ctx.fillText("Node to inspect", promptX + 74, promptY + promptH / 2);
 
     // Divider
     ctx.fillStyle = "#475569";
-    ctx.fillText("|", topPillX + 226, topPillY + topPillH / 2);
+    ctx.fillText("|", promptX + 226, promptY + promptH / 2);
 
-    // Grip segment
+    // Grip reposition segment
     ctx.font = "bold 12px monospace";
     ctx.fillStyle = "#a855f7";
-    ctx.fillText("HOLD GRIP", topPillX + 248, topPillY + topPillH / 2);
+    ctx.fillText("HOLD GRIP", promptX + 248, promptY + promptH / 2);
 
     ctx.font = "13px monospace";
     ctx.fillStyle = "#cbd5e1";
-    ctx.fillText("To reposition", topPillX + 338, topPillY + topPillH / 2);
+    ctx.fillText("To reposition", promptX + 338, promptY + promptH / 2);
 
-    // 2. Bottom Context Pill (Y: 510)
+    // 3. BELOW HEADSET: Simulated Recording Context Pill (Y: 646)
     const trialNum = String((frame.trialIndex ?? 0) + 1).padStart(2, "0");
-    const infoPillW = 520;
+    const infoPillW = 570;
     const infoPillH = 42;
     const infoPillX = centerX - infoPillW / 2;
-    const infoPillY = 510;
+    const infoPillY = 646;
 
     ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
     ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
@@ -140,20 +187,20 @@ export function renderNodeDetailsCanvas(
     ctx.font = "bold 12px monospace";
     ctx.fillStyle = "#94a3b8";
     ctx.textAlign = "left";
-    ctx.fillText("RECORDING", infoPillX + 36, infoPillY + infoPillH / 2);
+    ctx.fillText("SIMULATED RECORDING", infoPillX + 36, infoPillY + infoPillH / 2);
 
     ctx.fillStyle = "#475569";
-    ctx.fillText("|", infoPillX + 122, infoPillY + infoPillH / 2);
+    ctx.fillText("|", infoPillX + 196, infoPillY + infoPillH / 2);
 
     ctx.font = "13px monospace";
     ctx.fillStyle = "#e2e8f0";
-    ctx.fillText(`Participant #7 · video-${trialNum}.m4a`, infoPillX + 138, infoPillY + infoPillH / 2);
+    ctx.fillText(`Participant #7 · video-${trialNum}.m4a`, infoPillX + 212, infoPillY + infoPillH / 2);
 
-    // 3. Bottom Primary CTA Pill: [ Measure Your Focus ✦ ] (Y: 574)
+    // 4. BELOW HEADSET: Primary Action CTA Pill: [ Track Your Focus ✦ ] (Y: 712)
     const btnW = 320;
     const btnH = 52;
     const btnX = centerX - btnW / 2;
-    const btnY = 574;
+    const btnY = 712;
     const isHovered = hoverId === "direction";
 
     ctx.fillStyle = isHovered ? "#4f46e5" : "rgba(30, 27, 75, 0.92)";
@@ -167,7 +214,7 @@ export function renderNodeDetailsCanvas(
     ctx.font = "bold 16px sans-serif";
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
-    ctx.fillText("Measure Your Focus  ✦", btnX + btnW / 2, btnY + btnH / 2);
+    ctx.fillText("Track Your Focus  ✦", btnX + btnW / 2, btnY + btnH / 2);
 
     hitAreas.push({
       id: "direction",
@@ -183,11 +230,11 @@ export function renderNodeDetailsCanvas(
   // =========================================================================
   // STATE B: ELECTRODE SELECTED
   // Spatially balanced pills surrounding the headset:
-  // 1. Top HUD Pill: [ REGION CORTEX | NODE NAME (FULL NAME) | RAW: +X.XX µV ]
-  // 2. Left Circular Navigation Pill: [ ← PREV ]
-  // 3. Right Circular Navigation Pill: [ NEXT → ]
-  // 4. Lower Insight Pill / Rect: [ MEASURES: COGNITIVE METRIC | Insight description text ]
-  // 5. Bottom Action Pills: [ ✕ Deselect Node ] and [ Measure Your Focus ✦ ]
+  // 1. TOP OF HEADSET (Y: 18): Intensity of Focus pill readout
+  // 2. TOP OF HEADSET (Y: 76): Selected Node Telemetry pill [ REGION CORTEX | NODE (FULL NAME) | RAW: +X.XX µV ]
+  // 3. FLANKING SIDES (Y: 370): Left [ ← PREV ] & Right [ NEXT → ] navigation pills
+  // 4. BELOW HEADSET (Y: 580): Insight container [ MEASURES: COGNITIVE METRIC | description ]
+  // 5. BELOW HEADSET (Y: 712): Action pills [ ✕ Deselect Node ] and [ Track Your Focus ✦ ]
   // =========================================================================
   const meta = getElectrodeMetadata(channel);
   const insight = NODE_INSIGHTS[channel];
@@ -208,14 +255,17 @@ export function renderNodeDetailsCanvas(
 
   ctx.textBaseline = "middle";
 
+  // 1. TOP OF HEADSET: Intensity of Focus Value Component (Y: 18)
+  drawIntensityOfFocusPill(ctx, centerX, 18, frame);
+
   // -------------------------------------------------------------------------
-  // 1. Top Telemetry Header Pill (Floating above the headset at Y: 24)
+  // 2. Selected Node Telemetry Header Pill (Y: 76)
   // Matching the HUD format from renderHUD.ts
   // -------------------------------------------------------------------------
-  const headerW = 720;
-  const headerH = 54;
+  const headerW = 740;
+  const headerH = 52;
   const headerX = centerX - headerW / 2;
-  const headerY = 24;
+  const headerY = 76;
 
   ctx.fillStyle = "rgba(15, 23, 42, 0.90)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.75)";
@@ -255,28 +305,28 @@ export function renderNodeDetailsCanvas(
   // Divider 2
   ctx.font = "13px monospace";
   ctx.fillStyle = "#475569";
-  ctx.fillText("|", headerX + 510, headerY + headerH / 2);
+  ctx.fillText("|", headerX + 524, headerY + headerH / 2);
 
   // Live Voltage
   ctx.font = "12px monospace";
   ctx.fillStyle = "#94a3b8";
-  ctx.fillText("RAW", headerX + 526, headerY + headerH / 2);
+  ctx.fillText("RAW", headerX + 540, headerY + headerH / 2);
 
   ctx.font = "bold 16px monospace";
   ctx.fillStyle = "#10b981";
   const voltStr = `${rawValue >= 0 ? `+${rawValue.toFixed(2)}` : rawValue.toFixed(2)} µV`;
-  ctx.fillText(voltStr, headerX + 566, headerY + headerH / 2);
+  ctx.fillText(voltStr, headerX + 580, headerY + headerH / 2);
 
   // -------------------------------------------------------------------------
-  // 2. Left & Right Navigation Pill/Circle Buttons (Floating at sides, Y: 290)
-  // Perfectly framing the physical head
+  // 3. Left & Right Navigation Pill Buttons (Y: 370)
+  // Perfectly framing the physical head on the sides without overlapping
   // -------------------------------------------------------------------------
-  const sideY = 290;
-  const sideW = 90;
+  const sideY = 370;
+  const sideW = 92;
   const sideH = 50;
 
   // Left Side Pill [ ← PREV ]
-  const leftX = 30;
+  const leftX = 24;
   const isPrevHovered = hoverId === "prev";
 
   ctx.fillStyle = isPrevHovered ? prevColor : "rgba(15, 23, 42, 0.88)";
@@ -287,7 +337,6 @@ export function renderNodeDetailsCanvas(
   ctx.fill();
   ctx.stroke();
 
-  // Left Arrow & Channel Label
   ctx.font = "bold 14px monospace";
   ctx.fillStyle = isPrevHovered ? "#ffffff" : prevColor;
   ctx.textAlign = "center";
@@ -302,7 +351,7 @@ export function renderNodeDetailsCanvas(
   });
 
   // Right Side Pill [ NEXT → ]
-  const rightX = PANEL_WIDTH - 30 - sideW;
+  const rightX = PANEL_WIDTH - 24 - sideW;
   const isNextHovered = hoverId === "next";
 
   ctx.fillStyle = isNextHovered ? nextColor : "rgba(15, 23, 42, 0.88)";
@@ -313,7 +362,6 @@ export function renderNodeDetailsCanvas(
   ctx.fill();
   ctx.stroke();
 
-  // Right Channel Label & Arrow
   ctx.font = "bold 14px monospace";
   ctx.fillStyle = isNextHovered ? "#ffffff" : nextColor;
   ctx.textAlign = "center";
@@ -328,13 +376,13 @@ export function renderNodeDetailsCanvas(
   });
 
   // -------------------------------------------------------------------------
-  // 3. Lower Insight Pill / Rounded Rect Container (Y: 460)
-  // Formatted like HUD telemetry card from /direction
+  // 4. Lower Insight Pill / Rounded Rect Container (Y: 570)
+  // Clear of the head bottom and leaving generous room for actions
   // -------------------------------------------------------------------------
   const insightW = 760;
-  const insightH = 96;
+  const insightH = 104;
   const insightX = centerX - insightW / 2;
-  const insightY = 460;
+  const insightY = 570;
 
   ctx.fillStyle = "rgba(15, 23, 42, 0.90)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.75)";
@@ -349,14 +397,14 @@ export function renderNodeDetailsCanvas(
     ctx.textAlign = "left";
     ctx.font = "bold 12px monospace";
     ctx.fillStyle = "#94a3b8";
-    ctx.fillText("MEASURES", insightX + 24, insightY + 26);
+    ctx.fillText("MEASURES", insightX + 24, insightY + 28);
 
     ctx.fillStyle = "#475569";
-    ctx.fillText("|", insightX + 96, insightY + 26);
+    ctx.fillText("|", insightX + 96, insightY + 28);
 
     ctx.font = "bold 13px sans-serif";
     ctx.fillStyle = accentColor;
-    ctx.fillText(insight.metricName.toUpperCase(), insightX + 112, insightY + 26);
+    ctx.fillText(insight.metricName.toUpperCase(), insightX + 112, insightY + 28);
 
     // Insight description text inside pill
     ctx.font = "14px sans-serif";
@@ -364,7 +412,7 @@ export function renderNodeDetailsCanvas(
 
     const words = insight.description.split(" ");
     let line = "";
-    let descY = insightY + 54;
+    let descY = insightY + 58;
     const maxDescWidth = insightW - 48;
 
     for (let n = 0; n < words.length; n++) {
@@ -382,11 +430,11 @@ export function renderNodeDetailsCanvas(
   }
 
   // -------------------------------------------------------------------------
-  // 4. Bottom Action Pills (Y: 574)
-  // Two discrete pill buttons: [ ✕ Deselect Node ] and [ Measure Your Focus ✦ ]
+  // 5. Bottom Action Pills (Y: 712)
+  // Two discrete pill buttons: [ ✕ Deselect Node ] and [ Track Your Focus ✦ ]
   // -------------------------------------------------------------------------
-  const actionY = 574;
-  const actionH = 48;
+  const actionY = 712;
+  const actionH = 50;
 
   // Deselect Node Pill Button
   const closeW = 200;
@@ -414,7 +462,7 @@ export function renderNodeDetailsCanvas(
     height: actionH,
   });
 
-  // Measure Your Focus Pill Button
+  // Track Your Focus Pill Button
   const dirW = 260;
   const dirX = centerX + 40;
   const isDirHovered = hoverId === "direction";
@@ -430,7 +478,7 @@ export function renderNodeDetailsCanvas(
   ctx.font = "bold 15px sans-serif";
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.fillText("Measure Your Focus  ✦", dirX + dirW / 2, actionY + actionH / 2);
+  ctx.fillText("Track Your Focus  ✦", dirX + dirW / 2, actionY + actionH / 2);
 
   hitAreas.push({
     id: "direction",

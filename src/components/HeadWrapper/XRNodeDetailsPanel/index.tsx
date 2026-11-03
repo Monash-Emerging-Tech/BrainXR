@@ -80,7 +80,7 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
     // Smoothly anchor the floating pills centered around the physical head
     if (headPositionRef?.current && groupRef.current) {
       const headPos = headPositionRef.current;
-      groupRef.current.position.set(headPos.x, headPos.y - 0.05, headPos.z - 0.02);
+      groupRef.current.position.set(headPos.x, headPos.y - 0.12, headPos.z - 0.02);
     }
   });
 
