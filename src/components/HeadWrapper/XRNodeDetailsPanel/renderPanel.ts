@@ -99,23 +99,58 @@ function drawIntensityOfFocusPill(
 }
 
 /**
- * Creates the exact authentic 5-stop cortical region gradient used across the site:
- * Frontal (#6366f1) -> Temporal (#a855f7) -> Central (#3b82f6) -> Parietal (#06b6d4) -> Occipital (#10b981)
+ * Draws the "Simulated Recording" pill component:
+ * [ (dot) SIMULATED RECORDING | Participant #7 · video-01.m4a ]
+ * Registers hit area "toggle-recording" so users can click/pinch to toggle back to Intensity of Focus.
  */
-function createNodeGradient(
+function drawSimulatedRecordingPill(
   ctx: CanvasRenderingContext2D,
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number
-): CanvasGradient {
-  const grad = ctx.createLinearGradient(x1, y1, x2, y2);
-  grad.addColorStop(0.0, "#6366f1");
-  grad.addColorStop(0.25, "#a855f7");
-  grad.addColorStop(0.5, "#3b82f6");
-  grad.addColorStop(0.75, "#06b6d4");
-  grad.addColorStop(1.0, "#10b981");
-  return grad;
+  centerX: number,
+  y: number,
+  frame: Frame,
+  hoverId: string | null,
+  hitAreas: NodePanelHitArea[]
+) {
+  const trialNum = String((frame.trialIndex ?? 0) + 1).padStart(2, "0");
+  const pillW = 540;
+  const pillH = 46;
+  const pillX = centerX - pillW / 2;
+  const isHovered = hoverId === "toggle-recording";
+
+  ctx.fillStyle = isHovered ? "rgba(30, 41, 59, 0.96)" : "rgba(11, 15, 23, 0.92)";
+  ctx.strokeStyle = isHovered ? "#38bdf8" : "rgba(51, 65, 85, 0.75)";
+  ctx.lineWidth = isHovered ? 2 : 1.5;
+  ctx.beginPath();
+  ctx.roundRect(pillX, y, pillW, pillH, pillH / 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Glowing dot
+  ctx.beginPath();
+  ctx.arc(pillX + 22, y + pillH / 2, 4.5, 0, Math.PI * 2);
+  ctx.fillStyle = "#10b981";
+  ctx.fill();
+
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 12px monospace";
+  ctx.fillStyle = isHovered ? "#38bdf8" : "#94a3b8";
+  ctx.fillText("SIMULATED RECORDING", pillX + 36, y + pillH / 2);
+
+  ctx.fillStyle = "#475569";
+  ctx.fillText("|", pillX + 196, y + pillH / 2);
+
+  ctx.font = "13px monospace";
+  ctx.fillStyle = "#e2e8f0";
+  ctx.fillText(`Participant #7 · video-${trialNum}.m4a`, pillX + 212, y + pillH / 2);
+
+  hitAreas.push({
+    id: "toggle-recording",
+    x: pillX,
+    y,
+    width: pillW,
+    height: pillH,
+  });
 }
 
 export function renderNodeDetailsCanvas(
@@ -133,18 +168,22 @@ export function renderNodeDetailsCanvas(
   const centerX = PANEL_WIDTH / 2;
 
   // =========================================================================
-  // STATE A: IDLE (NO ELECTRODE SELECTED)
-  // Balanced floating pills framing the headset:
-  // 1. TOP OF HEADSET (Y: 28): Intensity of Focus pill readout (toggles simulated recording)
+  // STATE A: IDLE (NO ELECTRODE SELECTED) - HOME SCREEN
+  // Top pill toggles in-place between Intensity of Focus and Simulated Recording!
+  // When toggled on, Simulated Recording REPLACES Intensity of Focus at top.
+  // 1. TOP OF HEADSET (Y: 28): [ INTENSITY OF FOCUS | XX% ] <--> [ SIMULATED RECORDING | ... ]
   // 2. BELOW HEADSET (Y: 580): XR Interaction Prompt [ PINCH NODE TO INSPECT | HOLD GRIP TO MOVE ]
-  // 3. BELOW HEADSET (Y: 646, CONDITIONAL): Simulated Recording pill [ SIMULATED RECORDING | Participant #7 · video-01.m4a ]
-  // 4. BELOW HEADSET: Primary CTA pill [ Track Your Focus ✦ ]
+  // 3. BELOW HEADSET (Y: 654): Primary Action CTA Pill [ Track Your Focus ✦ ]
   // =========================================================================
   if (!channel) {
     ctx.textBaseline = "middle";
 
-    // 1. TOP OF HEADSET: Intensity of Focus Value Component (Y: 28)
-    drawIntensityOfFocusPill(ctx, centerX, 28, frame, hoverId, hitAreas);
+    // 1. TOP OF HEADSET: In-place toggle component (Y: 28)
+    if (showSimulatedRecording) {
+      drawSimulatedRecordingPill(ctx, centerX, 28, frame, hoverId, hitAreas);
+    } else {
+      drawIntensityOfFocusPill(ctx, centerX, 28, frame, hoverId, hitAreas);
+    }
 
     // 2. BELOW HEADSET: XR Interaction Prompt Pill (Y: 580)
     const promptW = 560;
@@ -183,47 +222,11 @@ export function renderNodeDetailsCanvas(
     ctx.fillStyle = "#cbd5e1";
     ctx.fillText("To reposition", promptX + 338, promptY + promptH / 2);
 
-    // 3. BELOW HEADSET: Simulated Recording Context Pill (RENDERED CONDITIONALLY ON TOGGLE)
-    if (showSimulatedRecording) {
-      const trialNum = String((frame.trialIndex ?? 0) + 1).padStart(2, "0");
-      const infoPillW = 570;
-      const infoPillH = 42;
-      const infoPillX = centerX - infoPillW / 2;
-      const infoPillY = 646;
-
-      ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
-      ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.roundRect(infoPillX, infoPillY, infoPillW, infoPillH, infoPillH / 2);
-      ctx.fill();
-      ctx.stroke();
-
-      // Small glowing dot
-      ctx.beginPath();
-      ctx.arc(infoPillX + 22, infoPillY + infoPillH / 2, 4, 0, Math.PI * 2);
-      ctx.fillStyle = "#10b981";
-      ctx.fill();
-
-      ctx.font = "bold 12px monospace";
-      ctx.fillStyle = "#94a3b8";
-      ctx.textAlign = "left";
-      ctx.fillText("SIMULATED RECORDING", infoPillX + 36, infoPillY + infoPillH / 2);
-
-      ctx.fillStyle = "#475569";
-      ctx.fillText("|", infoPillX + 196, infoPillY + infoPillH / 2);
-
-      ctx.font = "13px monospace";
-      ctx.fillStyle = "#e2e8f0";
-      ctx.fillText(`Participant #7 · video-${trialNum}.m4a`, infoPillX + 212, infoPillY + infoPillH / 2);
-    }
-
-    // 4. BELOW HEADSET: Primary Action CTA Pill: [ Track Your Focus ✦ ]
-    // Sits at 646 when simulated recording is hidden, or 712 when visible!
+    // 3. BELOW HEADSET: Primary Action CTA Pill: [ Track Your Focus ✦ ] (Y: 654)
     const btnW = 320;
     const btnH = 52;
     const btnX = centerX - btnW / 2;
-    const btnY = showSimulatedRecording ? 712 : 646;
+    const btnY = 654;
     const isHovered = hoverId === "direction";
 
     ctx.fillStyle = isHovered ? "#4f46e5" : "rgba(30, 27, 75, 0.92)";

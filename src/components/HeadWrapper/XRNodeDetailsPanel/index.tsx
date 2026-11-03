@@ -30,7 +30,20 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
 }) => {
   const hitAreasRef = useRef<NodePanelHitArea[]>([]);
   const [hoverId, setHoverId] = useState<string | null>(null);
+  // Default to false for home screen, but toggled on by default when a node is selected
   const [showSimulatedRecording, setShowSimulatedRecording] = useState(false);
+  const prevChannelRef = useRef<ElectrodeName | null>(null);
+
+  // Automatically toggle ON when a node is selected, and OFF when returning to home
+  useEffect(() => {
+    if (channel && !prevChannelRef.current) {
+      setShowSimulatedRecording(true);
+    } else if (!channel && prevChannelRef.current) {
+      setShowSimulatedRecording(false);
+    }
+    prevChannelRef.current = channel;
+  }, [channel]);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const textureRef = useRef<THREE.CanvasTexture | null>(null);
   const groupRef = useRef<THREE.Group>(null);
