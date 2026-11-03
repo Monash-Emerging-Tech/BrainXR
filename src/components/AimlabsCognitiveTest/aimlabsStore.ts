@@ -10,9 +10,12 @@ import type {
   CognitiveRoundType,
   GameStatus,
   RoundMetrics,
+  LiveFocusMetrics,
+  TargetTelemetryRecord,
   StimulusDefinition,
 } from "./types";
 import type { ShatterBurstData } from "./AimlabsShatters";
+import { saveSessionReport, type CognitiveSessionReport } from "./reportStorage";
 
 export const STIMULUS_DURATION = 0.5; // 500ms target visible
 export const ISI_DURATION = 0.7; // 700ms fixation cross
@@ -38,7 +41,26 @@ export interface AimlabsState {
   lastReactionTime: number | null;
   recentFeedback: { text: string; color: string } | null;
   isPaused: boolean;
+  soundEnabled: boolean;
+  liveFocusMetrics: LiveFocusMetrics;
 }
+
+const INITIAL_LIVE_METRICS: LiveFocusMetrics = {
+  reactionTimes: [],
+  meanRT: 0,
+  medianRT: 0,
+  sdRT: 0,
+  cv: 0,
+  focusLevel: "Calibrating",
+  focusDescription: "Baseline reaction times",
+  boxesHit: 0,
+  boxesMissed: 0,
+  spheresHit: 0,
+  spheresMissed: 0,
+  accuracy: 100,
+  precision: 100,
+  telemetryTable: [],
+};
 
 class AimlabsStore {
   private state: AimlabsState = {
@@ -60,6 +82,8 @@ class AimlabsStore {
     lastReactionTime: null,
     recentFeedback: null,
     isPaused: false,
+    soundEnabled: true,
+    liveFocusMetrics: INITIAL_LIVE_METRICS,
   };
 
   private listeners = new Set<() => void>();
@@ -75,7 +99,14 @@ class AimlabsStore {
     reactionTimes: [] as number[],
     totalShots: 0,
     accurateShots: 0,
+    boxesHit: 0,
+    boxesMissed: 0,
+    spheresHit: 0,
+    spheresMissed: 0,
   };
+
+  private pauseStartTime: number = 0;
+  private telemetryTable: TargetTelemetryRecord[] = [];
 
   private countdownTimer: ReturnType<typeof setInterval> | null = null;
   private feedbackTimer: ReturnType<typeof setTimeout> | null = null;
@@ -157,6 +188,7 @@ class AimlabsStore {
 
     this.sequence = generateRoundSequence(targetRound);
     this.trialHasResponded = false;
+    this.telemetryTable = [];
 
     this.metrics = {
       goHits: 0,
@@ -166,6 +198,10 @@ class AimlabsStore {
       reactionTimes: [],
       totalShots: 0,
       accurateShots: 0,
+      boxesHit: 0,
+      boxesMissed: 0,
+      spheresHit: 0,
+      spheresMissed: 0,
     };
 
     this.setState({
@@ -177,6 +213,7 @@ class AimlabsStore {
       trialPhaseTime: 0,
       currentTargetType: this.sequence[0]?.type ?? "sphere",
       recentFeedback: null,
+      liveFocusMetrics: INITIAL_LIVE_METRICS,
     });
 
     aimlabsAudio.playCountdown(3);
@@ -222,17 +259,167 @@ class AimlabsStore {
   }
 
   private updateAccuracy() {
-    const { totalShots, accurateShots } = this.metrics;
+    const { totalShots, accurateShots, goHits, commissions, omissions } = this.metrics;
+    let acc = 100;
     if (totalShots > 0) {
-      const acc = Math.min(100, Math.max(0, (accurateShots / totalShots) * 100));
+      acc = Math.min(100, Math.max(0, (accurateShots / totalShots) * 100));
       this.setState({ accuracy: acc });
     }
+
+    const totalPresses = goHits + commissions;
+    const precision =
+      totalPresses > 0
+        ? Math.min(100, Math.max(0, Math.round((goHits / totalPresses) * 100)))
+        : omissions > 0
+        ? 0
+        : 100;
+
+    this.updateLiveFocusMetrics(acc, precision);
+  }
+
+  private updateLiveFocusMetrics(acc: number, precision: number) {
+    const rts = [...this.metrics.reactionTimes];
+    const n = rts.length;
+    let meanRT = 0;
+    let medianRT = 0;
+    let sdRT = 0;
+
+    if (n > 0) {
+      const sum = rts.reduce((a, b) => a + b, 0);
+      meanRT = Math.round(sum / n);
+
+      const sorted = [...rts].sort((a, b) => a - b);
+      const mid = Math.floor(n / 2);
+      medianRT = n % 2 !== 0 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+
+      if (n > 1) {
+        const variance = rts.reduce((accVar, val) => accVar + Math.pow(val - meanRT, 2), 0) / (n - 1);
+        sdRT = Math.round(Math.sqrt(variance));
+      } else {
+        sdRT = 0;
+      }
+    }
+
+    let cv = 0;
+    if (meanRT > 0 && sdRT > 0) {
+      cv = Number((sdRT / meanRT).toFixed(3));
+    }
+
+    const totalGoTargets = this.metrics.goHits + this.metrics.omissions;
+    const recall = totalGoTargets > 0 ? (this.metrics.goHits / totalGoTargets) * 100 : 100;
+    const totalNoGoTargets = this.metrics.correctRejections + this.metrics.commissions;
+    const specificity = totalNoGoTargets > 0 ? (this.metrics.correctRejections / totalNoGoTargets) * 100 : 100;
+    const balancedAcc = (recall + specificity) / 2;
+
+    let focusLevel: "Optimal Focus" | "Steady Focus" | "Variable Focus" | "Calibrating" = "Calibrating";
+    let focusDescription = "Collecting baseline trials";
+
+    // Gate 1: Calibration / minimum sample
+    if (n >= 4 && this.metrics.totalShots >= 8) {
+      // Check for Disengagement / Mindless Autopilot / High Error Rate
+      const isDisengaged = recall < 80; // User missing > 20% of Go targets (omission lapses / inattention)
+      const isIndiscriminate = precision < 70 || specificity < 50; // User clicking No-Go impulsively
+      const isLowAccuracy = acc < 75 || balancedAcc < 70; // High overall error rate
+
+      if (isDisengaged) {
+        focusLevel = "Variable Focus";
+        const missPct = Math.round(100 - recall);
+        focusDescription = `Attentional lapse · ${missPct}% Go targets missed (OER > 20%)`;
+      } else if (isIndiscriminate) {
+        focusLevel = "Variable Focus";
+        focusDescription = `Motor disinhibition · Low response precision (${Math.round(precision)}%)`;
+      } else if (isLowAccuracy) {
+        focusLevel = "Variable Focus";
+        focusDescription = `High decision error rate (${Math.round(acc)}% accuracy)`;
+      } else {
+        // Performance gates passed -> evaluate temporal stability via CV
+        if (cv > 0 && cv <= 0.18 && acc >= 88 && precision >= 85 && recall >= 90 && n >= 8) {
+          focusLevel = "Optimal Focus";
+          focusDescription = `Laser-like vigilance · Multiplier ${cv}x Mean RT (${Math.round(precision)}% Prec)`;
+        } else if (cv > 0 && cv <= 0.28 && acc >= 75 && precision >= 70 && recall >= 80) {
+          focusLevel = "Steady Focus";
+          focusDescription = `Consistent sustained focus · Multiplier ${cv}x Mean RT (${Math.round(precision)}% Prec)`;
+        } else {
+          focusLevel = "Variable Focus";
+          focusDescription = `Elevated response time dispersion (${cv}x variability)`;
+        }
+      }
+    }
+
+    const liveFocusMetrics: LiveFocusMetrics = {
+      reactionTimes: rts,
+      meanRT,
+      medianRT,
+      sdRT,
+      cv,
+      focusLevel,
+      focusDescription,
+      boxesHit: this.metrics.boxesHit,
+      boxesMissed: this.metrics.boxesMissed,
+      spheresHit: this.metrics.spheresHit,
+      spheresMissed: this.metrics.spheresMissed,
+      accuracy: Math.round(acc),
+      precision: Math.round(precision),
+      omissionRate: Math.round(100 - recall),
+      telemetryTable: [...this.telemetryTable],
+    };
+
+    this.setState({ liveFocusMetrics });
+  }
+
+  private recordTrialTelemetry(
+    trialIndex: number,
+    item: StimulusDefinition,
+    userResponded: boolean,
+    isCorrect: boolean,
+    rt: number | null
+  ) {
+    const { totalShots, accurateShots, goHits, commissions, omissions } = this.metrics;
+    const cumulativeAccuracy = totalShots > 0 ? Math.round((accurateShots / totalShots) * 100) : 100;
+    const totalPresses = goHits + commissions;
+    const cumulativePrecision =
+      totalPresses > 0
+        ? Math.min(100, Math.max(0, Math.round((goHits / totalPresses) * 100)))
+        : omissions > 0
+        ? 0
+        : 100;
+
+    // Moving window of last 10 reaction times
+    const windowRTs = this.metrics.reactionTimes.slice(-10);
+    const mCount = windowRTs.length;
+    let movingAverageRT = 0;
+    let movingSdRT = 0;
+
+    if (mCount > 0) {
+      movingAverageRT = Math.round(windowRTs.reduce((a, b) => a + b, 0) / mCount);
+      if (mCount > 1) {
+        const v = windowRTs.reduce((acc, val) => acc + Math.pow(val - movingAverageRT, 2), 0) / (mCount - 1);
+        movingSdRT = Math.round(Math.sqrt(v));
+      }
+    }
+
+    const record: TargetTelemetryRecord = {
+      trialIndex,
+      targetType: item.type,
+      isGo: item.isGo,
+      userResponded,
+      isCorrect,
+      reactionTime: rt,
+      cumulativeAccuracy,
+      cumulativePrecision,
+      movingAverageRT,
+      movingSdRT,
+      timestamp: performance.now(),
+    };
+
+    this.telemetryTable.push(record);
   }
 
   // Handle user response (Spacebar or Click)
   handleResponse() {
-    const { status, trialIndex, isTargetVisible } = this.state;
+    const { status, trialIndex, isTargetVisible, isPaused } = this.state;
     if (status !== "round1" && status !== "round2") return;
+    if (isPaused) return; // Ignore response inputs when paused
     if (this.trialHasResponded) return; // Only one response per stimulus trial window
 
     // Only allow hitting when the stimulus target is currently active/visible
@@ -253,6 +440,12 @@ class AimlabsStore {
       this.metrics.accurateShots++;
       this.metrics.reactionTimes.push(rt);
 
+      if (item.type === "box") {
+        this.metrics.boxesHit++;
+      } else {
+        this.metrics.spheresHit++;
+      }
+
       newScore += rt;
 
       aimlabsAudio.playHit(item.type === "sphere");
@@ -272,6 +465,11 @@ class AimlabsStore {
     } else {
       // Commission Error (Clicked No-Go!): Subtract RT from cumulative score
       this.metrics.commissions++;
+      if (item.type === "box") {
+        this.metrics.boxesMissed++; // Incorrectly pressed No-Go box
+      } else {
+        this.metrics.spheresMissed++; // Incorrectly pressed No-Go sphere
+      }
       newScore = Math.max(0, newScore - rt);
 
       aimlabsAudio.playError();
@@ -282,6 +480,7 @@ class AimlabsStore {
       score: newScore,
       lastReactionTime: rt,
     });
+    this.recordTrialTelemetry(trialIndex, item, true, item.isGo, rt);
     this.updateAccuracy();
   }
 
@@ -301,13 +500,19 @@ class AimlabsStore {
         // Omission Error (Missed Go target)
         this.metrics.omissions++;
         this.metrics.totalShots++;
+        if (item.type === "box") {
+          this.metrics.boxesMissed++;
+        } else {
+          this.metrics.spheresMissed++;
+        }
       } else {
         // Correct Rejection (Correctly withheld on No-Go)
+        // Keep non-responses silent to prevent auditory alerting confounds on the subsequent trial
         this.metrics.correctRejections++;
         this.metrics.accurateShots++;
         this.metrics.totalShots++;
-        aimlabsAudio.playCorrectRejection();
       }
+      this.recordTrialTelemetry(trialIndex, item, false, !item.isGo, null);
       this.updateAccuracy();
     }
 
@@ -317,8 +522,27 @@ class AimlabsStore {
 
   togglePause() {
     if (this.state.status === "round1" || this.state.status === "round2") {
-      this.setState({ isPaused: !this.state.isPaused });
+      const nextPaused = !this.state.isPaused;
+      if (nextPaused) {
+        this.pauseStartTime = performance.now();
+      } else {
+        if (this.pauseStartTime > 0) {
+          const pausedDuration = performance.now() - this.pauseStartTime;
+          this.trialStartTime += pausedDuration;
+          this.pauseStartTime = 0;
+        }
+      }
+      this.setState({ isPaused: nextPaused });
     }
+  }
+
+  setSoundEnabled(enabled: boolean) {
+    aimlabsAudio.setSoundEnabled(enabled);
+    this.setState({ soundEnabled: enabled });
+  }
+
+  toggleSound() {
+    this.setSoundEnabled(!this.state.soundEnabled);
   }
 
   skipRound() {
@@ -333,9 +557,58 @@ class AimlabsStore {
     const rts = m.reactionTimes;
     const meanRT = rts.length > 0 ? rts.reduce((a, b) => a + b, 0) / rts.length : 0;
 
+    const variance =
+      rts.length > 1
+        ? rts.reduce((sum, val) => sum + Math.pow(val - meanRT, 2), 0) / (rts.length - 1)
+        : 0;
+    const sdRT = Math.round(Math.sqrt(variance));
+    const cv = meanRT > 0 ? parseFloat((sdRT / meanRT).toFixed(2)) : 0;
+
+    const roundPresses = m.goHits + m.commissions;
+    const roundPrecision =
+      roundPresses > 0
+        ? Math.min(100, Math.max(0, Math.round((m.goHits / roundPresses) * 100)))
+        : m.omissions > 0
+        ? 0
+        : 100;
+
+    const roundGoTotal = m.goHits + m.omissions;
+    const roundRecall = roundGoTotal > 0 ? (m.goHits / roundGoTotal) * 100 : 100;
+    const roundNoGoTotal = m.correctRejections + m.commissions;
+    const roundSpecificity = roundNoGoTotal > 0 ? (m.correctRejections / roundNoGoTotal) * 100 : 100;
+    const roundBalancedAcc = (roundRecall + roundSpecificity) / 2;
+
+    let roundFocusLevel: "Optimal Focus" | "Steady Focus" | "Variable Focus" = "Steady Focus";
+    if (
+      roundRecall < 80 ||
+      roundPrecision < 70 ||
+      this.state.accuracy < 75 ||
+      roundBalancedAcc < 70 ||
+      cv > 0.28 ||
+      cv === 0
+    ) {
+      roundFocusLevel = "Variable Focus";
+    } else if (
+      cv > 0 &&
+      cv <= 0.18 &&
+      this.state.accuracy >= 88 &&
+      roundPrecision >= 85 &&
+      roundRecall >= 90 &&
+      rts.length >= 8
+    ) {
+      roundFocusLevel = "Optimal Focus";
+    } else {
+      roundFocusLevel = "Steady Focus";
+    }
+
+    // Check if this is the first played round or the second played round
+    const hasExistingMetrics = Boolean(this.state.round1Metrics || this.state.round2Metrics);
+    const roundOrderPrefix = hasExistingMetrics ? "Round 2" : "Round 1";
+    const paradigmName = isRound1 ? "CPT" : "SART";
+
     const roundData: RoundMetrics = {
       round: this.state.round,
-      roundName: isRound1 ? "Round 1: CPT" : "Round 2: SART",
+      roundName: `${roundOrderPrefix}: ${paradigmName}`,
       totalTrials: TOTAL_TRIALS,
       sphereCount: SPHERE_COUNT,
       boxCount: BOX_COUNT,
@@ -345,14 +618,17 @@ class AimlabsStore {
       correctRejections: m.correctRejections,
       reactionTimes: rts,
       meanReactionTime: meanRT,
+      sdReactionTime: sdRT,
+      cv,
+      focusLevel: roundFocusLevel,
       score: this.state.score,
       accuracy: this.state.accuracy,
+      precision: roundPrecision,
+      omissionRate: Math.round(100 - roundRecall),
+      telemetryTable: [...this.telemetryTable],
     };
 
     aimlabsAudio.playRoundComplete();
-
-    // Check if this is the first played round or the second played round
-    const hasExistingMetrics = Boolean(this.state.round1Metrics || this.state.round2Metrics);
 
     if (!hasExistingMetrics) {
       // First round complete -> go to intermission
@@ -371,6 +647,97 @@ class AimlabsStore {
       }
     } else {
       // Both rounds complete -> go to finished report
+      const r1 = isRound1 ? roundData : this.state.round1Metrics!;
+      const r2 = !isRound1 ? roundData : this.state.round2Metrics!;
+
+      const allRts = [...r1.reactionTimes, ...r2.reactionTimes];
+      const overallMeanRT =
+        allRts.length > 0 ? Math.round(allRts.reduce((a, b) => a + b, 0) / allRts.length) : 0;
+      const overallVariance =
+        allRts.length > 1
+          ? allRts.reduce((sum, v) => sum + Math.pow(v - overallMeanRT, 2), 0) / (allRts.length - 1)
+          : 0;
+      const overallSdRT = Math.round(Math.sqrt(overallVariance));
+      const overallCv = overallMeanRT > 0 ? parseFloat((overallSdRT / overallMeanRT).toFixed(2)) : 0;
+      const overallAccuracy = Math.round((r1.accuracy + r2.accuracy) / 2);
+
+      const totalGo = r1.goHits + r2.goHits;
+      const totalCommissions = r1.commissions + r2.commissions;
+      const totalPresses = totalGo + totalCommissions;
+      const overallPrecision =
+        totalPresses > 0 ? Math.min(100, Math.max(0, Math.round((totalGo / totalPresses) * 100))) : 0;
+
+      const totalOmissions = r1.omissions + r2.omissions;
+      const totalGoTargets = totalGo + totalOmissions;
+      const overallRecall = totalGoTargets > 0 ? (totalGo / totalGoTargets) * 100 : 100;
+      const overallOmissionRate = totalGoTargets > 0 ? Math.round((totalOmissions / totalGoTargets) * 100) : 0;
+      const totalNoGo = r1.correctRejections + r2.correctRejections + totalCommissions;
+      const overallSpecificity =
+        totalNoGo > 0 ? ((r1.correctRejections + r2.correctRejections) / totalNoGo) * 100 : 100;
+      const overallBalancedAcc = (overallRecall + overallSpecificity) / 2;
+
+      let focusClassification: "Optimal Focus" | "Steady Focus" | "Variable Focus" = "Steady Focus";
+      let focusDescription = "Consistent cognitive processing speed with standard baseline variability";
+
+      if (
+        overallRecall < 80 ||
+        overallPrecision < 70 ||
+        overallAccuracy < 75 ||
+        overallBalancedAcc < 70 ||
+        overallCv > 0.28 ||
+        overallCv === 0
+      ) {
+        focusClassification = "Variable Focus";
+        if (overallRecall < 80) {
+          focusDescription = `High omission rate (${overallOmissionRate}% missed Go targets) indicating attentional lapses`;
+        } else if (overallPrecision < 70) {
+          focusDescription = `Elevated commission errors (${100 - overallPrecision}% false alarms) indicating motor impulsivity`;
+        } else if (overallAccuracy < 75) {
+          focusDescription = `Low decision accuracy (${overallAccuracy}%) across stimulus presentations`;
+        } else {
+          focusDescription = `Elevated response time variability (RT CV ${overallCv}x > 0.28) indicating cognitive fluctuation`;
+        }
+      } else if (
+        overallCv > 0 &&
+        overallCv <= 0.18 &&
+        overallAccuracy >= 88 &&
+        overallPrecision >= 85 &&
+        overallRecall >= 90 &&
+        allRts.length >= 15
+      ) {
+        focusClassification = "Optimal Focus";
+        focusDescription = `High sustained attentional vigilance and tight inhibitory control (Acc ${overallAccuracy}%, Prec ${overallPrecision}%, Misses ${overallOmissionRate}%, RT CV ${overallCv}x)`;
+      } else {
+        focusClassification = "Steady Focus";
+        focusDescription = `Consistent cognitive processing speed with reliable target detection (Acc ${overallAccuracy}%, Prec ${overallPrecision}%, Misses ${overallOmissionRate}%, RT CV ${overallCv}x)`;
+      }
+
+      const report: CognitiveSessionReport = {
+        id: `session-${Date.now()}`,
+        timestamp: Date.now(),
+        dateStr: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        round1Metrics: r1,
+        round2Metrics: r2,
+        overallAccuracy,
+        overallPrecision,
+        overallOmissionRate,
+        overallMeanRT,
+        overallSdRT,
+        overallCv,
+        focusClassification,
+        focusDescription,
+        telemetryHistory: [...(r1.telemetryTable || []), ...(r2.telemetryTable || [])],
+      };
+
+      // Persist the full session telemetry report to localStorage
+      saveSessionReport(report);
+
       if (isRound1) {
         this.setState({
           round1Metrics: roundData,

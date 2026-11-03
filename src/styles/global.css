@@ -28,6 +28,10 @@ body {
 
 @theme {
   --font-offbit: 'OffBit', monospace;
+  --color-amber-300: #F6E285;
+  --color-amber-400: #F3DA66;
+  --color-amber-500: #E5C43B;
+  --color-amber-950: #2A240A;
 }
 
 .text-stroke-slate {

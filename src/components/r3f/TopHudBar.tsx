@@ -2,6 +2,7 @@ import React from "react";
 import type { PlaybackEngine } from "../../hooks/usePlaybackEngine";
 import BackButton from "./BackButton";
 import { SpeakerOffIcon, SpeakerOnIcon } from "../icons/IconmonstrIcons";
+import { AccessibilityMenu } from "../common/AccessibilityMenu";
 
 interface TopHudBarProps {
   engine: PlaybackEngine;
@@ -11,7 +12,7 @@ interface TopHudBarProps {
 }
 
 // Top HUD nav bar: exit button (left), focus sensors monitor (center),
-// audio speaker toggle button (right). Hidden entirely in idle mode by the caller.
+// audio speaker toggle and color vision accessibility menu (right). Hidden entirely in idle mode by the caller.
 const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, focusSensorsActive, onShowPrefrontal }) => {
   const isBaseline = engine.frame.phase === "baseline";
   const focusPercent = engine.frame.focus == null ? null : Math.round(engine.frame.focus * 100);
@@ -59,7 +60,11 @@ const TopHudBar: React.FC<TopHudBarProps> = ({ engine, onBack, focusSensorsActiv
         </button>
       </div>
 
-      <div className="flex items-center gap-3 pointer-events-auto">
+      <div className="flex items-center gap-2.5 pointer-events-auto">
+        <AccessibilityMenu
+          buttonClassName="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-slate-950/68 text-slate-300 backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 hover:border-white/35 hover:bg-slate-950/82 hover:text-white shadow-lg active:scale-95 md:h-9 md:w-9"
+        />
+
         <button
           onClick={engine.toggleMute}
           className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border backdrop-blur-xl transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 md:h-9 md:w-9 ${engine.isMuted

@@ -1,4 +1,7 @@
-// Renders edge-concentrated 3D rendered gradient spheres & cubes matching desktop ModalDecorativeField
+/**
+ * Renders edge-concentrated cyber portal tiles and wireframe accents in WebXR,
+ * perfectly matching the desktop ModalDecorativeField and the 3D portal room aesthetic.
+ */
 export function renderDecorative(
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -7,73 +10,153 @@ export function renderDecorative(
 ): void {
   ctx.save();
 
-  // 1. Top-Left: Soft Slate-Cyan Gradient Sphere
-  const s1x = 80;
-  const s1y = 80 + Math.sin(time * 0.8) * 12;
-  const g1 = ctx.createRadialGradient(s1x - 30, s1y - 30, 10, s1x, s1y, 110);
-  g1.addColorStop(0, "#38bdf8");
-  g1.addColorStop(0.4, "#0369a1");
-  g1.addColorStop(0.8, "#0f172a");
-  g1.addColorStop(1, "rgba(2, 6, 23, 0)");
-  ctx.fillStyle = g1;
-  ctx.beginPath();
-  ctx.arc(s1x, s1y, 110, 0, Math.PI * 2);
-  ctx.fill();
+  // Helper to draw a glowing wireframe portal tile
+  const drawPortalTile = (
+    cx: number,
+    cy: number,
+    w: number,
+    h: number,
+    angle: number,
+    borderColor: string,
+    fillColor: string,
+    shadowColor: string,
+    label?: string
+  ) => {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
 
-  // 2. Top-Left: Muted Rose Box
-  ctx.save();
-  ctx.translate(140, 240 + Math.cos(time * 1.1) * 8);
-  ctx.rotate(0.35);
-  const gb1 = ctx.createLinearGradient(-35, -35, 35, 35);
-  gb1.addColorStop(0, "#be123c");
-  gb1.addColorStop(0.55, "#4c0519");
-  gb1.addColorStop(1, "#0f172a");
-  ctx.fillStyle = gb1;
-  ctx.beginPath();
-  ctx.roundRect(-35, -35, 70, 70, 12);
-  ctx.fill();
-  ctx.restore();
+    // Glowing tile face
+    ctx.shadowColor = shadowColor;
+    ctx.shadowBlur = 16;
+    ctx.fillStyle = fillColor;
+    ctx.beginPath();
+    ctx.roundRect(-w / 2, -h / 2, w, h, 6);
+    ctx.fill();
 
-  // 3. Bottom-Left: Rose-Burgundy Cube
-  ctx.save();
-  ctx.translate(120, height - 160 + Math.sin(time * 0.7) * 10);
-  ctx.rotate(0.5);
-  const gb2 = ctx.createLinearGradient(-55, -55, 55, 55);
-  gb2.addColorStop(0, "#9f1239");
-  gb2.addColorStop(0.65, "#4c0519");
-  gb2.addColorStop(1, "#020617");
-  ctx.fillStyle = gb2;
-  ctx.beginPath();
-  ctx.roundRect(-55, -55, 110, 110, 16);
-  ctx.fill();
-  ctx.restore();
+    // Crisp wireframe border
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(-w / 2, -h / 2, w, h, 6);
+    ctx.stroke();
 
-  // 4. Top-Right: Crimson Cube
-  ctx.save();
-  ctx.translate(width - 130, 110 + Math.cos(time * 0.9) * 10);
-  ctx.rotate(-0.4);
-  const gb3 = ctx.createLinearGradient(-50, -50, 50, 50);
-  gb3.addColorStop(0, "#be123c");
-  gb3.addColorStop(0.5, "#881337");
-  gb3.addColorStop(1, "#0f172a");
-  ctx.fillStyle = gb3;
-  ctx.beginPath();
-  ctx.roundRect(-50, -50, 100, 100, 14);
-  ctx.fill();
-  ctx.restore();
+    // Corner hairline brackets
+    const bLen = Math.min(w, h) * 0.22;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    // Top-left bracket
+    ctx.moveTo(-w / 2 + bLen, -h / 2);
+    ctx.lineTo(-w / 2, -h / 2);
+    ctx.lineTo(-w / 2, -h / 2 + bLen);
+    // Bottom-right bracket
+    ctx.moveTo(w / 2 - bLen, h / 2);
+    ctx.lineTo(w / 2, h / 2);
+    ctx.lineTo(w / 2, h / 2 - bLen);
+    ctx.stroke();
 
-  // 5. Bottom-Right: Deep Soft Cyan Sphere
-  const s2x = width - 100;
-  const s2y = height - 100 + Math.sin(time * 0.75) * 12;
-  const g2 = ctx.createRadialGradient(s2x - 35, s2y - 35, 12, s2x, s2y, 130);
-  g2.addColorStop(0, "#7dd3fc");
-  g2.addColorStop(0.45, "#0369a1");
-  g2.addColorStop(0.75, "#075985");
-  g2.addColorStop(1, "rgba(2, 6, 23, 0)");
-  ctx.fillStyle = g2;
-  ctx.beginPath();
-  ctx.arc(s2x, s2y, 130, 0, Math.PI * 2);
-  ctx.fill();
+    if (label) {
+      ctx.fillStyle = borderColor;
+      ctx.font = "bold 9px monospace";
+      ctx.textAlign = "right";
+      ctx.fillText(label, w / 2 - 4, -h / 2 + 12);
+    }
+
+    ctx.restore();
+  };
+
+  // 1. Top-Left: Large White Portal Tile
+  const t1x = 90;
+  const t1y = 95 + Math.sin(time * 0.8) * 8;
+  drawPortalTile(
+    t1x,
+    t1y,
+    130,
+    85,
+    -0.18,
+    "rgba(255, 255, 255, 0.35)",
+    "rgba(255, 255, 255, 0.05)",
+    "rgba(255, 255, 255, 0.2)"
+  );
+
+  // 2. Top-Left Inner: Emerald Accent Tile (#34d399)
+  const t2x = 165;
+  const t2y = 210 + Math.cos(time * 1.0) * 7;
+  drawPortalTile(
+    t2x,
+    t2y,
+    75,
+    55,
+    0.22,
+    "rgba(52, 211, 153, 0.65)",
+    "rgba(52, 211, 153, 0.12)",
+    "#34d399",
+    "EMR"
+  );
+
+  // 3. Bottom-Left: Purple Accent Tile (#c084fc)
+  const t3x = 125;
+  const t3y = height - 140 + Math.sin(time * 0.7) * 9;
+  drawPortalTile(
+    t3x,
+    t3y,
+    110,
+    75,
+    0.28,
+    "rgba(192, 132, 252, 0.65)",
+    "rgba(192, 132, 252, 0.12)",
+    "#c084fc",
+    "PRP"
+  );
+
+  // 4. Top-Right: Cyan Accent Tile (#22d3ee)
+  const t4x = width - 130;
+  const t4y = 100 + Math.cos(time * 0.9) * 8;
+  drawPortalTile(
+    t4x,
+    t4y,
+    120,
+    80,
+    0.16,
+    "rgba(34, 211, 238, 0.65)",
+    "rgba(34, 211, 238, 0.12)",
+    "#22d3ee",
+    "CYN"
+  );
+
+  // 5. Bottom-Right: Red Accent Tile (#f43f5e)
+  const t5x = width - 110;
+  const t5y = height - 120 + Math.sin(time * 0.75) * 9;
+  drawPortalTile(
+    t5x,
+    t5y,
+    130,
+    85,
+    -0.22,
+    "rgba(244, 63, 94, 0.65)",
+    "rgba(244, 63, 94, 0.12)",
+    "#f43f5e",
+    "RED"
+  );
+
+  // 6. Corner Technical Crosshairs & Reticles
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+  ctx.lineWidth = 1;
+  const drawCrosshair = (x: number, y: number) => {
+    ctx.beginPath();
+    ctx.moveTo(x - 6, y);
+    ctx.lineTo(x + 6, y);
+    ctx.moveTo(x, y - 6);
+    ctx.lineTo(x, y + 6);
+    ctx.stroke();
+  };
+
+  drawCrosshair(55, 45);
+  drawCrosshair(width - 55, 45);
+  drawCrosshair(55, height - 45);
+  drawCrosshair(width - 55, height - 45);
 
   ctx.restore();
 }

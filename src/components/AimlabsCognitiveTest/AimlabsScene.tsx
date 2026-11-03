@@ -39,6 +39,11 @@ export const AimlabsScene: React.FC<AimlabsSceneProps> = ({
         } else if (state.status === "intermission") {
           aimlabsStore.startRound2();
         }
+      } else if (e.key === "Escape" || e.code === "Escape") {
+        e.preventDefault();
+        if (state.status === "round1" || state.status === "round2") {
+          aimlabsStore.togglePause();
+        }
       }
     };
 
@@ -70,6 +75,13 @@ export const AimlabsScene: React.FC<AimlabsSceneProps> = ({
     }
   };
 
+  const handleXRPause = (sourceState: any) => {
+    if (state.status === "round1" || state.status === "round2") {
+      triggerXRHaptic({ inputSource: sourceState?.inputSource }, 0.6, 40);
+      aimlabsStore.togglePause();
+    }
+  };
+
   // Listen for trigger presses on left & right controllers
   useXRControllerButtonEvent(leftController, "xr-standard-trigger", (btnState) => {
     if (btnState === "pressed") handleXRButtonTrigger(leftController);
@@ -84,6 +96,14 @@ export const AimlabsScene: React.FC<AimlabsSceneProps> = ({
   });
   useXRControllerButtonEvent(rightController, "xr-standard-squeeze", (btnState) => {
     if (btnState === "pressed") handleXRButtonTrigger(rightController);
+  });
+
+  // Listen for secondary pause buttons on VR controllers (Y on left, B on right)
+  useXRControllerButtonEvent(leftController, "y-button", (btnState) => {
+    if (btnState === "pressed") handleXRPause(leftController);
+  });
+  useXRControllerButtonEvent(rightController, "b-button", (btnState) => {
+    if (btnState === "pressed") handleXRPause(rightController);
   });
 
   // Primary XRSession "select" events (standard WebXR trigger / screen tap / hand pinch)

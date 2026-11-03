@@ -24,12 +24,18 @@ export const XRCanvasScreen: React.FC<XRCanvasScreenProps> = ({
       onStartRound2: () => aimlabsStore.startRound2(),
       onRestart: () => aimlabsStore.restart(),
       onExit,
+      onHome: () => {
+        aimlabsStore.exit();
+        if (typeof window !== "undefined") {
+          window.location.href = "/";
+        }
+      },
       onSkipRound: () => aimlabsStore.skipRound(),
       onTogglePause: () => aimlabsStore.togglePause(),
-      onMenu: onExit,
+      onToggleSound: () => aimlabsStore.toggleSound(),
     });
 
-  const isGameplay = state.status === "round1" || state.status === "round2";
+  const isGameplay = (state.status === "round1" || state.status === "round2") && !state.isPaused;
 
   const { texture } = useXRCanvasTexture({
     state: {
@@ -42,6 +48,8 @@ export const XRCanvasScreen: React.FC<XRCanvasScreenProps> = ({
       round2Metrics: state.round2Metrics,
       recentFeedback: state.recentFeedback,
       isPaused: state.isPaused,
+      soundEnabled: state.soundEnabled,
+      liveFocusMetrics: state.liveFocusMetrics,
       hoverId,
     },
     hitAreasRef,

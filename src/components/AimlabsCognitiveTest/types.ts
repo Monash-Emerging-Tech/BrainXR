@@ -26,6 +26,38 @@ export interface HitRecord {
   points: number;
 }
 
+export interface TargetTelemetryRecord {
+  trialIndex: number;
+  targetType: TargetType;
+  isGo: boolean;
+  userResponded: boolean;
+  isCorrect: boolean;
+  reactionTime: number | null; // in ms if responded, null if withheld
+  cumulativeAccuracy: number; // percentage (0 - 100)
+  cumulativePrecision?: number; // percentage (0 - 100)
+  movingAverageRT: number; // in ms
+  movingSdRT: number; // in ms
+  timestamp: number;
+}
+
+export interface LiveFocusMetrics {
+  reactionTimes: number[];
+  meanRT: number;
+  medianRT: number;
+  sdRT: number;
+  cv: number; // Response Time Coefficient of Variation (SD_RT / Mean_RT)
+  focusLevel: "Optimal Focus" | "Steady Focus" | "Variable Focus" | "Calibrating";
+  focusDescription: string;
+  boxesHit: number;
+  boxesMissed: number;
+  spheresHit: number;
+  spheresMissed: number;
+  accuracy: number;
+  precision: number;
+  omissionRate?: number; // percentage: missed Go targets / total Go targets
+  telemetryTable: TargetTelemetryRecord[];
+}
+
 export interface RoundMetrics {
   round: CognitiveRoundType;
   roundName: string;
@@ -34,12 +66,18 @@ export interface RoundMetrics {
   boxCount: number;
   goHits: number;
   omissions: number; // Missed Go targets
-  commissions: number; // False alarms (clicked No-Go)
+  commissions: number; // False alarms (clicked No-Go / No-Go Alarms)
   correctRejections: number; // Correctly ignored No-Go
   reactionTimes: number[];
   meanReactionTime: number;
+  sdReactionTime?: number;
+  cv?: number; // Response Time Coefficient of Variation (sdReactionTime / meanReactionTime)
+  focusLevel?: "Optimal Focus" | "Steady Focus" | "Variable Focus";
   score: number;
   accuracy: number; // percentage
+  precision: number; // positive predictive value: goHits / (goHits + commissions)
+  omissionRate?: number; // percentage: omissions / (goHits + omissions)
+  telemetryTable: TargetTelemetryRecord[];
 }
 
 export type GameStatus =

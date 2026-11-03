@@ -52,9 +52,9 @@ export const AimlabsTarget: React.FC<AimlabsTargetProps> = ({
           <meshStandardMaterial
             color="#22c55e"
             emissive="#15803d"
-            emissiveIntensity={0.65}
-            roughness={0.2}
-            metalness={0.15}
+            emissiveIntensity={0.6}
+            roughness={0.75}
+            metalness={0.0}
           />
         </mesh>
       ) : (
@@ -64,9 +64,9 @@ export const AimlabsTarget: React.FC<AimlabsTargetProps> = ({
             <meshStandardMaterial
               color="#f43f5e"
               emissive="#be123c"
-              emissiveIntensity={0.75}
-              roughness={0.25}
-              metalness={0.1}
+              emissiveIntensity={0.7}
+              roughness={0.7}
+              metalness={0.0}
             />
           </mesh>
           <lineSegments>

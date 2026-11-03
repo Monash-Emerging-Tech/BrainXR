@@ -40,12 +40,12 @@ export function renderHUD(
   const isPaused = Boolean(state.isPaused);
 
   ctx.fillStyle = isPaused
-    ? "rgba(245, 158, 11, 0.2)"
+    ? "rgba(243, 218, 102, 0.2)"
     : isPauseHover
     ? "#334155"
     : "#0f172a";
   ctx.strokeStyle = isPaused
-    ? "rgba(245, 158, 11, 0.6)"
+    ? "rgba(243, 218, 102, 0.6)"
     : isPauseHover
     ? "#94a3b8"
     : "#334155";
@@ -56,7 +56,7 @@ export function renderHUD(
   ctx.stroke();
 
   // Draw Pause || or Play > symbol
-  ctx.fillStyle = isPaused ? "#fbbf24" : isPauseHover ? "#ffffff" : "#cbd5e1";
+  ctx.fillStyle = isPaused ? "#F3DA66" : isPauseHover ? "#ffffff" : "#cbd5e1";
   if (isPaused) {
     // Play Triangle icon
     ctx.beginPath();
@@ -72,56 +72,9 @@ export function renderHUD(
   }
   hitAreas.push({ id: "toggle-pause", type: "toggle-pause", x: pauseX, y: topY, width: pauseW, height: pauseH });
 
-  // 3. Skip Button (renamed from Skip Round)
-  const skipW = 100;
-  const skipH = 50;
-  const skipX = pauseX + pauseW + 12;
-  const isSkipHover = state.hoverId === "skip-round";
-
-  ctx.fillStyle = isSkipHover ? "#1e293b" : "#0f172a";
-  ctx.strokeStyle = isSkipHover ? "#f59e0b" : "#334155";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.roundRect(skipX, topY, skipW, skipH, skipH / 2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.font = "bold 15px monospace";
-  ctx.fillStyle = isSkipHover ? "#fbbf24" : "#cbd5e1";
-  ctx.textAlign = "center";
-  ctx.fillText("Skip ⇥", skipX + skipW / 2, topY + 31);
-  hitAreas.push({ id: "skip-round", type: "skip-round", x: skipX, y: topY, width: skipW, height: skipH });
-
-  // 4. Menu Button [Hamburger SVG Icon only]
-  const menuW = 50;
-  const menuH = 50;
-  const menuX = skipX + skipW + 12;
-  const isMenuHover = state.hoverId === "menu";
-
-  ctx.fillStyle = isMenuHover ? "#334155" : "#0f172a";
-  ctx.strokeStyle = isMenuHover ? "#94a3b8" : "#334155";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.roundRect(menuX, topY, menuW, menuH, menuH / 2);
-  ctx.fill();
-  ctx.stroke();
-
-  // Draw 3 Hamburger lines
-  ctx.strokeStyle = isMenuHover ? "#ffffff" : "#cbd5e1";
-  ctx.lineWidth = 2.4;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(menuX + 15, topY + 18);
-  ctx.lineTo(menuX + 35, topY + 18);
-  ctx.moveTo(menuX + 15, topY + 25);
-  ctx.lineTo(menuX + 35, topY + 25);
-  ctx.moveTo(menuX + 15, topY + 32);
-  ctx.lineTo(menuX + 35, topY + 32);
-  ctx.stroke();
-  hitAreas.push({ id: "menu", type: "menu", x: menuX, y: topY, width: menuW, height: menuH });
-
-  // Telemetry Readout (Top Right)
-  const telW = 280;
+  // Telemetry Readout (Top Right: Strictly Mean, Accuracy, Precision, Omission Rate)
+  const m = state.liveFocusMetrics;
+  const telW = 425;
   const telH = 50;
   const telX = width - telW - 60;
 
@@ -132,25 +85,54 @@ export function renderHUD(
   ctx.fill();
   ctx.stroke();
 
-  ctx.font = "14px monospace";
+  // 1. Mean Reaction Time
+  ctx.font = "12px monospace";
   ctx.fillStyle = "#94a3b8";
   ctx.textAlign = "left";
-  ctx.fillText("RT", telX + 24, topY + 31);
+  ctx.fillText("MEAN", telX + 16, topY + 30);
 
-  ctx.font = "bold 17px monospace";
-  ctx.fillStyle = "#ffffff";
-  ctx.fillText(`${state.score}ms`, telX + 54, topY + 31);
+  ctx.font = "bold 15px monospace";
+  ctx.fillStyle = "#22d3ee";
+  ctx.fillText(`${m && m.meanRT > 0 ? `${m.meanRT}ms` : `${state.score}ms`}`, telX + 54, topY + 30);
 
-  ctx.fillStyle = "#475569";
-  ctx.fillText("|", telX + 155, topY + 31);
+  // Divider 1
+  ctx.font = "12px monospace";
+  ctx.fillStyle = "#334155";
+  ctx.fillText("|", telX + 116, topY + 30);
 
-  ctx.font = "14px monospace";
+  // 2. Accuracy
   ctx.fillStyle = "#94a3b8";
-  ctx.fillText("Acc", telX + 175, topY + 31);
+  ctx.fillText("ACC", telX + 128, topY + 30);
 
-  ctx.font = "bold 17px monospace";
+  ctx.font = "bold 15px monospace";
   ctx.fillStyle = "#34d399";
-  ctx.fillText(`${Math.round(state.accuracy)}%`, telX + 210, topY + 31);
+  ctx.fillText(`${Math.round(state.accuracy)}%`, telX + 158, topY + 30);
+
+  // Divider 2
+  ctx.font = "12px monospace";
+  ctx.fillStyle = "#334155";
+  ctx.fillText("|", telX + 208, topY + 30);
+
+  // 3. Precision
+  ctx.fillStyle = "#94a3b8";
+  ctx.fillText("PREC", telX + 220, topY + 30);
+
+  ctx.font = "bold 15px monospace";
+  ctx.fillStyle = "#a5b4fc";
+  ctx.fillText(`${Math.round(m?.precision ?? 100)}%`, telX + 258, topY + 30);
+
+  // Divider 3
+  ctx.font = "12px monospace";
+  ctx.fillStyle = "#334155";
+  ctx.fillText("|", telX + 312, topY + 30);
+
+  // 4. Omission Rate
+  ctx.fillStyle = "#94a3b8";
+  ctx.fillText("OMIT", telX + 324, topY + 30);
+
+  ctx.font = "bold 15px monospace";
+  ctx.fillStyle = "#f43f5e";
+  ctx.fillText(`${Math.round(m?.omissionRate ?? 0)}%`, telX + 364, topY + 30);
 
   // Center Top Rule Badge Card
   const ruleW = 620;
@@ -181,11 +163,36 @@ export function renderHUD(
     ctx.textAlign = "center";
     ctx.fillText(state.recentFeedback.text, width / 2, height / 2 + 140);
   }
+
+  // Bottom Pause Quick Tip Badge in XR
+  const hintW = 320;
+  const hintH = 40;
+  const hintX = (width - hintW) / 2;
+  const hintY = height - 60;
+
+  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(hintX, hintY, hintW, hintH, hintH / 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = "bold 15px monospace";
+  ctx.fillStyle = "#cbd5e1";
+  ctx.textAlign = "center";
+  ctx.fillText("Press [B] or [Y] to Pause", width / 2, hintY + 25);
 }
 
 function drawMiniRuleBadge(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, name: string, action: string, color: string, isPress: boolean) {
-  ctx.fillStyle = isPress ? "rgba(4, 47, 46, 0.7)" : "rgba(76, 5, 25, 0.5)";
-  ctx.strokeStyle = isPress ? "rgba(6, 182, 212, 0.45)" : "rgba(244, 63, 94, 0.35)";
+  const isGreen = color === "#22c55e";
+  if (isPress) {
+    ctx.fillStyle = isGreen ? "rgba(5, 46, 22, 0.75)" : "rgba(76, 5, 25, 0.75)";
+    ctx.strokeStyle = isGreen ? "rgba(34, 197, 94, 0.5)" : "rgba(244, 63, 94, 0.5)";
+  } else {
+    ctx.fillStyle = isGreen ? "rgba(5, 46, 22, 0.5)" : "rgba(76, 5, 25, 0.5)";
+    ctx.strokeStyle = isGreen ? "rgba(34, 197, 94, 0.35)" : "rgba(244, 63, 94, 0.35)";
+  }
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, h / 2);
@@ -207,7 +214,7 @@ function drawMiniRuleBadge(ctx: CanvasRenderingContext2D, x: number, y: number, 
   ctx.fillText(name, x + 42, y + h / 2 + 5);
 
   ctx.font = "bold 14px 'OffBit', monospace";
-  ctx.fillStyle = isPress ? "#38bdf8" : "#fb7185";
+  ctx.fillStyle = isGreen ? "#4ade80" : "#fb7185";
   ctx.textAlign = "right";
   ctx.fillText(action, x + w - 18, y + h / 2 + 5);
 }

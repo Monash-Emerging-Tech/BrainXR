@@ -82,7 +82,7 @@ export const IdleHeadline: React.FC<IdleHeadlineProps> = ({ variant, onStartStor
               target="_blank"
               rel="noopener noreferrer"
               className="pointer-events-auto inline-flex items-center shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-              title="Visit Monash Emerging Tech"
+              title="Visit Monash Nexus for Emerging Technologies (MNET)"
             >
               <img
                 src="/mnet-logo.png"
@@ -104,7 +104,7 @@ export const IdleHeadline: React.FC<IdleHeadlineProps> = ({ variant, onStartStor
               target="_blank"
               rel="noopener noreferrer"
               className="group pointer-events-auto cursor-pointer no-underline text-slate-900 inline-flex items-center justify-between flex-1 max-w-[14rem] py-1 px-1 -my-1 hover:text-indigo-600 transition-colors"
-              title="Visit Monash Emerging Tech"
+              title="Visit Monash Nexus for Emerging Technologies (MNET)"
             >
               {"MNET".split("").map((c, i) => (
                 <span

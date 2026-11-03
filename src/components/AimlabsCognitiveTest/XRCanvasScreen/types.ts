@@ -1,8 +1,16 @@
-import type { GameStatus, CognitiveRoundType, RoundMetrics } from "../types";
+import type { GameStatus, CognitiveRoundType, RoundMetrics, LiveFocusMetrics } from "../types";
 
 export interface InteractiveHitArea {
   id: string;
-  type: "start-game" | "start-round2" | "restart" | "exit" | "skip-round" | "toggle-pause" | "menu";
+  type:
+    | "start-game"
+    | "start-round2"
+    | "restart"
+    | "exit"
+    | "home"
+    | "skip-round"
+    | "toggle-pause"
+    | "toggle-sound";
   x: number;
   y: number;
   width: number;
@@ -19,5 +27,7 @@ export interface CanvasScreenRenderState {
   round2Metrics: RoundMetrics | null;
   recentFeedback: { text: string; color: string } | null;
   isPaused?: boolean;
+  soundEnabled?: boolean;
+  liveFocusMetrics?: LiveFocusMetrics;
   hoverId?: string | null;
 }

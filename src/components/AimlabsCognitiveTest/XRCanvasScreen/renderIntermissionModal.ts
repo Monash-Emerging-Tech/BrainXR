@@ -11,15 +11,17 @@ export function renderIntermissionModal(
   if (!m) return;
   const cx = width / 2;
 
-  // Did we just finish Round 1 or Round 2?
-  const isNextRound2 = !state.round2Metrics;
-  const completedLabel = isNextRound2 ? "ROUND 1 COMPLETE" : "ROUND 2 COMPLETE";
-  const ruleReversalTitle = isNextRound2 ? "RULE REVERSAL FOR ROUND 2 (SART)" : "RULE REVERSAL FOR ROUND 1 (CPT)";
-  const nextButtonLabel = isNextRound2 ? "Start Round 2 (SART) →" : "Start Round 1 (CPT) →";
+  // Intermission always occurs after Round 1 and transitions into Round 2.
+  // If state.round1Metrics exists, Round 1 was CPT, so the upcoming Round 2 is SART.
+  // If state.round2Metrics exists, Round 1 was SART, so the upcoming Round 2 is CPT.
+  const isNextSART = Boolean(state.round1Metrics);
+  const completedLabel = "ROUND 1 COMPLETE";
+  const ruleReversalTitle = isNextSART ? "RULE REVERSAL FOR ROUND 2 (SART)" : "RULE REVERSAL FOR ROUND 2 (CPT)";
+  const nextButtonLabel = isNextSART ? "Start Round 2 (SART) →" : "Start Round 2 (CPT) →";
 
   // Eyebrow badge
   ctx.font = "bold 16px monospace";
-  ctx.fillStyle = "#fbbf24";
+  ctx.fillStyle = "#F3DA66";
   ctx.textAlign = "center";
   ctx.fillText(completedLabel, cx, 140);
 
@@ -29,12 +31,12 @@ export function renderIntermissionModal(
   ctx.fillStyle = "#ffffff";
   ctx.fillText("TELEMETRY REPORT", cx, 210);
 
-  // 4 Metric Badges
+  // 4 Metric Badges (Action & Result)
   const stats = [
-    { label: "HITS (GO)", value: m.goHits.toString(), color: "#22d3ee" },
-    { label: "FALSE ALARMS", value: m.commissions.toString(), color: "#f43f5e" },
-    { label: "MEAN RT", value: `${Math.round(m.meanReactionTime)} ms`, color: "#fbbf24" },
-    { label: "ACCURACY", value: `${Math.round(m.accuracy)}%`, color: "#34d399" },
+    { label: "HIT (CORRECT)", value: m.goHits.toString(), color: "#22d3ee" },
+    { label: "HIT (INCORRECT)", value: m.commissions.toString(), color: "#f43f5e" },
+    { label: "AVOIDED (CORRECT)", value: m.correctRejections.toString(), color: "#34d399" },
+    { label: "MEAN RT", value: `${Math.round(m.meanReactionTime)} ms`, color: "#F3DA66" },
   ];
 
   const statW = 280;
@@ -85,15 +87,21 @@ export function renderIntermissionModal(
   ctx.textAlign = "center";
   ctx.fillText(ruleReversalTitle, cx, revY + 42);
 
-  if (isNextRound2) {
+  if (isNextSART) {
     // Round 2 SART rules: Red Box -> PRESS, Green Sphere -> DO NOT PRESS
     drawRuleSubcard(ctx, revX + 40, revY + 70, 440, 100, "Red Box", "PRESS", "#f43f5e", true);
     drawRuleSubcard(ctx, revX + 520, revY + 70, 440, 100, "Green Sphere", "DO NOT PRESS", "#22c55e", false);
   } else {
-    // Round 1 CPT rules: Green Sphere -> PRESS, Red Box -> DO NOT PRESS
+    // Round 2 CPT rules: Green Sphere -> PRESS, Red Box -> DO NOT PRESS
     drawRuleSubcard(ctx, revX + 40, revY + 70, 440, 100, "Green Sphere", "PRESS", "#22c55e", true);
     drawRuleSubcard(ctx, revX + 520, revY + 70, 440, 100, "Red Box", "DO NOT PRESS", "#f43f5e", false);
   }
+
+  // Notice: Report available at end
+  ctx.font = "15px monospace";
+  ctx.fillStyle = "#818cf8";
+  ctx.textAlign = "center";
+  ctx.fillText("📄 Full performance telemetry report will be available to download at the end of Round 2", cx, 665);
 
   // Continue Button
   const btnW = 420;
@@ -102,17 +110,17 @@ export function renderIntermissionModal(
   const btnY = 690;
   const isHover = state.hoverId === "start-round2";
 
-  ctx.fillStyle = isHover ? "#e11d48" : "#be123c";
-  ctx.strokeStyle = isHover ? "#fda4af" : "#f43f5e";
+  ctx.fillStyle = isHover ? "#e2e8f0" : "#ffffff";
+  ctx.strokeStyle = "#ffffff";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.roundRect(btnX, btnY, btnW, btnH, btnH / 2);
+  ctx.roundRect(btnX, btnY, btnW, btnH, 12);
   ctx.fill();
   ctx.stroke();
 
-  ctx.font = "bold 22px monospace";
-  ctx.letterSpacing = "1px";
-  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 22px 'OffBit', monospace";
+  ctx.letterSpacing = "2px";
+  ctx.fillStyle = "#000000";
   ctx.textAlign = "center";
   ctx.fillText(nextButtonLabel, cx, btnY + 44);
 
