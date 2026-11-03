@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import type { GameStatus, RoundMetrics, CognitiveRoundType } from "./types";
+import type { GameStatus, RoundMetrics, CognitiveRoundType, LiveFocusMetrics } from "./types";
 
 interface SpannedTextProps {
   text: string;
@@ -155,10 +155,18 @@ interface AimlabsModalsProps {
   currentRound: CognitiveRoundType;
   round1Metrics: RoundMetrics | null;
   round2Metrics: RoundMetrics | null;
+  isPaused?: boolean;
+  score?: number;
+  accuracy?: number;
+  soundEnabled?: boolean;
+  liveFocusMetrics?: LiveFocusMetrics;
   onStartGame: () => void;
   onStartRound2: () => void;
   onRestart: () => void;
   onExit: () => void;
+  onResume?: () => void;
+  onSkipRound?: () => void;
+  onToggleSound?: () => void;
 }
 
 export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
@@ -167,10 +175,18 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
   currentRound,
   round1Metrics,
   round2Metrics,
+  isPaused = false,
+  score = 0,
+  accuracy = 100,
+  soundEnabled = true,
+  liveFocusMetrics,
   onStartGame,
   onStartRound2,
   onRestart,
   onExit,
+  onResume,
+  onSkipRound,
+  onToggleSound,
 }) => {
   // Fade in / fade out transition state
   const [isFadingOut, setIsFadingOut] = useState(false);
@@ -393,15 +409,15 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
           </div>
 
           {/* Subtext info */}
-          <div className="flex items-center gap-4 text-xs font-mono text-slate-400 my-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-xs font-mono text-slate-400 my-3">
             <span className="flex items-center gap-1.5 text-cyan-300">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
               1 Target at a Time
             </span>
-            <span>·</span>
+            <span className="hidden sm:inline">·</span>
             <span>500ms flash + 700ms fixation</span>
-            <span>·</span>
-            <span className="text-indigo-300">Spacebar / Click</span>
+            <span className="hidden sm:inline">·</span>
+            <span className="text-amber-300/90 font-medium">Stroop Cognitive Conflict Rule</span>
           </div>
 
           {/* Action Buttons */}
@@ -604,6 +620,453 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
               className="flex-1 py-3 px-6 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-indigo-500/30 active:scale-95 transition-all cursor-pointer border border-indigo-400/40"
             >
               Return to EEG
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // In-Game Pause Menu
+  if (isPaused && (status === "round1" || status === "round2")) {
+    const isRound1 = currentRound === 1;
+    const roundTitle = isRound1 ? "ROUND 1 · CPT" : "ROUND 2 · SART";
+    const roundFullName = isRound1
+      ? "Continuous Performance Test"
+      : "Sustained Attention to Response Task";
+
+    const m: LiveFocusMetrics = liveFocusMetrics || {
+      reactionTimes: [],
+      meanRT: 0,
+      medianRT: 0,
+      sdRT: 0,
+      cv: 0,
+      focusLevel: "Calibrating",
+      focusDescription: "Collecting baseline response times",
+      boxesHit: 0,
+      boxesMissed: 0,
+      spheresHit: 0,
+      spheresMissed: 0,
+      accuracy: Math.round(accuracy),
+      telemetryTable: [],
+    };
+
+    const focusBadgeColor =
+      m.focusLevel === "Optimal Focus"
+        ? "text-emerald-400 bg-emerald-950/60 border-emerald-500/40"
+        : m.focusLevel === "Steady Focus"
+        ? "text-cyan-400 bg-cyan-950/60 border-cyan-500/40"
+        : m.focusLevel === "Variable Focus"
+        ? "text-amber-400 bg-amber-950/60 border-amber-500/40"
+        : "text-slate-400 bg-slate-900/60 border-slate-700/40";
+
+    return (
+      <div
+        className={`absolute inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl px-4 font-sans select-none overflow-hidden transition-all duration-300 ease-out ${
+          mounted && !isFadingOut
+            ? "opacity-100 scale-100 pointer-events-auto"
+            : "opacity-0 scale-[0.98] pointer-events-none"
+        }`}
+      >
+        <ModalDecorativeField />
+
+        <div className="relative z-10 max-w-2xl w-full flex flex-col items-center text-center px-4 py-5">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 rounded-full bg-amber-950/70 px-3.5 py-1.5 text-xs font-mono tracking-wider text-amber-300 border border-amber-500/40 backdrop-blur-md mb-2 uppercase font-semibold">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            GAME PAUSED
+          </div>
+
+          <div className="w-full px-4 mb-1">
+            <SpannedText
+              text="PAUSE MENU"
+              className="text-white text-2xl sm:text-3xl font-bold"
+            />
+          </div>
+
+          <p className="text-xs text-slate-400 font-mono mb-3">
+            {roundTitle} · <span className="text-cyan-300">{roundFullName}</span>
+          </p>
+
+          {/* Target Rules with embedded hit/miss tally */}
+          <div className="w-full grid grid-cols-2 gap-3 my-2 text-xs font-mono">
+            {isRound1 ? (
+              <>
+                {/* Round 1 (CPT): Hit Sphere */}
+                <div className="p-3 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 flex items-center justify-between text-left shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff]" />
+                    <div>
+                      <div className="text-white font-bold text-xs">Hit Sphere</div>
+                      <div className="text-[11px] text-slate-300 mt-0.5">
+                        Hit: <span className="font-bold text-emerald-400">{m.spheresHit}</span> · Miss: <span className="font-bold text-rose-400">{m.spheresMissed}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] uppercase font-bold text-cyan-300 bg-cyan-950 px-2.5 py-1 rounded-full border border-cyan-500/40 font-offbit">
+                    PRESS
+                  </span>
+                </div>
+
+                {/* Round 1 (CPT): Avoid Box */}
+                <div className="p-3 rounded-2xl bg-rose-950/30 border border-rose-500/30 flex items-center justify-between text-left shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-4 h-4 rounded-xs bg-rose-500 shadow-[0_0_8px_#f43f5e]" />
+                    <div>
+                      <div className="text-white font-bold text-xs">Avoid Box</div>
+                      <div className="text-[11px] text-slate-300 mt-0.5">
+                        Avoided: <span className="font-bold text-emerald-400">{Math.max(0, 37 - m.boxesMissed)}</span> · Faults: <span className="font-bold text-rose-400">{m.boxesMissed}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] uppercase font-bold text-rose-300 bg-rose-950 px-2.5 py-1 rounded-full border border-rose-500/40 font-offbit">
+                    AVOID
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Round 2 (SART): Hit Box */}
+                <div className="p-3 rounded-2xl bg-rose-950/40 border border-rose-500/30 flex items-center justify-between text-left shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-4 h-4 rounded-xs bg-rose-500 shadow-[0_0_8px_#f43f5e]" />
+                    <div>
+                      <div className="text-white font-bold text-xs">Hit Box</div>
+                      <div className="text-[11px] text-slate-300 mt-0.5">
+                        Hit: <span className="font-bold text-emerald-400">{m.boxesHit}</span> · Miss: <span className="font-bold text-rose-400">{m.boxesMissed}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] uppercase font-bold text-rose-300 bg-rose-950 px-2.5 py-1 rounded-full border border-rose-500/40 font-offbit">
+                    PRESS
+                  </span>
+                </div>
+
+                {/* Round 2 (SART): Avoid Sphere */}
+                <div className="p-3 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 flex items-center justify-between text-left shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff]" />
+                    <div>
+                      <div className="text-white font-bold text-xs">Avoid Sphere</div>
+                      <div className="text-[11px] text-slate-300 mt-0.5">
+                        Avoided: <span className="font-bold text-emerald-400">{Math.max(0, 150 - m.spheresMissed)}</span> · Faults: <span className="font-bold text-rose-400">{m.spheresMissed}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] uppercase font-bold text-cyan-300 bg-cyan-950 px-2.5 py-1 rounded-full border border-cyan-500/40 font-offbit">
+                    AVOID
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Unified Performance Graph: RT & Moving Avg / Dual SD Band Envelope (Left Axis) + Accuracy % (Right Axis) */}
+          <div className="w-full p-4 rounded-2xl bg-slate-950/85 border border-slate-800 shadow-2xl my-2 text-left font-mono">
+            {/* Graph Header */}
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <span className="text-xs text-slate-300 font-bold uppercase tracking-wider">Session Performance</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${focusBadgeColor}`}>
+                  {m.focusLevel}
+                </span>
+                {m.cv > 0 && (
+                  <span className="text-[10px] text-amber-300/90 bg-amber-950/40 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                    CV: {(m.cv * 100).toFixed(0)}% ({(m.cv).toFixed(2)}x Mean)
+                  </span>
+                )}
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center gap-2.5 sm:gap-3 text-[11px] flex-wrap justify-end">
+                <div className="flex items-center gap-1.5 text-cyan-300">
+                  <span className="w-2.5 h-0.5 bg-cyan-400 rounded-full" />
+                  <span>Moving RT</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-amber-300">
+                  <span className="w-2.5 h-2 rounded-xs bg-amber-400/40 border border-amber-400/70" />
+                  <span>±1.0x SD</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-amber-400/70">
+                  <span className="w-2 h-0.5 border-b border-dashed border-amber-400/80" />
+                  <span>±1.5x Whisker</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-emerald-300">
+                  <span className="w-2.5 h-0.5 bg-emerald-400 rounded-full stroke-dashed" />
+                  <span>Accuracy %</span>
+                </div>
+              </div>
+            </div>
+
+            {/* SVG Graph Viewport */}
+            <div className="w-full h-36 relative my-1">
+              {m.telemetryTable && m.telemetryTable.length > 1 ? (
+                (() => {
+                  const data = m.telemetryTable.slice(-30);
+                  const count = data.length;
+                  const W = 560;
+                  const H = 140;
+                  const padL = 36;
+                  const padR = 36;
+                  const padT = 12;
+                  const padB = 22;
+                  const innerW = W - padL - padR;
+                  const innerH = H - padT - padB;
+
+                  // Scales: RT (Left Axis) 100ms - 550ms
+                  const minRT = 100;
+                  const maxRT = 550;
+                  const rtRange = maxRT - minRT;
+                  const getYForRT = (val: number) => {
+                    const clamped = Math.max(minRT, Math.min(maxRT, val));
+                    return padT + innerH - ((clamped - minRT) / rtRange) * innerH;
+                  };
+
+                  // Scale: Accuracy (Right Axis) 0 - 100%
+                  const getYForAcc = (acc: number) => {
+                    return padT + innerH - (acc / 100) * innerH;
+                  };
+
+                  const getX = (idx: number) => padL + (idx / (count - 1)) * innerW;
+
+                  // Compute Envelope Points
+                  // Core band: +/- 1.0 * SD
+                  // Whisker outer threshold: +/- 1.5 * SD
+                  const innerUpperPoints: string[] = [];
+                  const innerLowerPoints: string[] = [];
+                  const outerUpperPoints: string[] = [];
+                  const outerLowerPoints: string[] = [];
+                  const whiskerTopLine: string[] = [];
+                  const whiskerBottomLine: string[] = [];
+                  const movingAvgPoints: string[] = [];
+                  const accPoints: string[] = [];
+
+                  data.forEach((d, i) => {
+                    const x = getX(i);
+                    const avg = d.movingAverageRT > 0 ? d.movingAverageRT : (d.reactionTime || m.meanRT || 300);
+                    const sd = d.movingSdRT || m.sdRT || 30;
+
+                    const yAvg = getYForRT(avg);
+                    const yInnerUpper = getYForRT(avg - sd);
+                    const yInnerLower = getYForRT(avg + sd);
+                    const yOuterUpper = getYForRT(avg - 1.5 * sd);
+                    const yOuterLower = getYForRT(avg + 1.5 * sd);
+
+                    movingAvgPoints.push(`${x.toFixed(1)},${yAvg.toFixed(1)}`);
+                    innerUpperPoints.push(`${x.toFixed(1)},${yInnerUpper.toFixed(1)}`);
+                    innerLowerPoints.push(`${x.toFixed(1)},${yInnerLower.toFixed(1)}`);
+                    outerUpperPoints.push(`${x.toFixed(1)},${yOuterUpper.toFixed(1)}`);
+                    outerLowerPoints.push(`${x.toFixed(1)},${yOuterLower.toFixed(1)}`);
+
+                    whiskerTopLine.push(`${x.toFixed(1)},${yOuterUpper.toFixed(1)}`);
+                    whiskerBottomLine.push(`${x.toFixed(1)},${yOuterLower.toFixed(1)}`);
+
+                    const yAcc = getYForAcc(d.cumulativeAccuracy);
+                    accPoints.push(`${x.toFixed(1)},${yAcc.toFixed(1)}`);
+                  });
+
+                  // Polygons for SVG
+                  const outerBandPolygon = `${outerUpperPoints.join(" ")} ${outerLowerPoints.reverse().join(" ")}`;
+                  const innerBandPolygon = `${innerUpperPoints.join(" ")} ${innerLowerPoints.reverse().join(" ")}`;
+
+                  return (
+                    <svg className="w-full h-full overflow-visible" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+                      <defs>
+                        {/* Outer 1.5x SD Whisker Band Fill */}
+                        <linearGradient id="outerSdBandGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.09" />
+                          <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.03" />
+                        </linearGradient>
+                        {/* Inner 1.0x SD Core Focus Band Fill */}
+                        <linearGradient id="innerSdBandGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.32" />
+                          <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.12" />
+                        </linearGradient>
+                      </defs>
+
+                      {/* Horizontal Gridlines */}
+                      {[0.25, 0.5, 0.75].map((ratio) => {
+                        const y = padT + innerH * ratio;
+                        return (
+                          <line
+                            key={ratio}
+                            x1={padL}
+                            y1={y}
+                            x2={padL + innerW}
+                            y2={y}
+                            stroke="rgba(51, 65, 85, 0.35)"
+                            strokeDasharray="3 3"
+                            strokeWidth="1"
+                          />
+                        );
+                      })}
+
+                      {/* Outer 1.5x SD Envelope Fill */}
+                      <polygon points={outerBandPolygon} fill="url(#outerSdBandGrad)" />
+
+                      {/* Outer Whisker Bounds (Dashed lines at +/- 1.5 SD) */}
+                      <polyline
+                        points={whiskerTopLine.join(" ")}
+                        fill="none"
+                        stroke="#f59e0b"
+                        strokeOpacity="0.45"
+                        strokeWidth="1"
+                        strokeDasharray="2 2"
+                      />
+                      <polyline
+                        points={whiskerBottomLine.join(" ")}
+                        fill="none"
+                        stroke="#f59e0b"
+                        strokeOpacity="0.45"
+                        strokeWidth="1"
+                        strokeDasharray="2 2"
+                      />
+
+                      {/* Inner 1.0x SD Core Focus Corridor */}
+                      <polygon points={innerBandPolygon} fill="url(#innerSdBandGrad)" stroke="#f59e0b" strokeOpacity="0.3" strokeWidth="0.8" />
+
+                      {/* Moving Average RT Line (Cyan) */}
+                      <polyline
+                        points={movingAvgPoints.join(" ")}
+                        fill="none"
+                        stroke="#38bdf8"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+
+                      {/* Cumulative Accuracy Line (Emerald) */}
+                      <polyline
+                        points={accPoints.join(" ")}
+                        fill="none"
+                        stroke="#34d399"
+                        strokeWidth="2"
+                        strokeDasharray="4 2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+
+                      {/* Individual Target Hit Dots */}
+                      {data.map((d, i) => {
+                        const x = getX(i);
+                        if (d.reactionTime) {
+                          const y = getYForRT(d.reactionTime);
+                          return (
+                            <circle
+                              key={i}
+                              cx={x}
+                              cy={y}
+                              r="2.5"
+                              fill={d.isCorrect ? "#00f0ff" : "#f43f5e"}
+                              stroke="#0f172a"
+                              strokeWidth="1"
+                            />
+                          );
+                        }
+                        return null;
+                      })}
+
+                      {/* Left Axis Labels (RT ms) */}
+                      <text x={padL - 4} y={padT + 4} fill="#64748b" fontSize="9" textAnchor="end" fontFamily="monospace">
+                        550ms
+                      </text>
+                      <text x={padL - 4} y={padT + innerH} fill="#64748b" fontSize="9" textAnchor="end" fontFamily="monospace">
+                        100ms
+                      </text>
+
+                      {/* Right Axis Labels (Accuracy %) */}
+                      <text x={padL + innerW + 4} y={padT + 4} fill="#10b981" fontSize="9" textAnchor="start" fontFamily="monospace">
+                        100%
+                      </text>
+                      <text x={padL + innerW + 4} y={padT + innerH} fill="#10b981" fontSize="9" textAnchor="start" fontFamily="monospace">
+                        0%
+                      </text>
+                    </svg>
+                  );
+                })()
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-xs text-slate-500 italic bg-slate-900/40 rounded-xl border border-slate-800/60">
+                  <span>Collecting live response telemetry...</span>
+                  <span className="text-[10px] text-slate-600 mt-1">Plotting moving average, dual SD bands, and accuracy</span>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Summary Bar */}
+            <div className="flex items-center justify-between text-xs text-slate-300 pt-2 border-t border-slate-800/80">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-slate-500 uppercase">Mean RT:</span>
+                <span className="font-bold text-cyan-400">{m.meanRT}ms</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-slate-500 uppercase">Median RT:</span>
+                <span className="font-bold text-indigo-300">{m.medianRT}ms</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-slate-500 uppercase">SD Multiplier:</span>
+                <span className="font-bold text-amber-400">±{m.sdRT}ms {m.cv > 0 ? `(${m.cv}x)` : ""}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] text-slate-500 uppercase">Accuracy:</span>
+                <span className="font-bold text-emerald-400">{m.accuracy}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Settings Section: Sound Effects */}
+          <div className="w-full bg-slate-950/80 border border-slate-800 px-4 py-2.5 rounded-2xl text-left my-1 font-mono backdrop-blur-md flex items-center justify-between">
+            <div>
+              <div className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <span>Audio Feedback Synthesizer</span>
+              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5">Target pop chimes and audio feedback</div>
+            </div>
+
+            <button
+              onClick={() => onToggleSound?.()}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                soundEnabled
+                  ? "bg-indigo-600/30 text-indigo-300 border-indigo-500/50 hover:bg-indigo-600/50"
+                  : "bg-slate-800/80 text-slate-400 border-slate-700 hover:bg-slate-700"
+              }`}
+            >
+              {soundEnabled ? "SOUND ON" : "MUTED"}
+            </button>
+          </div>
+
+          {/* Action Buttons: 1 line for all 3 buttons: Back, Resume, Skip */}
+          <div className="grid grid-cols-3 gap-2.5 w-full mt-3 font-mono text-xs">
+            {/* Back Button */}
+            <button
+              onClick={() => {
+                handleAction(() => {
+                  if (typeof window !== "undefined") {
+                    window.location.href = "/";
+                  }
+                });
+              }}
+              className="py-3 px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700/60 font-bold uppercase tracking-wider active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:text-white hover:border-slate-500"
+            >
+              <span>←</span>
+              <span>Back</span>
+            </button>
+
+            {/* Resume Button */}
+            <button
+              onClick={() => handleAction(() => onResume?.())}
+              className="py-3 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-wider shadow-lg hover:shadow-indigo-500/30 active:scale-95 transition-all cursor-pointer border border-indigo-400/40 flex items-center justify-center gap-1.5"
+            >
+              <span>▶</span>
+              <span>Resume</span>
+            </button>
+
+            {/* Skip Button */}
+            <button
+              onClick={() => handleAction(() => onSkipRound?.())}
+              className="py-3 px-3 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-amber-300 border border-amber-500/40 font-bold uppercase tracking-wider active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-1.5 hover:border-amber-400"
+            >
+              <span>Skip</span>
+              <span className="text-amber-400">⇥</span>
             </button>
           </div>
         </div>

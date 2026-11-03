@@ -3,8 +3,18 @@
 
 class AimlabsAudio {
   private ctx: AudioContext | null = null;
+  private soundEnabled: boolean = true;
+
+  setSoundEnabled(enabled: boolean) {
+    this.soundEnabled = enabled;
+  }
+
+  isSoundEnabled(): boolean {
+    return this.soundEnabled;
+  }
 
   private getContext(): AudioContext | null {
+    if (!this.soundEnabled) return null;
     if (typeof window === "undefined") return null;
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;

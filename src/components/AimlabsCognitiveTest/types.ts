@@ -26,6 +26,35 @@ export interface HitRecord {
   points: number;
 }
 
+export interface TargetTelemetryRecord {
+  trialIndex: number;
+  targetType: TargetType;
+  isGo: boolean;
+  userResponded: boolean;
+  isCorrect: boolean;
+  reactionTime: number | null; // in ms if responded, null if withheld
+  cumulativeAccuracy: number; // percentage (0 - 100)
+  movingAverageRT: number; // in ms
+  movingSdRT: number; // in ms
+  timestamp: number;
+}
+
+export interface LiveFocusMetrics {
+  reactionTimes: number[];
+  meanRT: number;
+  medianRT: number;
+  sdRT: number;
+  cv: number; // Coefficient of Variation (SD / Mean)
+  focusLevel: "Optimal Focus" | "Steady Focus" | "Variable Focus" | "Calibrating";
+  focusDescription: string;
+  boxesHit: number;
+  boxesMissed: number;
+  spheresHit: number;
+  spheresMissed: number;
+  accuracy: number;
+  telemetryTable: TargetTelemetryRecord[];
+}
+
 export interface RoundMetrics {
   round: CognitiveRoundType;
   roundName: string;
@@ -40,6 +69,7 @@ export interface RoundMetrics {
   meanReactionTime: number;
   score: number;
   accuracy: number; // percentage
+  telemetryTable: TargetTelemetryRecord[];
 }
 
 export type GameStatus =

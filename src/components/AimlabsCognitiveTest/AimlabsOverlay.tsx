@@ -25,13 +25,11 @@ export const AimlabsOverlay: React.FC<AimlabsOverlayProps> = ({
           recentFeedback={state.recentFeedback}
           isPaused={state.isPaused}
           onExit={onExit}
-          onSkipRound={() => aimlabsStore.skipRound()}
           onTogglePause={() => aimlabsStore.togglePause()}
-          onMenu={onExit}
         />
       )}
 
-      {/* Modals & Flow Screens (Ready, Intermission, Results) */}
+      {/* Modals & Flow Screens (Ready, Intermission, Results, Pause) */}
       {!state.isXR && (
         <AimlabsModals
           status={state.status}
@@ -39,10 +37,18 @@ export const AimlabsOverlay: React.FC<AimlabsOverlayProps> = ({
           currentRound={state.round}
           round1Metrics={state.round1Metrics}
           round2Metrics={state.round2Metrics}
+          isPaused={state.isPaused}
+          score={state.score}
+          accuracy={state.accuracy}
+          soundEnabled={state.soundEnabled}
+          liveFocusMetrics={state.liveFocusMetrics}
           onStartGame={() => aimlabsStore.startGame()}
           onStartRound2={() => aimlabsStore.startRound2()}
           onRestart={() => aimlabsStore.restart()}
           onExit={onExit}
+          onResume={() => aimlabsStore.togglePause()}
+          onSkipRound={() => aimlabsStore.skipRound()}
+          onToggleSound={() => aimlabsStore.toggleSound()}
         />
       )}
     </>

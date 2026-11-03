@@ -104,7 +104,7 @@ export function renderReadyModal(
   ctx.font = "16px monospace";
   ctx.fillStyle = "#94a3b8";
   ctx.textAlign = "center";
-  ctx.fillText("1 Target at a Time  ·  500ms flash + 700ms fixation  ·  Spacebar / Trigger", cx, 710);
+  ctx.fillText("1 Target at a Time  ·  500ms flash + 700ms fixation  ·  Stroop Conflict Rule", cx, 710);
 
   // Action Buttons
   const btnY = 760;

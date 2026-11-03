@@ -72,54 +72,6 @@ export function renderHUD(
   }
   hitAreas.push({ id: "toggle-pause", type: "toggle-pause", x: pauseX, y: topY, width: pauseW, height: pauseH });
 
-  // 3. Skip Button (renamed from Skip Round)
-  const skipW = 100;
-  const skipH = 50;
-  const skipX = pauseX + pauseW + 12;
-  const isSkipHover = state.hoverId === "skip-round";
-
-  ctx.fillStyle = isSkipHover ? "#1e293b" : "#0f172a";
-  ctx.strokeStyle = isSkipHover ? "#f59e0b" : "#334155";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.roundRect(skipX, topY, skipW, skipH, skipH / 2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.font = "bold 15px monospace";
-  ctx.fillStyle = isSkipHover ? "#fbbf24" : "#cbd5e1";
-  ctx.textAlign = "center";
-  ctx.fillText("Skip ⇥", skipX + skipW / 2, topY + 31);
-  hitAreas.push({ id: "skip-round", type: "skip-round", x: skipX, y: topY, width: skipW, height: skipH });
-
-  // 4. Menu Button [Hamburger SVG Icon only]
-  const menuW = 50;
-  const menuH = 50;
-  const menuX = skipX + skipW + 12;
-  const isMenuHover = state.hoverId === "menu";
-
-  ctx.fillStyle = isMenuHover ? "#334155" : "#0f172a";
-  ctx.strokeStyle = isMenuHover ? "#94a3b8" : "#334155";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.roundRect(menuX, topY, menuW, menuH, menuH / 2);
-  ctx.fill();
-  ctx.stroke();
-
-  // Draw 3 Hamburger lines
-  ctx.strokeStyle = isMenuHover ? "#ffffff" : "#cbd5e1";
-  ctx.lineWidth = 2.4;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(menuX + 15, topY + 18);
-  ctx.lineTo(menuX + 35, topY + 18);
-  ctx.moveTo(menuX + 15, topY + 25);
-  ctx.lineTo(menuX + 35, topY + 25);
-  ctx.moveTo(menuX + 15, topY + 32);
-  ctx.lineTo(menuX + 35, topY + 32);
-  ctx.stroke();
-  hitAreas.push({ id: "menu", type: "menu", x: menuX, y: topY, width: menuW, height: menuH });
-
   // Telemetry Readout (Top Right)
   const telW = 280;
   const telH = 50;

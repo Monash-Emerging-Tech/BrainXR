@@ -4,6 +4,7 @@ import { renderReadyModal } from "./renderReadyModal";
 import { renderIntermissionModal } from "./renderIntermissionModal";
 import { renderFinishedModal } from "./renderFinishedModal";
 import { renderHUD } from "./renderHUD";
+import { renderPauseModal } from "./renderPauseModal";
 
 export const CANVAS_WIDTH = 1600;
 export const CANVAS_HEIGHT = 900;
@@ -18,10 +19,15 @@ export function renderCanvas(
   // Clear Canvas
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+  const isPaused =
+    (state.status === "round1" || state.status === "round2") &&
+    Boolean(state.isPaused);
+
   const isModal =
     state.status === "ready" ||
     state.status === "intermission" ||
-    state.status === "finished";
+    state.status === "finished" ||
+    isPaused;
 
   if (isModal) {
     // Background Dark Translucent Glass Card
@@ -38,7 +44,9 @@ export function renderCanvas(
     renderDecorative(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, time);
   }
 
-  if (state.status === "ready") {
+  if (isPaused) {
+    renderPauseModal(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, state, hitAreas);
+  } else if (state.status === "ready") {
     renderReadyModal(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, state, hitAreas);
   } else if (state.status === "countdown") {
     renderCountdown(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, state.countdown);

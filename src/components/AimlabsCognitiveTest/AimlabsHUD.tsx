@@ -8,9 +8,7 @@ interface AimlabsHUDProps {
   recentFeedback: { text: string; color: string } | null;
   isPaused?: boolean;
   onExit: () => void;
-  onSkipRound?: () => void;
   onTogglePause?: () => void;
-  onMenu?: () => void;
 }
 
 export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
@@ -20,9 +18,7 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
   recentFeedback,
   isPaused = false,
   onExit,
-  onSkipRound,
   onTogglePause,
-  onMenu,
 }) => {
   const isRound1 = round === 1;
 
@@ -30,7 +26,7 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
     <div className="absolute inset-0 pointer-events-none select-none z-40 overflow-hidden font-sans">
       {/* Top Header Bar */}
       <div className="absolute top-5 left-6 right-6 flex items-center justify-between">
-        {/* Left Actions: Back, Pause, Skip, Menu */}
+        {/* Left Actions: Back, Pause */}
         <div className="flex items-center gap-2 pointer-events-auto">
           {/* Back Button */}
           <button
@@ -65,32 +61,6 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
               )}
             </button>
           )}
-
-          {/* Skip Button */}
-          {onSkipRound && (
-            <button
-              onClick={onSkipRound}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-amber-500/50 active:scale-95 cursor-pointer text-xs font-mono uppercase tracking-wider"
-              title="Skip"
-            >
-              <span>Skip</span>
-              <span className="text-amber-400">⇥</span>
-            </button>
-          )}
-
-          {/* Menu Button [Hamburger SVG] */}
-          <button
-            onClick={onMenu || onExit}
-            className="p-2.5 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500 active:scale-95 cursor-pointer flex items-center justify-center"
-            title="Menu"
-            aria-label="Menu"
-          >
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <line x1="4" y1="6" x2="20" y2="6" />
-              <line x1="4" y1="12" x2="20" y2="12" />
-              <line x1="4" y1="18" x2="20" y2="18" />
-            </svg>
-          </button>
         </div>
 
         {/* Compact Telemetry Readout (No trials completed/remaining) */}
