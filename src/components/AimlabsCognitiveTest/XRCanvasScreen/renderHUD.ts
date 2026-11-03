@@ -140,21 +140,31 @@ export function renderHUD(
   ctx.fillStyle = "#f43f5e";
   ctx.fillText(`${Math.round(m?.omissionRate ?? 0)}%`, telX + 458, topY + 30);
 
-  // Center Top Rule Badge Card (compacted to 480px to leave generous breathing room)
-  const ruleW = 480;
+  // Instant Feedback Badge (below center)
+  if (state.recentFeedback) {
+    ctx.font = "bold 32px monospace";
+    ctx.fillStyle = state.recentFeedback.color;
+    ctx.textAlign = "center";
+    ctx.fillText(state.recentFeedback.text, width / 2, height / 2 + 120);
+  }
+
+  // Bottom Rules Component (Box press / Sphere avoid moved to the bottom in XR!)
+  const ruleW = 540;
   const ruleH = 54;
   const ruleX = (width - ruleW) / 2;
+  const bottomY = height - 76;
 
-  ctx.fillStyle = "rgba(2, 6, 23, 0.88)";
-  ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
+  ctx.fillStyle = "rgba(2, 6, 23, 0.90)";
+  ctx.strokeStyle = "rgba(51, 65, 85, 0.75)";
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.roundRect(ruleX, topY - 2, ruleW, ruleH, ruleH / 2);
+  ctx.roundRect(ruleX, bottomY, ruleW, ruleH, ruleH / 2);
   ctx.fill();
   ctx.stroke();
 
-  const badgeW = (ruleW - 24) / 2; // 228px each
-  const badgeH = 46;
-  const badgeY = topY + 2;
+  const badgeW = (ruleW - 24) / 2; // 258px each
+  const badgeH = 44;
+  const badgeY = bottomY + 5;
 
   if (isRound1) {
     // Round 1 (CPT): Green = Press, Red = Avoid
@@ -165,33 +175,6 @@ export function renderHUD(
     drawMiniRuleBadge(ctx, ruleX + 8, badgeY, badgeW, badgeH, "Red Box", "PRESS", "#f43f5e", true);
     drawMiniRuleBadge(ctx, ruleX + 16 + badgeW, badgeY, badgeW, badgeH, "Green Sphere", "DO NOT PRESS", "#22c55e", false);
   }
-
-  // Instant Feedback Badge (below center)
-  if (state.recentFeedback) {
-    ctx.font = "bold 32px monospace";
-    ctx.fillStyle = state.recentFeedback.color;
-    ctx.textAlign = "center";
-    ctx.fillText(state.recentFeedback.text, width / 2, height / 2 + 140);
-  }
-
-  // Bottom Pause Quick Tip Badge in XR: safely padded inside canvas boundary so it never gets clipped
-  const hintW = 380;
-  const hintH = 42;
-  const hintX = (width - hintW) / 2;
-  const hintY = height - 56;
-
-  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-  ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.roundRect(hintX, hintY, hintW, hintH, hintH / 2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.font = "bold 15px monospace";
-  ctx.fillStyle = "#cbd5e1";
-  ctx.textAlign = "center";
-  ctx.fillText("Press [B] or [Y] to Pause", width / 2, hintY + 26);
 }
 
 function drawMiniRuleBadge(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, name: string, action: string, color: string, isPress: boolean) {
