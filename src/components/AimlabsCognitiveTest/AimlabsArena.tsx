@@ -286,130 +286,6 @@ function RoomSegment({
   );
 }
 
-interface EndWallProps {
-  position: [number, number, number];
-  rotation: [number, number, number];
-  width: number;
-  height: number;
-}
-
-/**
- * EndWall: A black wall with white tile cutouts matching the corridor's 16:9 grid.
- * Some tiles appear as glowing/crisp white tiles while inactive ones remain black void.
- */
-const EndWall: React.FC<EndWallProps> = ({ position, rotation, width, height }) => {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  const Nx = 16;
-  const Ny = 9;
-  const totalTiles = Nx * Ny;
-  const tileW = width / Nx;
-  const tileH = height / Ny;
-
-  const positions = useMemo(() => {
-    const vertices: number[] = [];
-    const halfW = width / 2;
-    const halfH = height / 2;
-
-    // Vertical grid lines
-    for (let i = 0; i <= Nx; i++) {
-      const x = -halfW + (i / Nx) * width;
-      vertices.push(x, -halfH, 0.01, x, halfH, 0.01);
-    }
-    // Horizontal grid lines
-    for (let j = 0; j <= Ny; j++) {
-      const y = -halfH + (j / Ny) * height;
-      vertices.push(-halfW, y, 0.01, halfW, y, 0.01);
-    }
-    return new Float32Array(vertices);
-  }, [width, height, Nx, Ny]);
-
-  useEffect(() => {
-    if (!meshRef.current) return;
-    const dummy = new THREE.Object3D();
-    const halfW = width / 2;
-    const halfH = height / 2;
-
-    let idx = 0;
-    for (let i = 0; i < Nx; i++) {
-      const x = -halfW + (i + 0.5) * tileW;
-      for (let j = 0; j < Ny; j++) {
-        const y = -halfH + (j + 0.5) * tileH;
-        dummy.position.set(x, y, 0.005);
-        dummy.scale.set(tileW, tileH, 1);
-        dummy.updateMatrix();
-        meshRef.current.setMatrixAt(idx, dummy.matrix);
-        meshRef.current.setColorAt(idx, getRandomTileColor());
-        idx++;
-      }
-    }
-    meshRef.current.instanceMatrix.needsUpdate = true;
-    if (meshRef.current.instanceColor) {
-      meshRef.current.instanceColor.needsUpdate = true;
-    }
-  }, [width, height, Nx, Ny, tileW, tileH]);
-
-  const timeSinceLastSwitch = useRef(0);
-  useFrame((_, delta) => {
-    timeSinceLastSwitch.current += delta;
-    if (timeSinceLastSwitch.current > 0.1) {
-      timeSinceLastSwitch.current = 0;
-      if (meshRef.current) {
-        const count = Math.max(1, Math.floor(totalTiles * 0.04));
-        for (let c = 0; c < count; c++) {
-          const idx = Math.floor(Math.random() * totalTiles);
-          meshRef.current.setColorAt(idx, getRandomTileColor());
-        }
-        if (meshRef.current.instanceColor) {
-          meshRef.current.instanceColor.needsUpdate = true;
-        }
-      }
-    }
-  });
-
-  return (
-    <group position={position} rotation={rotation}>
-      {/* 1. Solid Black Base Wall */}
-      <mesh raycast={() => null}>
-        <planeGeometry args={[width, height]} />
-        <meshBasicMaterial color="#000000" side={THREE.DoubleSide} />
-      </mesh>
-
-      {/* 2. White Cutout Tiles */}
-      <instancedMesh
-        ref={meshRef}
-        args={[undefined, undefined, totalTiles]}
-        raycast={() => null}
-      >
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial
-          side={THREE.DoubleSide}
-          transparent
-          opacity={0.85}
-          polygonOffset
-          polygonOffsetFactor={1}
-          polygonOffsetUnits={1}
-        />
-      </instancedMesh>
-
-      {/* 3. White Tile Boundary Grid Lines */}
-      <lineSegments raycast={() => null}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[positions, 3]}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial
-          color="#ffffff"
-          transparent
-          opacity={0.35}
-          linewidth={1}
-        />
-      </lineSegments>
-    </group>
-  );
-};
-
 interface AimlabsArenaProps {
   speed?: number;
   width?: number;
@@ -429,7 +305,7 @@ export const AimlabsArena: React.FC<AimlabsArenaProps> = ({
     const prevFog = scene.fog;
 
     scene.background = new THREE.Color("#000000");
-    scene.fog = new THREE.Fog("#000000", 20, 85);
+    scene.fog = new THREE.FogExp2("#000000", 0.024);
 
     return () => {
       scene.background = prevBackground;
@@ -481,12 +357,6 @@ export const AimlabsArena: React.FC<AimlabsArenaProps> = ({
         Extends 120m in length with seamless wrapping behind the viewer.
       */}
       <group position={[0, 1.6, 0]}>
-        {/* Front end wall (far horizon at z = -90m) */}
-        <EndWall position={[0, 0, -90]} rotation={[0, 0, 0]} width={width} height={height} />
-
-        {/* Back end wall (behind player at z = 30m) */}
-        <EndWall position={[0, 0, 30]} rotation={[0, Math.PI, 0]} width={width} height={height} />
-
         <RoomSegment initialZ={15} depthSegment={30} totalLength={120} speed={speed} width={width} height={height} />
         <RoomSegment initialZ={-15} depthSegment={30} totalLength={120} speed={speed} width={width} height={height} />
         <RoomSegment initialZ={-45} depthSegment={30} totalLength={120} speed={speed} width={width} height={height} />

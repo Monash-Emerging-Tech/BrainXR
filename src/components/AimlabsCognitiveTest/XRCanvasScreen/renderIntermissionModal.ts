@@ -123,6 +123,7 @@ export function renderIntermissionModal(
   ctx.fillStyle = "#000000";
   ctx.textAlign = "center";
   ctx.fillText(nextButtonLabel, cx, btnY + 44);
+  ctx.letterSpacing = "0px";
 
   hitAreas.push({ id: "start-round2", type: "start-round2", x: btnX, y: btnY, width: btnW, height: btnH });
 }

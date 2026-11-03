@@ -135,6 +135,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
   const handleEnterVR = useCallback(() => {
     if (showStory) cancelOnboarding();
     launchExperience({
+      preferVR: true,
       onStartXR: () => {
         aimlabsStore.launch(true);
       },
@@ -262,7 +263,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
   }
 
   return (
-    <div className={`w-full h-full flex flex-col md:flex-row relative ${theme === "dark" ? "bg-[#0b0f17] text-slate-200" : "bg-white text-slate-800"} transition-colors duration-700 overflow-hidden font-sans`}>
+    <div className={`w-full h-full flex flex-col md:flex-row relative ${aimlabsState.isActive ? "bg-black text-slate-200" : theme === "dark" ? "bg-[#0b0f17] text-slate-200" : "bg-white text-slate-800"} transition-colors duration-700 overflow-hidden font-sans`}>
       <BackgroundOscilloscopes
         historiesRef={engine.historiesRef}
         frameRef={engine.frameRef}

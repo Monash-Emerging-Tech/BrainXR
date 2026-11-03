@@ -510,4 +510,5 @@ function drawPauseRuleBadge(
   ctx.letterSpacing = "1px";
   ctx.fillStyle = isPress ? "#ffffff" : isEmerald ? "#6ee7b7" : "#fda4af";
   ctx.fillText(action, x + 40, y + 37);
+  ctx.letterSpacing = "0px";
 }

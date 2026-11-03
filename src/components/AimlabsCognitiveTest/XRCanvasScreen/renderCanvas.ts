@@ -16,6 +16,12 @@ export function renderCanvas(
 ): InteractiveHitArea[] {
   const hitAreas: InteractiveHitArea[] = [];
 
+  // Protect canvas context state across redraw cycles to prevent letterSpacing/transforms leaking
+  ctx.save();
+  ctx.letterSpacing = "0px";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+
   // Clear Canvas
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
@@ -58,6 +64,9 @@ export function renderCanvas(
     renderHUD(ctx, CANVAS_WIDTH, CANVAS_HEIGHT, state, hitAreas);
   }
 
+  // Restore context state so nothing leaks into next frame
+  ctx.restore();
+
   return hitAreas;
 }
 
@@ -67,6 +76,7 @@ function renderCountdown(
   height: number,
   count: number
 ) {
+  ctx.save();
   const cx = width / 2;
   const cy = height / 2;
 
@@ -84,4 +94,5 @@ function renderCountdown(
   ctx.letterSpacing = "4px";
   ctx.fillStyle = "#22d3ee";
   ctx.fillText("FIXATE CENTER CROSS", cx, cy + 105);
+  ctx.restore();
 }

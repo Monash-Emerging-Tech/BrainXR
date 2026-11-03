@@ -287,9 +287,9 @@ export function renderNodeDetailsCanvas(
 
   // -------------------------------------------------------------------------
   // 2. Selected Node Telemetry Header Pill (Y: 76)
-  // Matching the HUD format from renderHUD.ts
+  // Dynamically measured layout to guarantee zero overlap even with long names
   // -------------------------------------------------------------------------
-  const headerW = 740;
+  const headerW = 760;
   const headerH = 52;
   const headerX = centerX - headerW / 2;
   const headerY = 76;
@@ -311,38 +311,46 @@ export function renderNodeDetailsCanvas(
   ctx.font = "bold 13px monospace";
   ctx.fillStyle = accentColor;
   ctx.textAlign = "left";
-  ctx.fillText(`${region.toUpperCase()}`, headerX + 38, headerY + headerH / 2);
+  const regionStr = region.toUpperCase();
+  ctx.fillText(regionStr, headerX + 38, headerY + headerH / 2);
+  const regionW = ctx.measureText(regionStr).width;
 
-  // Divider 1
+  // Divider 1 (dynamically spaced after region)
+  const div1X = headerX + 38 + regionW + 12;
   ctx.font = "13px monospace";
   ctx.fillStyle = "#475569";
-  ctx.fillText("|", headerX + 138, headerY + headerH / 2);
+  ctx.fillText("|", div1X, headerY + headerH / 2);
 
   // Node Name + Full Name
+  const nodeX = div1X + 14;
   ctx.font = "900 18px monospace";
   ctx.fillStyle = "#ffffff";
-  ctx.fillText(channel, headerX + 154, headerY + headerH / 2);
-
+  ctx.fillText(channel, nodeX, headerY + headerH / 2);
   const channelWidth = ctx.measureText(channel).width;
+
   ctx.font = "500 13px sans-serif";
   ctx.fillStyle = "#94a3b8";
   const fullNameStr = meta?.fullName ? `(${meta.fullName})` : "";
-  ctx.fillText(fullNameStr, headerX + 154 + channelWidth + 10, headerY + headerH / 2);
+  ctx.fillText(fullNameStr, nodeX + channelWidth + 8, headerY + headerH / 2);
 
-  // Divider 2
-  ctx.font = "13px monospace";
-  ctx.fillStyle = "#475569";
-  ctx.fillText("|", headerX + 524, headerY + headerH / 2);
-
-  // Live Voltage
-  ctx.font = "12px monospace";
-  ctx.fillStyle = "#94a3b8";
-  ctx.fillText("RAW", headerX + 540, headerY + headerH / 2);
-
+  // Right-anchored Live Voltage and RAW readout
+  const voltStr = `${rawValue >= 0 ? `+${rawValue.toFixed(2)}` : rawValue.toFixed(2)} µV`;
   ctx.font = "bold 16px monospace";
   ctx.fillStyle = "#10b981";
-  const voltStr = `${rawValue >= 0 ? `+${rawValue.toFixed(2)}` : rawValue.toFixed(2)} µV`;
-  ctx.fillText(voltStr, headerX + 580, headerY + headerH / 2);
+  ctx.textAlign = "right";
+  ctx.fillText(voltStr, headerX + headerW - 24, headerY + headerH / 2);
+  const voltW = ctx.measureText(voltStr).width;
+
+  ctx.font = "12px monospace";
+  ctx.fillStyle = "#94a3b8";
+  const rawX = headerX + headerW - 24 - voltW - 12;
+  ctx.fillText("RAW", rawX, headerY + headerH / 2);
+  const rawW = ctx.measureText("RAW").width;
+
+  // Divider 2 (anchored cleanly before RAW)
+  ctx.font = "13px monospace";
+  ctx.fillStyle = "#475569";
+  ctx.fillText("|", rawX - rawW - 12, headerY + headerH / 2);
 
   // -------------------------------------------------------------------------
   // 3. Left & Right Navigation Pill Buttons (Y: 370)
@@ -403,19 +411,39 @@ export function renderNodeDetailsCanvas(
   });
 
   // -------------------------------------------------------------------------
-  // 4. Lower Insight Pill / Rounded Rect Container (Y: 570)
-  // Clear of the head bottom and leaving generous room for actions
+  // 4. Lower Insight Pill / Rounded Rect Container (Y: 556)
+  // Dynamic height based on measured text wrapping so lines never overflow
   // -------------------------------------------------------------------------
   const insightW = 760;
-  const insightH = 104;
   const insightX = centerX - insightW / 2;
-  const insightY = 570;
+  const insightY = 556;
+
+  // Pre-calculate line wrapping for insight description
+  const words = insight?.description ? insight.description.split(" ") : [];
+  const descLines: string[] = [];
+  let curLine = "";
+  ctx.font = "13.5px sans-serif";
+  const maxDescWidth = insightW - 48;
+
+  for (let n = 0; n < words.length; n++) {
+    const testLine = curLine ? `${curLine} ${words[n]}` : words[n];
+    if (ctx.measureText(testLine).width > maxDescWidth && curLine) {
+      descLines.push(curLine);
+      curLine = words[n];
+    } else {
+      curLine = testLine;
+    }
+  }
+  if (curLine) descLines.push(curLine);
+
+  // Dynamically size container height so 3-line descriptions never overflow or touch borders
+  const insightH = descLines.length >= 3 ? 116 : 96;
 
   ctx.fillStyle = "rgba(15, 23, 42, 0.90)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.75)";
   ctx.lineWidth = 1.5;
   ctx.beginPath();
-  ctx.roundRect(insightX, insightY, insightW, insightH, 20);
+  ctx.roundRect(insightX, insightY, insightW, insightH, 18);
   ctx.fill();
   ctx.stroke();
 
@@ -424,47 +452,37 @@ export function renderNodeDetailsCanvas(
     ctx.textAlign = "left";
     ctx.font = "bold 12px monospace";
     ctx.fillStyle = "#94a3b8";
-    ctx.fillText("MEASURES", insightX + 24, insightY + 28);
+    ctx.fillText("MEASURES", insightX + 24, insightY + 24);
 
     ctx.fillStyle = "#475569";
-    ctx.fillText("|", insightX + 96, insightY + 28);
+    ctx.fillText("|", insightX + 96, insightY + 24);
 
     ctx.font = "bold 13px sans-serif";
     ctx.fillStyle = accentColor;
-    ctx.fillText(insight.metricName.toUpperCase(), insightX + 112, insightY + 28);
+    ctx.fillText(insight.metricName.toUpperCase(), insightX + 112, insightY + 24);
 
-    // Insight description text inside pill
-    ctx.font = "14px sans-serif";
+    // Insight description text lines inside pill with comfortable line-height
+    ctx.font = "13.5px sans-serif";
     ctx.fillStyle = "#cbd5e1";
-
-    const words = insight.description.split(" ");
-    let line = "";
-    let descY = insightY + 58;
-    const maxDescWidth = insightW - 48;
-
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + words[n] + " ";
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxDescWidth && n > 0) {
-        ctx.fillText(line, insightX + 24, descY);
-        line = words[n] + " ";
-        descY += 22;
-      } else {
-        line = testLine;
-      }
-    }
-    ctx.fillText(line, insightX + 24, descY);
+    const startLineY = insightY + 50;
+    const lineSpacing = descLines.length >= 3 ? 20 : 22;
+    descLines.forEach((l, idx) => {
+      ctx.fillText(l, insightX + 24, startLineY + idx * lineSpacing);
+    });
   }
 
   // -------------------------------------------------------------------------
   // 5. Conditional Simulated Recording Pill during Inspection Mode
+  // Dynamically positioned below the insight container with guaranteed margin
   // -------------------------------------------------------------------------
+  const insightBottom = insightY + insightH;
+  const recH = 36;
+  const recY = insightBottom + 12;
+
   if (showSimulatedRecording) {
     const trialNum = String((frame.trialIndex ?? 0) + 1).padStart(2, "0");
     const recW = 540;
-    const recH = 38;
     const recX = centerX - recW / 2;
-    const recY = 684;
 
     ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
     ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
@@ -495,9 +513,10 @@ export function renderNodeDetailsCanvas(
   // -------------------------------------------------------------------------
   // 6. Bottom Action Pills
   // Two discrete pill buttons: [ ✕ Deselect Node ] and [ Track Your Focus ✦ ]
+  // Dynamically offset from previous element to prevent collision
   // -------------------------------------------------------------------------
-  const actionY = showSimulatedRecording ? 732 : 696;
-  const actionH = 50;
+  const actionY = showSimulatedRecording ? recY + recH + 12 : insightBottom + 16;
+  const actionH = 48;
 
   // Deselect Node Pill Button
   const closeW = 200;

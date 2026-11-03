@@ -145,6 +145,7 @@ export function renderReadyModal(
   ctx.fillStyle = "#000000";
   ctx.textAlign = "center";
   ctx.fillText("READY TO START →", startX + startW / 2, btnY + 42);
+  ctx.letterSpacing = "0px";
   hitAreas.push({ id: "start-game", type: "start-game", x: startX, y: btnY, width: startW, height: btnH });
 }
 

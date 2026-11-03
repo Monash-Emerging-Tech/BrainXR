@@ -59,6 +59,7 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
     const texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
     texture.colorSpace = THREE.SRGBColorSpace;
     textureRef.current = texture;
 
