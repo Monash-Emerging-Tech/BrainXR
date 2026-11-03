@@ -4,6 +4,7 @@ import { useFrame } from "@react-three/fiber";
 import type { ThreeEvent } from "@react-three/fiber";
 import type { ElectrodeName, Frame } from "../../../utils/signalSource";
 import { triggerXRHaptic } from "../../../utils/xrHaptics";
+import { aimlabsStore } from "../../AimlabsCognitiveTest/aimlabsStore";
 import {
   renderNodeDetailsCanvas,
   PANEL_WIDTH,
@@ -24,7 +25,7 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
   channel,
   frameRef,
   onSelectChannel,
-  position = [0, 0.72, -0.95],
+  position = [0, 0.76, -0.95],
   headPositionRef,
 }) => {
   const hitAreasRef = useRef<NodePanelHitArea[]>([]);
@@ -34,7 +35,7 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
   const groupRef = useRef<THREE.Group>(null);
   const lastUpdateRef = useRef(0);
 
-  // Initialize off-screen baking canvas
+  // Initialize high-DPI off-screen baking canvas
   useEffect(() => {
     const canvas = document.createElement("canvas");
     canvas.width = PANEL_WIDTH;
@@ -60,7 +61,7 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
     if (!canvas || !texture) return;
 
     const now = performance.now();
-    // Re-draw when voltage updates or at least 15fps
+    // Render on frame update or at least 15fps
     if (now - lastUpdateRef.current > 66) {
       lastUpdateRef.current = now;
       const ctx = canvas.getContext("2d");
@@ -79,7 +80,7 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
     // Smoothly anchor the panel relative to the floating head position
     if (headPositionRef?.current && groupRef.current) {
       const headPos = headPositionRef.current;
-      groupRef.current.position.set(headPos.x, headPos.y - 0.42, headPos.z - 0.05);
+      groupRef.current.position.set(headPos.x, headPos.y - 0.40, headPos.z - 0.05);
     }
   });
 
@@ -120,10 +121,9 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
 
     triggerXRHaptic(e, 0.5, 25);
 
+    // Launch Direction of Focus seamlessly inside VR itself!
     if (match.id === "direction") {
-      if (typeof window !== "undefined") {
-        window.location.href = "/direction";
-      }
+      aimlabsStore.launch(true);
       return;
     }
 
@@ -144,7 +144,7 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
     }
   };
 
-  const width = 0.96;
+  const width = 0.94;
   const height = (width / PANEL_WIDTH) * PANEL_HEIGHT;
 
   return (
@@ -173,4 +173,3 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
     </group>
   );
 };
-
