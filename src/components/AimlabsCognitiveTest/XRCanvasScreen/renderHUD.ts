@@ -72,88 +72,98 @@ export function renderHUD(
   }
   hitAreas.push({ id: "toggle-pause", type: "toggle-pause", x: pauseX, y: topY, width: pauseW, height: pauseH });
 
-  // Telemetry Readout (Top Right: Strictly Mean, Accuracy, Precision, Omission Rate)
+  // Telemetry Readout (Top Right: Mean RT, Accuracy, Precision, Omission Rate)
   const m = state.liveFocusMetrics;
-  const telW = 510;
+  const telW = 540;
   const telH = 50;
   const telX = width - telW - 40;
 
-  ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+  ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
+  ctx.lineWidth = 1.5;
   ctx.beginPath();
   ctx.roundRect(telX, topY, telW, telH, telH / 2);
   ctx.fill();
   ctx.stroke();
 
-  // 1. Mean Reaction Time
-  ctx.font = "12px monospace";
+  // 4 Evenly spaced segments across telW (540px):
+  // Segment width = 135px each.
+  // 1. Mean Reaction Time: [0 .. 135]
+  ctx.font = "11.5px monospace";
   ctx.fillStyle = "#94a3b8";
   ctx.textAlign = "left";
-  ctx.fillText("MEAN", telX + 24, topY + 30);
+  ctx.fillText("MEAN", telX + 18, topY + 30);
 
-  ctx.font = "bold 15px monospace";
+  ctx.font = "bold 14.5px monospace";
   ctx.fillStyle = "#22d3ee";
-  ctx.fillText(`${m && m.meanRT > 0 ? `${m.meanRT}ms` : `${state.score}ms`}`, telX + 64, topY + 30);
+  ctx.fillText(`${m && m.meanRT > 0 ? `${m.meanRT}ms` : `${state.score}ms`}`, telX + 56, topY + 30);
 
-  // Divider 1
+  // Divider 1 (x: 135)
   ctx.font = "12px monospace";
   ctx.fillStyle = "#334155";
-  ctx.fillText("|", telX + 136, topY + 30);
+  ctx.fillText("|", telX + 135, topY + 30);
 
-  // 2. Accuracy
+  // 2. Accuracy: [135 .. 270]
+  ctx.font = "11.5px monospace";
   ctx.fillStyle = "#94a3b8";
-  ctx.fillText("ACC", telX + 152, topY + 30);
+  ctx.fillText("ACC", telX + 148, topY + 30);
 
-  ctx.font = "bold 15px monospace";
+  ctx.font = "bold 14.5px monospace";
   ctx.fillStyle = "#34d399";
-  ctx.fillText(`${Math.round(state.accuracy)}%`, telX + 184, topY + 30);
+  ctx.fillText(`${Math.round(state.accuracy)}%`, telX + 180, topY + 30);
 
-  // Divider 2
+  // Divider 2 (x: 270)
   ctx.font = "12px monospace";
   ctx.fillStyle = "#334155";
-  ctx.fillText("|", telX + 244, topY + 30);
+  ctx.fillText("|", telX + 270, topY + 30);
 
-  // 3. Precision
+  // 3. Precision: [270 .. 405]
+  ctx.font = "11.5px monospace";
   ctx.fillStyle = "#94a3b8";
-  ctx.fillText("PREC", telX + 260, topY + 30);
+  ctx.fillText("PREC", telX + 283, topY + 30);
 
-  ctx.font = "bold 15px monospace";
+  ctx.font = "bold 14.5px monospace";
   ctx.fillStyle = "#a5b4fc";
-  ctx.fillText(`${Math.round(m?.precision ?? 100)}%`, telX + 300, topY + 30);
+  ctx.fillText(`${Math.round(m?.precision ?? 100)}%`, telX + 321, topY + 30);
 
-  // Divider 3
+  // Divider 3 (x: 405)
   ctx.font = "12px monospace";
   ctx.fillStyle = "#334155";
-  ctx.fillText("|", telX + 364, topY + 30);
+  ctx.fillText("|", telX + 405, topY + 30);
 
-  // 4. Omission Rate
+  // 4. Omission Rate: [405 .. 540]
+  ctx.font = "11.5px monospace";
   ctx.fillStyle = "#94a3b8";
-  ctx.fillText("OMIT", telX + 380, topY + 30);
+  ctx.fillText("OMIT", telX + 418, topY + 30);
 
-  ctx.font = "bold 15px monospace";
+  ctx.font = "bold 14.5px monospace";
   ctx.fillStyle = "#f43f5e";
-  ctx.fillText(`${Math.round(m?.omissionRate ?? 0)}%`, telX + 422, topY + 30);
+  ctx.fillText(`${Math.round(m?.omissionRate ?? 0)}%`, telX + 458, topY + 30);
 
-  // Center Top Rule Badge Card
-  const ruleW = 620;
-  const ruleH = 58;
+  // Center Top Rule Badge Card (compacted to 480px to leave generous breathing room)
+  const ruleW = 480;
+  const ruleH = 54;
   const ruleX = (width - ruleW) / 2;
 
   ctx.fillStyle = "rgba(2, 6, 23, 0.88)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
   ctx.beginPath();
-  ctx.roundRect(ruleX, topY - 4, ruleW, ruleH, ruleH / 2);
+  ctx.roundRect(ruleX, topY - 2, ruleW, ruleH, ruleH / 2);
   ctx.fill();
   ctx.stroke();
 
+  const badgeW = (ruleW - 24) / 2; // 228px each
+  const badgeH = 46;
+  const badgeY = topY + 2;
+
   if (isRound1) {
     // Round 1 (CPT): Green = Press, Red = Avoid
-    drawMiniRuleBadge(ctx, ruleX + 10, topY, 290, 50, "Green Sphere", "PRESS", "#22c55e", true);
-    drawMiniRuleBadge(ctx, ruleX + 320, topY, 290, 50, "Red Box", "DO NOT PRESS", "#f43f5e", false);
+    drawMiniRuleBadge(ctx, ruleX + 8, badgeY, badgeW, badgeH, "Green Sphere", "PRESS", "#22c55e", true);
+    drawMiniRuleBadge(ctx, ruleX + 16 + badgeW, badgeY, badgeW, badgeH, "Red Box", "DO NOT PRESS", "#f43f5e", false);
   } else {
     // Round 2 (SART): Red = Press, Green = Avoid
-    drawMiniRuleBadge(ctx, ruleX + 10, topY, 290, 50, "Red Box", "PRESS", "#f43f5e", true);
-    drawMiniRuleBadge(ctx, ruleX + 320, topY, 290, 50, "Green Sphere", "DO NOT PRESS", "#22c55e", false);
+    drawMiniRuleBadge(ctx, ruleX + 8, badgeY, badgeW, badgeH, "Red Box", "PRESS", "#f43f5e", true);
+    drawMiniRuleBadge(ctx, ruleX + 16 + badgeW, badgeY, badgeW, badgeH, "Green Sphere", "DO NOT PRESS", "#22c55e", false);
   }
 
   // Instant Feedback Badge (below center)
