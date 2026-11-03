@@ -77,10 +77,10 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
       }
     }
 
-    // Smoothly anchor the panel relative to the floating head position
+    // Smoothly anchor the floating pills centered around the physical head
     if (headPositionRef?.current && groupRef.current) {
       const headPos = headPositionRef.current;
-      groupRef.current.position.set(headPos.x, headPos.y - 0.40, headPos.z - 0.05);
+      groupRef.current.position.set(headPos.x, headPos.y - 0.05, headPos.z - 0.02);
     }
   });
 
@@ -144,14 +144,13 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
     }
   };
 
-  const width = 0.94;
+  const width = 1.1;
   const height = (width / PANEL_WIDTH) * PANEL_HEIGHT;
 
   return (
     <group
       ref={groupRef}
       position={position}
-      rotation={[-Math.PI / 10, 0, 0]}
       name="xr-node-details-panel"
     >
       <mesh

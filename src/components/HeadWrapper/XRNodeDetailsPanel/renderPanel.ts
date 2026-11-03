@@ -12,8 +12,8 @@ export interface NodePanelHitArea {
   height: number;
 }
 
-export const PANEL_WIDTH = 1024;
-export const PANEL_HEIGHT = 460;
+export const PANEL_WIDTH = 1100;
+export const PANEL_HEIGHT = 650;
 
 function drawRoundedRect(
   ctx: CanvasRenderingContext2D,
@@ -64,114 +64,110 @@ export function renderNodeDetailsCanvas(
   hitAreas: NodePanelHitArea[]
 ): void {
   hitAreas.length = 0;
+  // Clear full canvas so there is NO big bounding card - only floating pills!
   ctx.clearRect(0, 0, PANEL_WIDTH, PANEL_HEIGHT);
 
-  // Background glass slate - identical to the web app's deep obsidian glass style
-  drawRoundedRect(ctx, 16, 16, PANEL_WIDTH - 32, PANEL_HEIGHT - 32, 28);
-  ctx.fillStyle = "rgba(11, 15, 23, 0.90)";
-  ctx.fill();
-  ctx.lineWidth = 1.5;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
-  ctx.stroke();
+  const centerX = PANEL_WIDTH / 2;
 
   // =========================================================================
-  // STATE A: NO ELECTRODE SELECTED -> EXACT WEB GUIDANCE & SIGNIFIERS
+  // STATE A: IDLE (NO ELECTRODE SELECTED)
+  // Balanced floating pills framing the headset:
+  // 1. Top HUD pill: [ PINCH NODE TO INSPECT | HOLD GRIP TO MOVE ]
+  // 2. Middle badge pill: [ SIMULATED DEMO · PARTICIPANT #7 · VIDEO-01.M4A ]
+  // 3. Bottom primary action pill: [ Measure Your Focus ✦ ]
   // =========================================================================
   if (!channel) {
-    ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // 1. Top Subheading with the exact CSS font-mono tracking-[0.22em] gradient text
-    ctx.font = "900 13px monospace";
-    ctx.letterSpacing = "3px";
-    ctx.fillStyle = createNodeGradient(ctx, 200, 56, 824, 56);
-    ctx.fillText("PINCH AND CLICK NODES TO EXPLORE WHAT EEG HEADSETS DO", PANEL_WIDTH / 2, 56);
-    ctx.letterSpacing = "0px";
+    // 1. Top HUD Guidance Pill (Y: 28)
+    const topPillW = 560;
+    const topPillH = 50;
+    const topPillX = centerX - topPillW / 2;
+    const topPillY = 28;
 
-    // 2. Authentic Distressed "SIMULATED DEMO" Rubber Stamp Badge
-    ctx.save();
-    ctx.translate(PANEL_WIDTH / 2, 134);
-    ctx.rotate((-4.5 * Math.PI) / 180); // Exact -4.5deg angle from .stamp-demo-badge
-
-    const stampW = 320;
-    const stampH = 54;
-    const stampX = -stampW / 2;
-    const stampY = -stampH / 2;
-
-    const stampGrad = createNodeGradient(ctx, stampX, stampY, stampX + stampW, stampY + stampH);
-
-    drawRoundedRect(ctx, stampX, stampY, stampW, stampH, 10);
-    ctx.lineWidth = 3.5;
-    ctx.strokeStyle = stampGrad;
+    ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
+    ctx.strokeStyle = "rgba(51, 65, 85, 0.75)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(topPillX, topPillY, topPillW, topPillH, topPillH / 2);
+    ctx.fill();
     ctx.stroke();
 
-    ctx.font = "900 28px sans-serif";
-    ctx.letterSpacing = "4px";
-    ctx.fillStyle = stampGrad;
-    ctx.fillText("SIMULATED DEMO", 0, 0);
-    ctx.restore();
+    // Trigger segment
+    ctx.font = "bold 12px monospace";
+    ctx.fillStyle = "#38bdf8";
+    ctx.textAlign = "left";
+    ctx.fillText("PINCH", topPillX + 24, topPillY + topPillH / 2);
 
-    // 3. EEG Recording context sub-line matching .font-offbit tracking-wide text
-    ctx.font = "17px 'OffBit', monospace";
+    ctx.font = "13px monospace";
     ctx.fillStyle = "#cbd5e1";
+    ctx.fillText("Node to inspect", topPillX + 74, topPillY + topPillH / 2);
+
+    // Divider
+    ctx.fillStyle = "#475569";
+    ctx.fillText("|", topPillX + 226, topPillY + topPillH / 2);
+
+    // Grip segment
+    ctx.font = "bold 12px monospace";
+    ctx.fillStyle = "#a855f7";
+    ctx.fillText("HOLD GRIP", topPillX + 248, topPillY + topPillH / 2);
+
+    ctx.font = "13px monospace";
+    ctx.fillStyle = "#cbd5e1";
+    ctx.fillText("To reposition", topPillX + 338, topPillY + topPillH / 2);
+
+    // 2. Bottom Context Pill (Y: 510)
     const trialNum = String((frame.trialIndex ?? 0) + 1).padStart(2, "0");
-    ctx.fillText(
-      `EEG recording for participant #7 listening to video-${trialNum}.m4a`,
-      PANEL_WIDTH / 2,
-      216
-    );
+    const infoPillW = 520;
+    const infoPillH = 42;
+    const infoPillX = centerX - infoPillW / 2;
+    const infoPillY = 510;
 
-    // 4. Subtle 3-Pill Spatial Interaction Guide (Matching web's sleek rounded-full pills)
-    const guideY = 270;
-    const pillH = 40;
-    const pillW = 260;
-    const gap = 20;
-    const startX = (PANEL_WIDTH - (pillW * 3 + gap * 2)) / 2;
+    ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
+    ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(infoPillX, infoPillY, infoPillW, infoPillH, infoPillH / 2);
+    ctx.fill();
+    ctx.stroke();
 
-    const guides = [
-      { tag: "TRIGGER", label: "Pinch node to inspect" },
-      { tag: "GRIP", label: "Hold grip to reposition" },
-      { tag: "PORTAL", label: "Direction of Focus" },
-    ];
+    // Small glowing dot
+    ctx.beginPath();
+    ctx.arc(infoPillX + 22, infoPillY + infoPillH / 2, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "#10b981";
+    ctx.fill();
 
-    guides.forEach((g, i) => {
-      const gx = startX + i * (pillW + gap);
-      drawRoundedRect(ctx, gx, guideY, pillW, pillH, 20);
-      ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-      ctx.fill();
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
-      ctx.stroke();
+    ctx.font = "bold 12px monospace";
+    ctx.fillStyle = "#94a3b8";
+    ctx.textAlign = "left";
+    ctx.fillText("RECORDING", infoPillX + 36, infoPillY + infoPillH / 2);
 
-      ctx.font = "bold 11px monospace";
-      ctx.fillStyle = "#38bdf8";
-      ctx.textAlign = "left";
-      ctx.fillText(g.tag, gx + 18, guideY + pillH / 2);
+    ctx.fillStyle = "#475569";
+    ctx.fillText("|", infoPillX + 122, infoPillY + infoPillH / 2);
 
-      ctx.font = "13px sans-serif";
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillText(g.label, gx + 78, guideY + pillH / 2);
-    });
+    ctx.font = "13px monospace";
+    ctx.fillStyle = "#e2e8f0";
+    ctx.fillText(`Participant #7 · video-${trialNum}.m4a`, infoPillX + 138, infoPillY + infoPillH / 2);
 
-    // 5. Direction of Focus Primary Button matching web design
-    // Indigo pill with SVG icon aesthetic: "Launch Experience"
-    const btnW = 340;
-    const btnH = 50;
-    const btnX = PANEL_WIDTH / 2 - btnW / 2;
-    const btnY = 360;
+    // 3. Bottom Primary CTA Pill: [ Measure Your Focus ✦ ] (Y: 574)
+    const btnW = 320;
+    const btnH = 52;
+    const btnX = centerX - btnW / 2;
+    const btnY = 574;
     const isHovered = hoverId === "direction";
 
-    drawRoundedRect(ctx, btnX, btnY, btnW, btnH, 25);
-    ctx.fillStyle = isHovered ? "#4f46e5" : "#4338ca";
-    ctx.fill();
+    ctx.fillStyle = isHovered ? "#4f46e5" : "rgba(30, 27, 75, 0.92)";
+    ctx.strokeStyle = isHovered ? "#c7d2fe" : "#6366f1";
     ctx.lineWidth = 1.5;
-    ctx.strokeStyle = isHovered ? "#a5b4fc" : "rgba(165, 180, 252, 0.45)";
+    ctx.beginPath();
+    ctx.roundRect(btnX, btnY, btnW, btnH, btnH / 2);
+    ctx.fill();
     ctx.stroke();
 
     ctx.font = "bold 16px sans-serif";
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
-    ctx.fillText("Launch Experience  ✦", PANEL_WIDTH / 2, btnY + btnH / 2);
+    ctx.fillText("Measure Your Focus  ✦", btnX + btnW / 2, btnY + btnH / 2);
 
     hitAreas.push({
       id: "direction",
@@ -185,7 +181,13 @@ export function renderNodeDetailsCanvas(
   }
 
   // =========================================================================
-  // STATE B: ELECTRODE SELECTED -> EXACT 1:1 NODE DETAILS BANNER DESIGN
+  // STATE B: ELECTRODE SELECTED
+  // Spatially balanced pills surrounding the headset:
+  // 1. Top HUD Pill: [ REGION CORTEX | NODE NAME (FULL NAME) | RAW: +X.XX µV ]
+  // 2. Left Circular Navigation Pill: [ ← PREV ]
+  // 3. Right Circular Navigation Pill: [ NEXT → ]
+  // 4. Lower Insight Pill / Rect: [ MEASURES: COGNITIVE METRIC | Insight description text ]
+  // 5. Bottom Action Pills: [ ✕ Deselect Node ] and [ Measure Your Focus ✦ ]
   // =========================================================================
   const meta = getElectrodeMetadata(channel);
   const insight = NODE_INSIGHTS[channel];
@@ -204,212 +206,237 @@ export function renderNodeDetailsCanvas(
   const prevColor = REGION_COLOR[prevMeta?.region ?? "Frontal"] ?? "#6366f1";
   const nextColor = REGION_COLOR[nextMeta?.region ?? "Frontal"] ?? "#6366f1";
 
-  // 1. Previous Node Button (Identical to web: Big Circular button with previous region color)
-  const prevBtnX = 66;
-  const prevBtnY = 96;
-  const btnRadius = 26;
+  ctx.textBaseline = "middle";
+
+  // -------------------------------------------------------------------------
+  // 1. Top Telemetry Header Pill (Floating above the headset at Y: 24)
+  // Matching the HUD format from renderHUD.ts
+  // -------------------------------------------------------------------------
+  const headerW = 720;
+  const headerH = 54;
+  const headerX = centerX - headerW / 2;
+  const headerY = 24;
+
+  ctx.fillStyle = "rgba(15, 23, 42, 0.90)";
+  ctx.strokeStyle = "rgba(51, 65, 85, 0.75)";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(headerX, headerY, headerW, headerH, headerH / 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // Region Badge indicator inside pill
+  ctx.beginPath();
+  ctx.arc(headerX + 24, headerY + headerH / 2, 5, 0, Math.PI * 2);
+  ctx.fillStyle = accentColor;
+  ctx.fill();
+
+  ctx.font = "bold 13px monospace";
+  ctx.fillStyle = accentColor;
+  ctx.textAlign = "left";
+  ctx.fillText(`${region.toUpperCase()}`, headerX + 38, headerY + headerH / 2);
+
+  // Divider 1
+  ctx.font = "13px monospace";
+  ctx.fillStyle = "#475569";
+  ctx.fillText("|", headerX + 138, headerY + headerH / 2);
+
+  // Node Name + Full Name
+  ctx.font = "900 18px monospace";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(channel, headerX + 154, headerY + headerH / 2);
+
+  const channelWidth = ctx.measureText(channel).width;
+  ctx.font = "500 13px sans-serif";
+  ctx.fillStyle = "#94a3b8";
+  const fullNameStr = meta?.fullName ? `(${meta.fullName})` : "";
+  ctx.fillText(fullNameStr, headerX + 154 + channelWidth + 10, headerY + headerH / 2);
+
+  // Divider 2
+  ctx.font = "13px monospace";
+  ctx.fillStyle = "#475569";
+  ctx.fillText("|", headerX + 510, headerY + headerH / 2);
+
+  // Live Voltage
+  ctx.font = "12px monospace";
+  ctx.fillStyle = "#94a3b8";
+  ctx.fillText("RAW", headerX + 526, headerY + headerH / 2);
+
+  ctx.font = "bold 16px monospace";
+  ctx.fillStyle = "#10b981";
+  const voltStr = `${rawValue >= 0 ? `+${rawValue.toFixed(2)}` : rawValue.toFixed(2)} µV`;
+  ctx.fillText(voltStr, headerX + 566, headerY + headerH / 2);
+
+  // -------------------------------------------------------------------------
+  // 2. Left & Right Navigation Pill/Circle Buttons (Floating at sides, Y: 290)
+  // Perfectly framing the physical head
+  // -------------------------------------------------------------------------
+  const sideY = 290;
+  const sideW = 90;
+  const sideH = 50;
+
+  // Left Side Pill [ ← PREV ]
+  const leftX = 30;
   const isPrevHovered = hoverId === "prev";
 
-  ctx.beginPath();
-  ctx.arc(prevBtnX, prevBtnY, isPrevHovered ? btnRadius + 3 : btnRadius, 0, Math.PI * 2);
-  ctx.fillStyle = prevColor;
-  ctx.fill();
+  ctx.fillStyle = isPrevHovered ? prevColor : "rgba(15, 23, 42, 0.88)";
+  ctx.strokeStyle = isPrevHovered ? "#ffffff" : prevColor;
   ctx.lineWidth = 1.5;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.beginPath();
+  ctx.roundRect(leftX, sideY - sideH / 2, sideW, sideH, sideH / 2);
+  ctx.fill();
   ctx.stroke();
 
-  // Hollow chevron arrow left
-  ctx.beginPath();
-  ctx.moveTo(prevBtnX + 5, prevBtnY - 9);
-  ctx.lineTo(prevBtnX - 4, prevBtnY);
-  ctx.lineTo(prevBtnX + 5, prevBtnY + 9);
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 3;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.stroke();
+  // Left Arrow & Channel Label
+  ctx.font = "bold 14px monospace";
+  ctx.fillStyle = isPrevHovered ? "#ffffff" : prevColor;
+  ctx.textAlign = "center";
+  ctx.fillText(`← ${prevChannel}`, leftX + sideW / 2, sideY);
 
   hitAreas.push({
     id: "prev",
-    x: prevBtnX - btnRadius - 8,
-    y: prevBtnY - btnRadius - 8,
-    width: (btnRadius + 8) * 2,
-    height: (btnRadius + 8) * 2,
+    x: leftX,
+    y: sideY - sideH / 2,
+    width: sideW,
+    height: sideH,
   });
 
-  // 2. Next Node Button (Identical to web: Big Circular button with next region color)
-  const nextBtnX = PANEL_WIDTH - 66;
-  const nextBtnY = 96;
+  // Right Side Pill [ NEXT → ]
+  const rightX = PANEL_WIDTH - 30 - sideW;
   const isNextHovered = hoverId === "next";
 
-  ctx.beginPath();
-  ctx.arc(nextBtnX, nextBtnY, isNextHovered ? btnRadius + 3 : btnRadius, 0, Math.PI * 2);
-  ctx.fillStyle = nextColor;
-  ctx.fill();
+  ctx.fillStyle = isNextHovered ? nextColor : "rgba(15, 23, 42, 0.88)";
+  ctx.strokeStyle = isNextHovered ? "#ffffff" : nextColor;
   ctx.lineWidth = 1.5;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+  ctx.beginPath();
+  ctx.roundRect(rightX, sideY - sideH / 2, sideW, sideH, sideH / 2);
+  ctx.fill();
   ctx.stroke();
 
-  // Hollow chevron arrow right
-  ctx.beginPath();
-  ctx.moveTo(nextBtnX - 5, nextBtnY - 9);
-  ctx.lineTo(nextBtnX + 4, nextBtnY);
-  ctx.lineTo(nextBtnX - 5, nextBtnY + 9);
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 3;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.stroke();
+  // Right Channel Label & Arrow
+  ctx.font = "bold 14px monospace";
+  ctx.fillStyle = isNextHovered ? "#ffffff" : nextColor;
+  ctx.textAlign = "center";
+  ctx.fillText(`${nextChannel} →`, rightX + sideW / 2, sideY);
 
   hitAreas.push({
     id: "next",
-    x: nextBtnX - btnRadius - 8,
-    y: nextBtnY - btnRadius - 8,
-    width: (btnRadius + 8) * 2,
-    height: (btnRadius + 8) * 2,
+    x: rightX,
+    y: sideY - sideH / 2,
+    width: sideW,
+    height: sideH,
   });
 
-  // 3. Center Section: Exact Web NodeDetailsBanner Layout
-  const contentLeft = 120;
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
+  // -------------------------------------------------------------------------
+  // 3. Lower Insight Pill / Rounded Rect Container (Y: 460)
+  // Formatted like HUD telemetry card from /direction
+  // -------------------------------------------------------------------------
+  const insightW = 760;
+  const insightH = 96;
+  const insightX = centerX - insightW / 2;
+  const insightY = 460;
 
-  // Cortical Region Pill: 1.5px border with 20% opacity bg, pulsating inner dot
-  const regX = contentLeft;
-  const regY = 74;
-  const regW = 160;
-  const regH = 34;
-  drawRoundedRect(ctx, regX, regY, regW, regH, 17);
-  ctx.fillStyle = `${accentColor}25`;
-  ctx.fill();
+  ctx.fillStyle = "rgba(15, 23, 42, 0.90)";
+  ctx.strokeStyle = "rgba(51, 65, 85, 0.75)";
   ctx.lineWidth = 1.5;
-  ctx.strokeStyle = accentColor;
-  ctx.stroke();
-
-  // Pulse circle
   ctx.beginPath();
-  ctx.arc(regX + 18, regY + regH / 2, 4.5, 0, Math.PI * 2);
-  ctx.fillStyle = accentColor;
+  ctx.roundRect(insightX, insightY, insightW, insightH, 20);
   ctx.fill();
-
-  ctx.font = "bold 12px sans-serif";
-  ctx.fillStyle = accentColor;
-  ctx.fillText(`${region.toUpperCase()} CORTEX`, regX + 32, regY + regH / 2);
-
-  // Node Name (font-mono text-lg font-black) + Full Name
-  ctx.font = "900 24px monospace";
-  ctx.fillStyle = "#ffffff";
-  const nameX = regX + regW + 20;
-  ctx.fillText(channel, nameX, regY + regH / 2);
-
-  const channelWidth = ctx.measureText(channel).width;
-  ctx.font = "600 14px sans-serif";
-  ctx.fillStyle = "#94a3b8";
-  ctx.fillText(`(${meta?.fullName ?? ""})`, nameX + channelWidth + 10, regY + regH / 2);
-
-  // Live Raw Voltage Readout: text-emerald-500
-  const voltX = PANEL_WIDTH - 280;
-  ctx.font = "bold 12px monospace";
-  ctx.fillStyle = "#94a3b8";
-  ctx.fillText("RAW:", voltX, regY + regH / 2);
-
-  ctx.font = "800 18px monospace";
-  ctx.fillStyle = "#10b981";
-  const voltStr = `${rawValue >= 0 ? `+${rawValue.toFixed(2)}` : rawValue.toFixed(2)} µV`;
-  ctx.fillText(voltStr, voltX + 46, regY + regH / 2);
-
-  // Divider
-  ctx.beginPath();
-  ctx.moveTo(contentLeft, 136);
-  ctx.lineTo(PANEL_WIDTH - 120, 136);
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
   ctx.stroke();
 
-  // 4. Insight / Metric Section matching web text hierarchy
   if (insight) {
-    ctx.font = "900 13px sans-serif";
-    ctx.fillStyle = "#f8fafc";
-    ctx.fillText("MEASURES: ", contentLeft, 170);
+    // Header line inside insight pill
+    ctx.textAlign = "left";
+    ctx.font = "bold 12px monospace";
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText("MEASURES", insightX + 24, insightY + 26);
 
+    ctx.fillStyle = "#475569";
+    ctx.fillText("|", insightX + 96, insightY + 26);
+
+    ctx.font = "bold 13px sans-serif";
     ctx.fillStyle = accentColor;
-    ctx.fillText(insight.metricName.toUpperCase(), contentLeft + 86, 170);
+    ctx.fillText(insight.metricName.toUpperCase(), insightX + 112, insightY + 26);
 
-    // Insight description paragraph
-    ctx.font = "16px sans-serif";
+    // Insight description text inside pill
+    ctx.font = "14px sans-serif";
     ctx.fillStyle = "#cbd5e1";
 
     const words = insight.description.split(" ");
     let line = "";
-    let y = 208;
-    const maxDescWidth = PANEL_WIDTH - contentLeft - 140;
+    let descY = insightY + 54;
+    const maxDescWidth = insightW - 48;
 
     for (let n = 0; n < words.length; n++) {
       const testLine = line + words[n] + " ";
       const metrics = ctx.measureText(testLine);
       if (metrics.width > maxDescWidth && n > 0) {
-        ctx.fillText(line, contentLeft, y);
+        ctx.fillText(line, insightX + 24, descY);
         line = words[n] + " ";
-        y += 26;
+        descY += 22;
       } else {
         line = testLine;
       }
     }
-    ctx.fillText(line, contentLeft, y);
+    ctx.fillText(line, insightX + 24, descY);
   }
 
-  // 5. Bottom Actions: Deselect Button + "Launch Experience"
-  const footerY = 375;
+  // -------------------------------------------------------------------------
+  // 4. Bottom Action Pills (Y: 574)
+  // Two discrete pill buttons: [ ✕ Deselect Node ] and [ Measure Your Focus ✦ ]
+  // -------------------------------------------------------------------------
+  const actionY = 574;
+  const actionH = 48;
 
-  // Deselect node button
-  const closeBtnW = 180;
-  const closeBtnH = 44;
-  const closeBtnX = contentLeft;
+  // Deselect Node Pill Button
+  const closeW = 200;
+  const closeX = centerX - 240;
   const isCloseHovered = hoverId === "close";
 
-  drawRoundedRect(ctx, closeBtnX, footerY, closeBtnW, closeBtnH, 22);
-  ctx.fillStyle = isCloseHovered ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.06)";
-  ctx.fill();
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
-  ctx.stroke();
-
-  ctx.font = "bold 13px sans-serif";
-  ctx.fillStyle = "#e2e8f0";
-  ctx.textAlign = "center";
-  ctx.fillText("✕ Deselect Node", closeBtnX + closeBtnW / 2, footerY + closeBtnH / 2);
-
-  hitAreas.push({
-    id: "close",
-    x: closeBtnX,
-    y: footerY,
-    width: closeBtnW,
-    height: closeBtnH,
-  });
-
-  // Launch Experience button (In-VR Transition into Direction of Focus)
-  const dirBtnW = 260;
-  const dirBtnH = 44;
-  const dirBtnX = PANEL_WIDTH - 120 - dirBtnW;
-  const isDirHovered = hoverId === "direction";
-
-  drawRoundedRect(ctx, dirBtnX, footerY, dirBtnW, dirBtnH, 22);
-  ctx.fillStyle = isDirHovered ? "#4f46e5" : "#4338ca";
-  ctx.fill();
+  ctx.fillStyle = isCloseHovered ? "#334155" : "rgba(15, 23, 42, 0.88)";
+  ctx.strokeStyle = isCloseHovered ? "#94a3b8" : "rgba(71, 85, 105, 0.8)";
   ctx.lineWidth = 1.5;
-  ctx.strokeStyle = isDirHovered ? "#a5b4fc" : "rgba(165, 180, 252, 0.4)";
+  ctx.beginPath();
+  ctx.roundRect(closeX, actionY, closeW, actionH, actionH / 2);
+  ctx.fill();
   ctx.stroke();
 
   ctx.font = "bold 14px sans-serif";
+  ctx.fillStyle = isCloseHovered ? "#ffffff" : "#cbd5e1";
+  ctx.textAlign = "center";
+  ctx.fillText("✕  Deselect Node", closeX + closeW / 2, actionY + actionH / 2);
+
+  hitAreas.push({
+    id: "close",
+    x: closeX,
+    y: actionY,
+    width: closeW,
+    height: actionH,
+  });
+
+  // Measure Your Focus Pill Button
+  const dirW = 260;
+  const dirX = centerX + 40;
+  const isDirHovered = hoverId === "direction";
+
+  ctx.fillStyle = isDirHovered ? "#4f46e5" : "rgba(30, 27, 75, 0.92)";
+  ctx.strokeStyle = isDirHovered ? "#c7d2fe" : "#6366f1";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(dirX, actionY, dirW, actionH, actionH / 2);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.font = "bold 15px sans-serif";
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.fillText("Launch Experience  ✦", dirBtnX + dirBtnW / 2, footerY + dirBtnH / 2);
+  ctx.fillText("Measure Your Focus  ✦", dirX + dirW / 2, actionY + actionH / 2);
 
   hitAreas.push({
     id: "direction",
-    x: dirBtnX,
-    y: footerY,
-    width: dirBtnW,
-    height: dirBtnH,
+    x: dirX,
+    y: actionY,
+    width: dirW,
+    height: actionH,
   });
 }

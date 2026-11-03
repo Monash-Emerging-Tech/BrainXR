@@ -176,6 +176,7 @@ const Scene: React.FC<SceneProps> = ({
             presentationStage={presentationStage}
             onChannelSelect={onChannelSelect}
             onChannelHover={onChannelHover}
+            onClearSelection={onClearSelection}
             onStartDemo={onStartDemo}
             onStartLive={onStartLive}
             onTrialSelect={onTrialSelect}

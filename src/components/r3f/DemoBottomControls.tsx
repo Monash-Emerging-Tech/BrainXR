@@ -46,10 +46,10 @@ const DemoBottomControls: React.FC<DemoBottomControlsProps> = ({ frame, onTrialS
         <a
           href="/direction"
           className="group flex items-center gap-2.5 bg-indigo-600/90 hover:bg-indigo-600 text-white font-bold py-2.5 px-5 rounded-full shadow-lg shadow-indigo-950/20 hover:shadow-indigo-500/30 active:scale-95 transition-all cursor-pointer border border-indigo-400/40 text-xs sm:text-sm no-underline backdrop-blur-md"
-          title="Launch Experience"
-          aria-label="Launch Experience"
+          title="Measure Your Focus"
+          aria-label="Measure Your Focus"
         >
-          <span>Launch Experience</span>
+          <span>Measure Your Focus</span>
           <svg className="w-4 h-4 fill-current transition-transform duration-200 group-hover:scale-110 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M21 7H3a2 2 0 00-2 2v6a2 2 0 002 2h4l2 2h6l2-2h4a2 2 0 002-2V9a2 2 0 00-2-2zM7.5 13a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm9 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3z" />
           </svg>

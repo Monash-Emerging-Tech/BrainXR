@@ -23,6 +23,7 @@ interface HeadWrapperProps {
   presentationStage?: HeadsetPresentationStage;
   onChannelSelect: (name: ElectrodeName) => void;
   onChannelHover?: (name: ElectrodeName | null) => void;
+  onClearSelection?: () => void;
   onStartDemo?: () => void;
   onStartLive?: () => void;
   onTrialSelect?: (index: number, startOffset?: number) => void;
@@ -41,6 +42,7 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
   presentationStage = "interactive",
   onChannelSelect,
   onChannelHover,
+  onClearSelection,
 }) => {
   const { gl } = useThree();
   const groupRef = useRef<THREE.Group>(null);
@@ -106,7 +108,7 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
         <XRNodeDetailsPanel
           channel={selectedChannel}
           frameRef={frameRef}
-          onSelectChannel={(ch) => ch ? onChannelSelect(ch) : onChannelHover?.(null)}
+          onSelectChannel={(ch) => ch ? onChannelSelect(ch) : onClearSelection?.()}
           headPositionRef={xrPositionRef}
         />
       )}

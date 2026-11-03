@@ -13,6 +13,9 @@ export default defineConfig({
   devToolbar: { enabled: false },
   server: { host: true },
   vite: {
+    server: {
+      allowedHosts: ['brainxr.lucidmach.com'],
+    },
     plugins: [tailwindcss()],
     resolve: {
       dedupe: ['three', 'react', 'react-dom']
