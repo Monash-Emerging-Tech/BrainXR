@@ -86,12 +86,12 @@ export function renderIntermissionModal(
   ctx.fillText(ruleReversalTitle, cx, revY + 42);
 
   if (isNextRound2) {
-    // Round 2 SART rules: Red Box -> PRESS, Cyan Sphere -> DO NOT PRESS
+    // Round 2 SART rules: Red Box -> PRESS, Green Sphere -> DO NOT PRESS
     drawRuleSubcard(ctx, revX + 40, revY + 70, 440, 100, "Red Box", "PRESS", "#f43f5e", true);
-    drawRuleSubcard(ctx, revX + 520, revY + 70, 440, 100, "Cyan Sphere", "DO NOT PRESS", "#00f0ff", false);
+    drawRuleSubcard(ctx, revX + 520, revY + 70, 440, 100, "Green Sphere", "DO NOT PRESS", "#22c55e", false);
   } else {
-    // Round 1 CPT rules: Cyan Sphere -> PRESS, Red Box -> DO NOT PRESS
-    drawRuleSubcard(ctx, revX + 40, revY + 70, 440, 100, "Cyan Sphere", "PRESS", "#00f0ff", true);
+    // Round 1 CPT rules: Green Sphere -> PRESS, Red Box -> DO NOT PRESS
+    drawRuleSubcard(ctx, revX + 40, revY + 70, 440, 100, "Green Sphere", "PRESS", "#22c55e", true);
     drawRuleSubcard(ctx, revX + 520, revY + 70, 440, 100, "Red Box", "DO NOT PRESS", "#f43f5e", false);
   }
 

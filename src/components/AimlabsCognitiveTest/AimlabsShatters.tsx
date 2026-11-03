@@ -45,8 +45,8 @@ const ShardBurst: React.FC<{
           (Math.PI * 2) / (count * 1.2)
         );
         mat = new THREE.MeshStandardMaterial({
-          color: "#00f0ff",
-          emissive: "#0088bb",
+          color: "#22c55e",
+          emissive: "#15803d",
           emissiveIntensity: 0.8,
           roughness: 0.2,
           transparent: true,

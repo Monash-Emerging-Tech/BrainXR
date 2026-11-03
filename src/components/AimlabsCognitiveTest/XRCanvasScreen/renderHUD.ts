@@ -165,13 +165,13 @@ export function renderHUD(
   ctx.stroke();
 
   if (isRound1) {
-    // Round 1 (CPT): Cyan = Press, Red = Avoid
-    drawMiniRuleBadge(ctx, ruleX + 10, topY, 290, 50, "Cyan Sphere", "PRESS", "#00f0ff", true);
+    // Round 1 (CPT): Green = Press, Red = Avoid
+    drawMiniRuleBadge(ctx, ruleX + 10, topY, 290, 50, "Green Sphere", "PRESS", "#22c55e", true);
     drawMiniRuleBadge(ctx, ruleX + 320, topY, 290, 50, "Red Box", "DO NOT PRESS", "#f43f5e", false);
   } else {
-    // Round 2 (SART): Red = Press, Cyan = Avoid
+    // Round 2 (SART): Red = Press, Green = Avoid
     drawMiniRuleBadge(ctx, ruleX + 10, topY, 290, 50, "Red Box", "PRESS", "#f43f5e", true);
-    drawMiniRuleBadge(ctx, ruleX + 320, topY, 290, 50, "Cyan Sphere", "DO NOT PRESS", "#00f0ff", false);
+    drawMiniRuleBadge(ctx, ruleX + 320, topY, 290, 50, "Green Sphere", "DO NOT PRESS", "#22c55e", false);
   }
 
   // Instant Feedback Badge (below center)

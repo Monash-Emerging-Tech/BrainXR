@@ -270,13 +270,13 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
               <div className="space-y-2.5 mt-4 pt-3 border-t border-slate-800 text-xs">
                 {currentRound === 1 ? (
                   <>
-                    {/* Cyan Sphere -> Press */}
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 shadow-sm">
+                    {/* Green Sphere -> Press */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-green-950/40 border border-green-500/30 shadow-sm">
                       <div className="flex items-center gap-2.5">
-                        <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
-                        <span className="text-slate-200">Cyan Sphere</span>
+                        <span className="w-3.5 h-3.5 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
+                        <span className="text-slate-200">Green Sphere</span>
                       </div>
-                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-green-950/80 text-green-300 border border-green-500/40 font-bold tracking-wider">
                         PRESS
                       </span>
                     </div>
@@ -305,13 +305,13 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
                       </span>
                     </div>
 
-                    {/* Cyan Sphere -> Avoid */}
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/25 shadow-sm">
+                    {/* Green Sphere -> Avoid */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-green-950/30 border border-green-500/25 shadow-sm">
                       <div className="flex items-center gap-2.5">
-                        <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_5px_rgba(6,182,212,0.5)]" />
-                        <span className="text-slate-300">Cyan Sphere</span>
+                        <span className="w-3.5 h-3.5 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" />
+                        <span className="text-slate-300">Green Sphere</span>
                       </div>
-                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-green-950/80 text-green-300 border border-green-500/40 font-bold tracking-wider">
                         DO NOT PRESS
                       </span>
                     </div>
@@ -352,26 +352,26 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
                       </span>
                     </div>
 
-                    {/* Cyan Sphere -> Avoid */}
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/25 shadow-sm">
+                    {/* Green Sphere -> Avoid */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-green-950/30 border border-green-500/25 shadow-sm">
                       <div className="flex items-center gap-2.5">
-                        <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_5px_rgba(6,182,212,0.5)]" />
-                        <span className="text-slate-300">Cyan Sphere</span>
+                        <span className="w-3.5 h-3.5 rounded-full bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" />
+                        <span className="text-slate-300">Green Sphere</span>
                       </div>
-                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-green-950/80 text-green-300 border border-green-500/40 font-bold tracking-wider">
                         DO NOT PRESS
                       </span>
                     </div>
                   </>
                 ) : (
                   <>
-                    {/* Cyan Sphere -> Press */}
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 shadow-sm">
+                    {/* Green Sphere -> Press */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-green-950/40 border border-green-500/30 shadow-sm">
                       <div className="flex items-center gap-2.5">
-                        <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
-                        <span className="text-slate-200">Cyan Sphere</span>
+                        <span className="w-3.5 h-3.5 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
+                        <span className="text-slate-200">Green Sphere</span>
                       </div>
-                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-green-950/80 text-green-300 border border-green-500/40 font-bold tracking-wider">
                         PRESS
                       </span>
                     </div>
@@ -489,11 +489,11 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 p-2 rounded-xl bg-cyan-950/50 border border-cyan-500/30">
-                <span className="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff]" />
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-green-950/50 border border-green-500/30">
+                <span className="w-3.5 h-3.5 rounded-full bg-green-400 shadow-[0_0_6px_#22c55e]" />
                 <div>
-                  <div className="text-[9px] text-cyan-300 uppercase">CYAN SPHERE</div>
-                  <div className="font-offbit font-bold text-cyan-300 text-xs">{isNextRound2 ? "DO NOT PRESS" : "PRESS"}</div>
+                  <div className="text-[9px] text-green-300 uppercase">GREEN SPHERE</div>
+                  <div className="font-offbit font-bold text-green-300 text-xs">{isNextRound2 ? "DO NOT PRESS" : "PRESS"}</div>
                 </div>
               </div>
             </div>
@@ -560,7 +560,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
               <tbody className="divide-y divide-slate-800/60">
                 <tr>
                   <td className="p-3 pl-4 text-slate-300">Target (Go)</td>
-                  <td className="p-3 text-center text-cyan-300">Cyan Sphere</td>
+                  <td className="p-3 text-center text-green-300">Green Sphere</td>
                   <td className="p-3 text-center text-rose-300">Red Box</td>
                 </tr>
                 <tr>

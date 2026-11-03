@@ -44,14 +44,14 @@ export function renderReadyModal(
 
   const cptCardConfig = {
     title: "Continuous Performance Test",
-    target1: { name: "Cyan Sphere", action: "PRESS", color: "#00f0ff", press: true },
+    target1: { name: "Green Sphere", action: "PRESS", color: "#22c55e", press: true },
     target2: { name: "Red Box", action: "DO NOT PRESS", color: "#f43f5e", press: false },
   };
 
   const sartCardConfig = {
     title: "Sustained Attention to Response Task",
     target1: { name: "Red Box", action: "PRESS", color: "#f43f5e", press: true },
-    target2: { name: "Cyan Sphere", action: "DO NOT PRESS", color: "#00f0ff", press: false },
+    target2: { name: "Green Sphere", action: "DO NOT PRESS", color: "#22c55e", press: false },
   };
 
   if (isStartRound1) {

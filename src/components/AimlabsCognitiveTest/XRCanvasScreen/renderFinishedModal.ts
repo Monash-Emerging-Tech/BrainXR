@@ -90,7 +90,7 @@ export function renderFinishedModal(
 
   // Table Rows
   const rows = [
-    { label: "Target (Go)", r1: "Cyan Sphere", r2: "Red Box", c1: "#38bdf8", c2: "#fb7185" },
+    { label: "Target (Go)", r1: "Green Sphere", r2: "Red Box", c1: "#4ade80", c2: "#fb7185" },
     { label: "Go Hits", r1: r1.goHits.toString(), r2: r2.goHits.toString(), c1: "#ffffff", c2: "#ffffff" },
     { label: "False Alarms", r1: r1.commissions.toString(), r2: r2.commissions.toString(), c1: "#f43f5e", c2: "#f43f5e" },
     { label: "Mean Reaction Time", r1: `${Math.round(r1.meanReactionTime)} ms`, r2: `${Math.round(r2.meanReactionTime)} ms`, c1: "#fbbf24", c2: "#fbbf24" },

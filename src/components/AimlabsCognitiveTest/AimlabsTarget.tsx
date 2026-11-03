@@ -50,8 +50,8 @@ export const AimlabsTarget: React.FC<AimlabsTargetProps> = ({
         <mesh>
           <sphereGeometry args={[0.38, 32, 32]} />
           <meshStandardMaterial
-            color="#00f0ff"
-            emissive="#00bbdd"
+            color="#22c55e"
+            emissive="#15803d"
             emissiveIntensity={0.65}
             roughness={0.2}
             metalness={0.15}

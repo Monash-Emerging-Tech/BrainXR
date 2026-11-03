@@ -7,11 +7,11 @@ export const TOTAL_TRIALS = SPHERE_COUNT + BOX_COUNT; // 187
 /**
  * Generates the pseudorandom trial sequence for the specified cognitive round.
  * Round 1: CPT (Continuous Performance Test)
- *   - 150 Cyan Spheres -> GO (Click)
+ *   - 150 Green Spheres -> GO (Click)
  *   - 37 Red Boxes -> NO-GO (Do not click)
- * 
+ *
  * Round 2: SART (Sustained Attention to Response Task)
- *   - 150 Cyan Spheres -> NO-GO (Do not click)
+ *   - 150 Green Spheres -> NO-GO (Do not click)
  *   - 37 Red Boxes -> GO (Click)
  * 
  * Ratio of sphere to box is exactly 150 / 37 in both rounds.

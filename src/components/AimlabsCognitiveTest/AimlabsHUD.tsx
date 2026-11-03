@@ -110,13 +110,13 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
       {/* Center Top: High-Clarity Visual Rule Cards */}
       <div className="absolute top-5 left-1/2 -translate-x-1/2 flex items-center gap-2 pointer-events-none">
         {isRound1 ? (
-          /* Round 1 (CPT): Cyan = Press, Red = Avoid */
+          /* Round 1 (CPT): Green = Press, Red = Avoid */
           <div className="flex items-center gap-2 p-1.5 rounded-full bg-slate-950/80 border border-white/10 backdrop-blur-md shadow-2xl">
-            {/* Target 1: Cyan Sphere -> PRESS */}
-            <div className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-cyan-950/70 border border-cyan-400/50 shadow-[0_0_12px_rgba(0,240,255,0.2)]">
-              <span className="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#00f0ff] animate-pulse" />
+            {/* Target 1: Green Sphere -> PRESS */}
+            <div className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-green-950/70 border border-green-400/50 shadow-[0_0_12px_rgba(34,197,94,0.2)]">
+              <span className="w-3.5 h-3.5 rounded-full bg-green-400 shadow-[0_0_8px_#22c55e] animate-pulse" />
               <div className="flex flex-col text-left">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-cyan-300 leading-none">CYAN SPHERE</span>
+                <span className="text-[9px] font-mono uppercase tracking-wider text-green-300 leading-none">GREEN SPHERE</span>
                 <span className="text-xs font-offbit uppercase font-bold text-white tracking-widest leading-tight">PRESS</span>
               </div>
             </div>
@@ -131,7 +131,7 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
             </div>
           </div>
         ) : (
-          /* Round 2 (SART): Red = Press, Cyan = Avoid */
+          /* Round 2 (SART): Red = Press, Green = Avoid */
           <div className="flex items-center gap-2 p-1.5 rounded-full bg-slate-950/80 border border-white/10 backdrop-blur-md shadow-2xl">
             {/* Target 1: Red Box -> PRESS */}
             <div className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-rose-950/70 border border-rose-500/60 shadow-[0_0_12px_rgba(244,63,94,0.25)]">
@@ -142,12 +142,12 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
               </div>
             </div>
 
-            {/* Target 2: Cyan Sphere -> AVOID */}
-            <div className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-cyan-950/70 border border-cyan-400/40 opacity-80">
-              <span className="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff]" />
+            {/* Target 2: Green Sphere -> AVOID */}
+            <div className="flex items-center gap-2 pl-2 pr-3 py-1 rounded-full bg-green-950/70 border border-green-400/40 opacity-80">
+              <span className="w-3.5 h-3.5 rounded-full bg-green-400 shadow-[0_0_6px_#22c55e]" />
               <div className="flex flex-col text-left">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-cyan-300 leading-none">CYAN SPHERE</span>
-                <span className="text-xs font-offbit uppercase font-bold text-cyan-300 tracking-widest leading-tight">DO NOT PRESS</span>
+                <span className="text-[9px] font-mono uppercase tracking-wider text-green-300 leading-none">GREEN SPHERE</span>
+                <span className="text-xs font-offbit uppercase font-bold text-green-300 tracking-widest leading-tight">DO NOT PRESS</span>
               </div>
             </div>
           </div>
