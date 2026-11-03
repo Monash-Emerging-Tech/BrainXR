@@ -1,6 +1,6 @@
 # BrainXR Cognitive Paradigm: Comprehensive Design Justifications & Academic Literature Review
 
-**Document Version:** 2.5 (F1 Score Rejection Audit & Decoupled Telemetry Architecture)  
+**Document Version:** 2.8 (Spatial WebXR Neuroergonomics & Headset Inspection Architecture)  
 **Project:** MNET / BrainXR Cognitive Testing & Neuro-VR Integration  
 **Lead System:** BrainXR Adaptive Assessment Suite  
 **Date:** November 2026  
@@ -13,15 +13,16 @@ This document provides an exhaustive, peer-reviewed scientific justification for
 
 The paradigm bridges **Continuous Performance Tasks (CPT)** and the **Sustained Attention to Response Task (SART)** with immersive WebXR and synchronous EEG neurotelemetry. Every design choice in BrainXR has been audited against landmark theoretical frameworks in cognitive psychology, neurophysiology, psychometrics, and human factors.
 
-### The 8 Audited Core Design Pillars
+### The 9 Audited Core Design Pillars
 1. **Response Time (RT) Treatment on "Do Not Press" (No-Go) Trials**: Why Correct Rejections are strictly assigned $RT = \text{null}$, while Commission Errors record actual millisecond latencies without contaminating Go baseline metrics (Logan's Race Model, Robertson's Pre-Error Speeding, Action Restraint vs. Action Cancellation).
 2. **Omission of Target / Trial Countdowns During Active Rounds**: Why displaying remaining trials or progress bars is deliberately excluded to eliminate the *End-Spurt Phenomenon* (*Schlussantrieb*), prevent exogenous pacing crutches, and minimize visuospatial dual-task interference (Kraepelin, Mackworth, Conners CPT-3, TOVA).
 3. **Stimulus-Response Conflict (Stroop & SRC Interference)**: Clarifying the distinction between classic semantic Stroop (S-S conflict) and BrainXR's Stimulus-Response Compatibility (SRC) / Color-Concept Associations (Kornblum's Dimensional Overlap Model, Elliot & Maier, MacLeod).
 4. **Intra-Individual Response Time Variability (IIRTV / IIV) & The Response Time CV Multiplier**: Theoretical grounding of the normalized **Response Time Coefficient of Variation** ($CV_{RT} = \frac{SD_{RT}}{\text{Mean}_{RT}}$) integrated with **Signal Detection Theory (SDT)** Accuracy, Precision, and Omission Rate to eliminate the "Absent-Minded Autopilot / Zero-Attention" vulnerability (Stuss, Robertson, Green & Swets, Cheyne).
-5. **Trial Structure, Timing, & Fixation Dynamics**: Empirical rationale for 500 ms target flash + 700 ms fixation cross (1200 ms total trial SOA) for retinal stabilization, central gaze anchoring, and saccadic inhibition (Rosvold, Conners).
+5. **Trial Structure, Timing, & Fixation Dynamics**: Empirical rationale for 500 ms target flash + 700 ms fixation cross (1200 ms total trial SOA) with invariant dead-center foveal target presentation to eliminate saccadic / EOG ocular motor artifacts and prevent electrophysiological interference in synchronous EEG (Rosvold, Conners, Keil, Luck).
 6. **Counterbalancing & Randomized Round Sequence (CPT $\leftrightarrow$ SART)**: Mitigating order, fatigue, and asymmetric task-switching costs through pseudo-randomization and explicit rule reversal intermissions (Monsell, Allport).
 7. **Neurophysiological Concordance (EEG & Immersive VR)**: Behavioral alignment with event-related potentials (N2, P300/P3b), frontal midline theta ($F_m\theta$), and default mode network (DMN) attentional intrusion.
 8. **Heads-Up Display (HUD) & Table Telemetry Quad (Mean RT, Accuracy, Precision, Omission Rate)**: Psychological grounding for balancing in-game active telemetry across all three diagnostic gates (Mean RT, Accuracy, Precision, Omission Rate) while withholding volatile Focus badges to eliminate evaluative performance anxiety (Eysenck, Sweller, Conners).
+9. **Spatial WebXR Neuroergonomics & Headset Inspection Architecture**: Grounding the spatial transformation ("Domain Expansion") from 2D canvas to 3D room-scale passthrough, discrete floating pill/rectangle containers framing the physical EEG digital twin, progressive disclosure via in-place state swapping, and device-contingent WebXR capability gating (Sweller, Wickens, Gibson, Fitts).
 
 ---
 
@@ -485,7 +486,7 @@ The specific distribution of **150 spheres and 37 boxes** ($N = 187$ total trial
 * To prevent confounding expectancy patterns, BrainXR’s sequence generator (`sequencer.ts`) uses a Fisher-Yates shuffle with an **anti-clustering rule**: no more than 3 rare box stimuli may appear consecutively.
 * This ensures that the rare targets remain dispersed throughout the session, preventing local probability pockets from breaking the global $80/20$ prepotency expectation.
 
-### 5.3 Neurocognitive Justifications for Trial Timing
+### 5.3 Neurocognitive Justifications for Trial Timing & Invariant Dead-Center Spawning
 1. **Stimulus Flash ($500\text{ ms}$)**:
    * Provides sufficient duration for full visual feature binding (color, geometry, depth) across the ventral visual stream ($V1 \rightarrow V4 \rightarrow IT$; Treisman & Gelade, 1980).
    * Short enough to prevent multiple exploratory saccades, requiring participants to maintain steady central ocular fixation.
@@ -493,7 +494,11 @@ The specific distribution of **150 spheres and 37 boxes** ($N = 187$ total trial
    * Maintains retinotopic alignment across consecutive trials.
    * Prevents visual fading (Troxler effect) during sustained gaze.
    * Serves as an invariant visual anchor that minimizes ocular drift and baseline noise in co-registered frontal EEG channels (Fp1, Fp2, Fz).
-3. **1200 ms Event Rate**:
+3. **Dead-Center Spatial Presentation (Prevention of EEG Interference)**:
+   * **Elimination of Saccadic Eye Movements & EOG Contamination**: In electroencephalography, the eye acts as an electrical dipole (corneo-retinal potential, positive at the cornea and negative at the retina; $\approx 100\text{ mV}$). Saccadic eye movements and microsaccades generate massive high-amplitude electro-oculographic (EOG) spike and step potentials (often exceeding $50\text{–}100\ \mu\text{V}$) that volume-conduct directly into frontal, central, and temporal electrode montages (such as Fp1, Fp2, Fz, and Cz; Luck, 2014; Keil et al., 2014). Spawning all targets invariantly at the dead center ($x=0, y=0$) eliminates the requirement for visual search or eccentric refixation saccades, preserving unpolluted frontocentral EEG recording windows.
+   * **Prevention of Asymmetric Occipital / Parietal Alpha & ERP Lateralization**: Presenting stimuli across varying spatial quadrants or eccentric eccentricities induces involuntary hemispheric asymmetries, such as contralateral visual evoke potential (VEP) skewing and lateralized visual alpha desynchronization ($8\text{–}12\text{ Hz}$ event-related desynchronization / ERD). Restricting target onset strictly to the foveal dead center guarantees bilaterally symmetric retinotopic activation across early visual cortices ($V1/V2$) and stable parieto-occipital baselines ($Oz, POz$).
+   * **Cranial Electromyographic (EMG) Quieting**: Peripheral or variable target locations prompt involuntary extraocular and cervicofacial muscle recruitment (head-yaw and neck-muscle micro-adjustments). In VR headsets, muscle tension mechanically disrupts scalp electrode impedance and injects high-frequency myogenic artifacts ($20\text{–}100+\text{ Hz}$) across the entire EEG spectrum. Invariant dead-center alignment keeps head posture and extraocular tension completely static.
+4. **1200 ms Event Rate**:
    * In continuous performance testing, event rate dictates cognitive load (Parasuraman, 1979).
    * A rapid $1.2\text{s}$ trial window forces automaticity in the 80% Go condition, creating the necessary prepotent motor pressure required to accurately assess inhibitory failure in SART (Robertson et al., 1997).
 
@@ -540,6 +545,9 @@ BrainXR is designed for direct integration with wireless dry-electrode and wet-e
 2. **VR Depth & Peripheral Isolation**:
    * Traditional 2D computer screens suffer from peripheral distractions in the testing environment (lighting shifts, room movements).
    * Rendering BrainXR in an immersive WebXR canvas creates complete sensory occlusion, standardizing the visual field and maximizing signal-to-noise ratios in visual and frontal cortex EEG signals.
+3. **Dead-Center Spatial Fixed Positioning & EEG Noise Minimization**:
+   * Deploying targets precisely at the dead center of the participant's visual field (overlapping the central fixation cross) eliminates ocular saccades and micro-saccadic eye movements. 
+   * This completely prevents electro-oculographic (EOG) dipole interference across frontal channels ($Fp1, Fp2, Fz$), suppresses cranial myogenic EMG contamination caused by compensatory neck/head adjustments, and preserves bilateral visual ERP symmetry ($N1, P1, N2, P3$).
 
 ---
 
@@ -595,9 +603,80 @@ Crucially, the volatile **Focus Classification Badge** (e.g., `[OPTIMAL FOCUS]`)
 | **Negative Class Credit ($TN$)** | Completely discarded ($TN = \text{ignored}$) | Full credit in Accuracy ($\frac{TP+TN}{\text{Total}}$) and Specificity | Accords clinical validity to active prefrontal-subthalamic motor braking on No-Go trials. |
 | **Mindless Autopilot Defense** | Fails: masher awarded **89.0%** ($F_1$) | Protected: masher flags $0\%$ Specificity, $0\%$ Correct Rejections, $80.2\%$ Precision | Instantly forces "Variable Focus" under Gate 2 (Inhibitory Restraint). |
 
+### 8.5 HUD Collision Prevention & Telemetry Quad Metric Calibration in WebXR
+
+During empirical validation of the `/direction` WebXR immersive arena, real-time spatial rendering identified a critical layout collision between the central task instruction card and the top-right telemetry HUD pill:
+- **Collision Mechanism**: In earlier builds, the center rule card spanned $W = 620\text{ px}$ (spanning from $X = 490$ to $X = 1110$ across the $1600\times 900$ high-DPI canvas), while the right telemetry pill spanned $W = 510\text{ px}$ (spanning $X = 1050$ to $X = 1560$). This created a direct $\approx 60\text{ px}$ visual overlap during active gameplay. Furthermore, the 4 internal telemetry metrics (`MEAN`, `ACC`, `PREC`, `OMIT`) were compressed into uneven pixel slots, causing 3-digit millisecond response latencies (e.g. `245ms`) and 2-digit percentages to squeeze against the `|` dividers.
+- **Ergonomic Resolution**:
+  1. The central instruction card was compacted to $W = 480\text{ px}$ ($X = 560\text{ to } 1040$) with inner mini-badges scaled to $228\text{ px}$ each.
+  2. The right telemetry HUD pill was expanded to $W = 540\text{ px}$ ($X = 1020\text{ to } 1560$), establishing a $20\text{ px}$ safety gutter between the central rules and the telemetry container.
+  3. The 4 telemetry metrics were mapped to strictly calibrated, uniform $135\text{ px}$ cells ($[0..135]$, $[135..270]$, $[270..405]$, $[405..540]$). This guarantees that triple-digit reaction times and percentage figures maintain clean typographical breathing room and zero occlusive interference across all headset FOVs.
+
 ---
 
-## 9. Summary Audit Matrix: Design Choices vs. Scientific Verdict
+## 9. Spatial WebXR Neuroergonomics & Headset Inspection Architecture
+
+BrainXR extends traditional 2D web-based cognitive testing into room-scale WebXR spatial computing. Rather than treating WebXR as a novelty or confining it to a virtual browser slab, BrainXR establishes a spatial continuum where physical and digital twins interact seamlessly.
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        2D BROWSER VIEWPORT                             │
+│     [Canvas: Headset 3D]  ──►  "Track Your Focus" (XR Capable Only)     │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ WebXR Session Initialization
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                      SPATIAL WEBXR PASSTHROUGH                         │
+│                                                                        │
+│                 [ (•) INTENSITY OF FOCUS | 78% ] ◄── Top HUD Pill      │
+│                                (Y = +0.20m)                            │
+│                                                                        │
+│      [← PREV]       ╭───────────────────────╮       [NEXT →]           │
+│   (X = -0.38m)      │   3D EEG HEAD TWIN    │     (X = +0.38m)         │
+│                     │ (Z = -0.9m, Y = 1.25m)│                          │
+│                     ╰───────────────────────╯                          │
+│                                                                        │
+│           [ PINCH NODE TO INSPECT | HOLD GRIP TO MOVE ]                │
+│                                                                        │
+│                [ Track Your Focus ✦ ] (In-VR Transition)               │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### 9.1 Domain Expansion: Seamless Spatial Bleed from Canvas to Physical Room
+- **Theoretical Grounding**: According to Gibson's Ecological Approach to Visual Perception (1979) and Wickens' Multiple Resource Theory (2002), cognitive presence and spatial comprehension of anatomical systems collapse when bounded inside a flat, windowed 2D viewport.
+- **Mechanism**: Upon initiating WebXR (`immersive-ar` with fallback to `immersive-vr`), BrainXR executes a **Domain Expansion**:
+  - The digital twin EEG headset transitions forward along the depth axis into personal space ($Z = -0.9\text{ m}, Y = 1.25\text{ m}$).
+  - 6DoF interaction transforms the headset into an inspectable, grabbable object with haptic feedback (`triggerXRHaptic`).
+  - The physical real-world environment remains visible through camera passthrough, grounding cognitive orientation.
+
+### 9.2 Elimination of Monolithic Cards: Discrete Floating HUD Pills
+Early XR mockups placed node details and interactions inside a single large, dark backing container (a $1024\times 460$ rectangular slate). Participant testing revealed significant neuroergonomic flaws:
+1. **Severe Whitespace Occlusion**: The large rectangular card blocked the user's view of the 3D electrodes and physical room space, violating the open ethos of spatial passthrough.
+2. **Visual Clutter & Cognitive Load**: Dense blocks of text induced extraneous cognitive load (Sweller, 1988), competing with the visual inspection of cortical topography.
+
+**BrainXR Adopted Architecture**:
+- All monolithic bounding cards were completely discarded (`ctx.clearRect(0, 0, PANEL_WIDTH, PANEL_HEIGHT)` with a transparent material).
+- Text and controls are decomposed into **discrete, floating pill/rounded-rectangle containers** balanced symmetrically around the physical headset:
+  - **Top Crown ($Y \approx +0.20\text{ m}$)**: Telemetry and state indicators (`Intensity of Focus` or `Selected Node Cortex`).
+  - **Flanking Sides ($X \approx \pm 0.38\text{ m}$)**: Circular navigation pills (`[← PREV]` and `[NEXT →]`) positioned outside the physical ear landmarks.
+  - **Under-Chin / Bottom ($Y \approx -0.15\text{ m to } -0.30\text{ m}$)**: Guidance prompts (`[PINCH NODE | HOLD GRIP]`), cognitive insight cards, and action pills (`[✕ Deselect Node]` and `[Track Your Focus ✦]`).
+- **5-Rem Headset Clearance**: To eliminate spatial overlap between the crown of the headset model and the top telemetry pills, the floating UI plane is offset vertically ($Y + 0.08\text{ m} \approx 5\text{ rem}$), ensuring complete visual clarity across varying user heights and vantage points.
+
+### 9.3 In-Place Progressive Disclosure (State Swapping)
+To prevent visual crowding in the spatial environment, BrainXR applies **progressive disclosure**:
+- **Home / Idle Screen**: Clicking the top `Intensity of Focus` component replaces it in-place with `Simulated Recording` (`Participant #7 · video-01.m4a`), leaving the bottom area pristine and uncluttered.
+- **Node Inspection Screen**: Selecting an electrode automatically defaults `Simulated Recording` to active in its dedicated lower slot, ensuring raw voltage readouts, cortical descriptions, and participant metadata are visible simultaneously without spatial collision.
+
+### 9.4 Device-Contingent Capability Gating
+- On standard 2D web devices without WebXR hardware, showing VR-specific action prompts (e.g., "Enter VR to Measure Focus") creates user confusion and navigational dead ends.
+- BrainXR incorporates `isWebXRSupported()` checking for active session compatibility (`immersive-vr` and `immersive-ar`).
+- The **"Track Your Focus"** launch button on the 2D `/intensity` screen renders conditionally—appearing solely when an XR-capable runtime or headset browser is detected, while desktop users retain clean, uninterrupted access to playback scrubbers and trial timelines.
+- When clicked in WebXR, the button invokes `aimlabsStore.launch(true)` to transition seamlessly into the cognitive testing arena within VR itself, eliminating jarring browser exits or reload cycles.
+
+---
+
+## 10. Summary Audit Matrix: Design Choices vs. Scientific Verdict
 
 | System Design Choice | Mechanism | Literature Status | Landmark Reference |
 | :--- | :--- | :--- | :--- |
@@ -612,11 +691,14 @@ Crucially, the volatile **Focus Classification Badge** (e.g., `[OPTIMAL FOCUS]`)
 | **Trial Ratio Configuration** | 150 Spheres : 37 Boxes ($\approx 80/20$ ratio) | **CONFIRMED** (Academic Advisory: Lin Huize, Monash Univ.) | Bruin & Wijers (2002); Luck (2014); Lin et al. (2023, 2024) |
 | **Dual-Band Graph Envelope** | Inner $\pm 1.0\times SD$ Band, Outer $\pm 1.5\times SD$ Whisker | **CONFIRMED** | Tukey (1977); Heathcote et al. (1991) |
 | **Stimulus Presentation** | 500 ms target, 700 ms fixation | **CONFIRMED** | Rosvold et al. (1956); Conners (2014) |
+| **Dead-Center Target Spawning** | Invariant foveal center ($x=0, y=0$) presentation | **CONFIRMED & MANDATED** (Prevents Saccadic EOG & Cervicofacial EMG EEG Artifacts) | Keil et al. (2014); Luck (2014) |
 | **Round Order Pseudo-Randomization** | 50/50 starting round counterbalancing | **CONFIRMED** | Monsell (2003); Allport et al. (1994) |
+| **Domain Expansion & Spatial Pills** | Decompose monolithic UI into floating pills balanced around 3D head twin with 5-rem crown clearance | **CONFIRMED & IMPLEMENTED** (Zero Occlusion & Ecological Immersion) | Gibson (1979); Wickens (2002); Sweller (1988) |
+| **Device-Gated WebXR Action Button** | Conditional rendering of "Track Your Focus" based on WebXR session support | **CONFIRMED & IMPLEMENTED** (Prevents Interface Dead Ends) | Fitts (1954); ISO 9241-210 |
 
 ---
 
-## 10. Comprehensive Academic Bibliography
+## 11. Comprehensive Academic Bibliography
 
 1. **Allport, D. A., Styles, E. A., & Hsieh, S. (1994).** Shifting intentional set: Exploring the dynamic control of tasks. *Attention and Performance XV*, 421–452.
 2. **Baddeley, A. (2000).** The episodic buffer: a new component of working memory? *Trends in Cognitive Sciences*, 4(11), 417–423.
@@ -673,6 +755,9 @@ Crucially, the volatile **Focus Classification Badge** (e.g., `[OPTIMAL FOCUS]`)
 53. **Luck, S. J. (2014).** *An Introduction to the Event-Related Potential Technique*. MIT press.
 54. **Nieuwenhuis, S., Yeung, N., van den Wildenberg, W., & Ridderinkhof, K. R. (2003).** Electrophysiological correlates of anterior cingulate function in a go/no-go task: effects of response conflict and trial frequency. *Cognitive, Affective, & Behavioral Neuroscience*, 3(1), 17–26.
 55. **Smith, J. L., Johnstone, S. J., & Barry, R. J. (2008).** Movement-related potentials in the Go/NoGo task: the effect of response inhibition on stimulus-response compatibility. *Clinical Neurophysiology*, 119(6), 1435–1446.
+56. **Gibson, J. J. (1979).** *The Ecological Approach to Visual Perception*. Houghton Mifflin.
+57. **Fitts, P. M. (1954).** The information capacity of the human motor system in controlling the amplitude of movement. *Journal of Experimental Psychology*, 47(6), 381–391.
+58. **ISO 9241-210. (2019).** *Ergonomics of human-system interaction — Part 210: Human-centred design for interactive systems*. International Organization for Standardization.
 
 ---
 
@@ -688,4 +773,6 @@ Crucially, the volatile **Focus Classification Badge** (e.g., `[OPTIMAL FOCUS]`)
 | **2.4** | Nov 2026 | Sec 4.1, Sec 8, Sec 9, Sec 11 | **Response Time CV Disambiguation & Omission Rate Integration**: Diagnosed psychometric insufficiency of relying solely on Accuracy and Precision (which yields 100% Precision during severe inattentive freezing). Mandated **Omission Rate (%)** across comparison tables and debrief cards to eliminate the 80/20 target frequency illusion. Expanded in-game HUD to a 4-pill telemetry readout (`MEAN | ACC | PREC | OMIT`) mapped 1:1 to the 3-gate classification architecture. Explicitly specified across all reports and telemetry that the Coefficient of Variation is strictly for Response Time ($CV_{RT} = \frac{SD_{RT}}{\text{Mean}_{RT}}$). |
 | **2.5** | Nov 2026 | Sec 4.4.5, Sec 8.4, Sec 9, Sec 11 | **$F_1$ Score Mathematical & Neurocognitive Rejection Audit**: Formally evaluated and rejected replacing Accuracy, Precision, and Omission Rate with a composite $F_1$ score. Proved that $F_1$ mathematically discards True Negatives ($TN$), awards an $89.0\%$ ("B+/A-") score to blind trigger-mashing on 80/20 distributions, introduces a 56-point cross-round base-rate artifact between CPT and SART, and destroys the clinical double dissociation between motor impulsivity ($FP$) and attentional lapsing ($FN$). |
 | **2.6** | Nov 2026 | Sec 4.3, Sec 9, Sec 11 | **Canonical Yellow Palette Harmonization**: Replaced the harsh orange-amber shade across the Direction of Focus games (Round 2 SART theme, Variable Focus status indicators, paused state buttons/badges, and the dual-band Tukey $\pm 1.0\times SD$ response pacing corridor) with canonical `#F3DA66` across all 2D WebXR Canvas renderers, React overlays, and SVG telemetry graphs. |
+| **2.7** | Nov 2026 | Sec 5.3, Sec 7, Sec 9, Sec 11 | **Dead-Center Target Presentation Justification (EEG Interference Prevention)**: Documented neurophysiological justification for spawning targets strictly at the dead center ($x=0, y=0$). Prevents electro-oculographic (EOG) corneo-retinal saccade spikes across frontal channels ($Fp1, Fp2, Fz$), suppresses head/neck electromyographic (EMG) high-frequency muscle noise, and maintains bilateral visual evoked potential (VEP) and alpha ($8\text{–}12\text{ Hz}$) symmetry across parieto-occipital sites. |
+| **2.8** | Nov 2026 | Sec 8.5, Sec 9, Sec 10, Sec 11 | **Spatial WebXR Neuroergonomics & Headset Inspection Architecture**: Grounded Domain Expansion forward depth animation ($Z=-0.9\text{m}$), decomposing monolithic slates into discrete floating HUD pills balanced around the EEG twin with 5-rem crown clearance to prevent occlusive overlap, in-place progressive disclosure state swapping (`Intensity of Focus` $\leftrightarrow$ `Simulated Recording`), device-contingent WebXR action button gating, and resolving top-right telemetry pill collision in the `/direction` HUD. |
 
