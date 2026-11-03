@@ -164,11 +164,11 @@ export function renderHUD(
     ctx.fillText(state.recentFeedback.text, width / 2, height / 2 + 140);
   }
 
-  // Bottom Pause Quick Tip Badge in XR: moved ~5 more rems down so it sits comfortably out of central focal gaze
+  // Bottom Pause Quick Tip Badge in XR: safely padded inside canvas boundary so it never gets clipped
   const hintW = 380;
   const hintH = 42;
   const hintX = (width - hintW) / 2;
-  const hintY = height - 20;
+  const hintY = height - 56;
 
   ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";

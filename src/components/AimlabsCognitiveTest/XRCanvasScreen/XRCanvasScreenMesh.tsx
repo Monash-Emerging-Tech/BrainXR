@@ -20,14 +20,14 @@ export const XRCanvasScreenMesh: React.FC<XRCanvasScreenMeshProps> = ({
   if (!texture) return null;
 
   // Position: positioned relative to eye level (target eye height is y = 1.6m at z = -4.5m)
-  // During gameplay, elevated slightly above eye level (y = 2.15m) to maintain clear sightline to targets.
+  // During gameplay, centered at y = 2.0m with an expanded height (2.3m), placing the bottom edge around y = 0.85m (~5 rems lower than before, comfortably below the targets without clipping the canvas).
   // During modals, centered directly at eye level (y = 1.6m).
   const position: [number, number, number] = isGameplay
-    ? [0, 2.15, -4.5]
+    ? [0, 2.0, -4.5]
     : [0, 1.6, -3.2];
 
   const width = isGameplay ? 3.6 : 3.2;
-  const height = isGameplay ? 2.22 : 1.8;
+  const height = isGameplay ? 2.3 : 1.8;
 
   // Baked materials memoized for zero GC/allocation overhead during render cycles
   const glassBackingMat = React.useMemo(

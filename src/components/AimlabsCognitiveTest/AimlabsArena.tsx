@@ -301,8 +301,20 @@ const MirrorWall: React.FC<MirrorWallProps> = ({ position, rotation, width, heig
       clipBias: 0.003,
       textureWidth: 1024,
       textureHeight: 1024,
-      color: new THREE.Color("#444444"),
+      color: new THREE.Color("#666666"),
     });
+
+    // Temporarily bypass scene fog during the mirror's virtual camera render pass.
+    // Otherwise, because the virtual camera is placed far beyond the mirror (e.g. z = -180m),
+    // any scene fog (which reached 100% black at 85m) completely blacks out the reflected scene before it can be drawn.
+    const originalOnBeforeRender = ref.onBeforeRender;
+    ref.onBeforeRender = function (renderer: any, scene: any, camera: any) {
+      const prevFog = scene.fog;
+      scene.fog = null;
+      originalOnBeforeRender.call(this, renderer, scene, camera);
+      scene.fog = prevFog;
+    };
+
     return ref;
   }, [width, height]);
 
