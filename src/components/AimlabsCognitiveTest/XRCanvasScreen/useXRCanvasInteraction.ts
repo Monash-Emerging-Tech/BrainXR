@@ -10,6 +10,9 @@ interface UseXRCanvasInteractionParams {
   onStartRound2: () => void;
   onRestart: () => void;
   onExit: () => void;
+  onSkipRound?: () => void;
+  onTogglePause?: () => void;
+  onMenu?: () => void;
 }
 
 export function useXRCanvasInteraction({
@@ -18,6 +21,9 @@ export function useXRCanvasInteraction({
   onStartRound2,
   onRestart,
   onExit,
+  onSkipRound,
+  onTogglePause,
+  onMenu,
 }: UseXRCanvasInteractionParams) {
   const [hoverId, setHoverId] = useState<string | null>(null);
 
@@ -63,6 +69,12 @@ export function useXRCanvasInteraction({
       onRestart();
     } else if (match.type === "exit") {
       onExit();
+    } else if (match.type === "skip-round") {
+      onSkipRound?.();
+    } else if (match.type === "toggle-pause") {
+      onTogglePause?.();
+    } else if (match.type === "menu") {
+      (onMenu || onExit)();
     }
   };
 

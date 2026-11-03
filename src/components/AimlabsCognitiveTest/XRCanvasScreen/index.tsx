@@ -24,6 +24,9 @@ export const XRCanvasScreen: React.FC<XRCanvasScreenProps> = ({
       onStartRound2: () => aimlabsStore.startRound2(),
       onRestart: () => aimlabsStore.restart(),
       onExit,
+      onSkipRound: () => aimlabsStore.skipRound(),
+      onTogglePause: () => aimlabsStore.togglePause(),
+      onMenu: onExit,
     });
 
   const isGameplay = state.status === "round1" || state.status === "round2";
@@ -38,6 +41,7 @@ export const XRCanvasScreen: React.FC<XRCanvasScreenProps> = ({
       round1Metrics: state.round1Metrics,
       round2Metrics: state.round2Metrics,
       recentFeedback: state.recentFeedback,
+      isPaused: state.isPaused,
       hoverId,
     },
     hitAreasRef,

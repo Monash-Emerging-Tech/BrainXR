@@ -33,33 +33,72 @@ export function renderReadyModal(
   ctx.letterSpacing = "0px";
   ctx.textAlign = "center";
   ctx.fillStyle = "#cbd5e1";
-  ctx.fillText("A cognitive game to measure the direction of focus.", cx, 270);
+  ctx.fillText("a cognitive game to track the direction of focus.", cx, 270);
 
-  // Draw Dual Round Cards
+  // Draw Dual Round Cards with the starting round ordered as Round 1 on the left
   const cardW = 580;
   const cardH = 340;
   const gap = 40;
   const cardY = 320;
+  const isStartRound1 = state.round === 1;
 
-  // Round 1 Card
-  drawCard(ctx, cx - cardW - gap / 2, cardY, cardW, cardH, {
-    badge: "ROUND 1 · CPT",
-    badgeColor: "#fbbf24",
-    type: "RESPONSE",
-    title: "Continuous Performance",
+  const cptCardConfig = {
+    title: "Continuous Performance Test",
     target1: { name: "Cyan Sphere", action: "PRESS", color: "#00f0ff", press: true },
     target2: { name: "Red Box", action: "DO NOT PRESS", color: "#f43f5e", press: false },
-  });
+  };
 
-  // Round 2 Card
-  drawCard(ctx, cx + gap / 2, cardY, cardW, cardH, {
-    badge: "ROUND 2 · SART",
-    badgeColor: "#22d3ee",
-    type: "INVERSION",
-    title: "Sustained Attention to Response",
+  const sartCardConfig = {
+    title: "Sustained Attention to Response Task",
     target1: { name: "Red Box", action: "PRESS", color: "#f43f5e", press: true },
     target2: { name: "Cyan Sphere", action: "DO NOT PRESS", color: "#00f0ff", press: false },
-  });
+  };
+
+  if (isStartRound1) {
+    // Round 1 (Left): CPT
+    drawCard(ctx, cx - cardW - gap / 2, cardY, cardW, cardH, {
+      badge: "● ROUND 1 · CPT",
+      badgeColor: "#fbbf24",
+      type: "STARTING ROUND",
+      title: cptCardConfig.title,
+      isStarting: true,
+      target1: cptCardConfig.target1,
+      target2: cptCardConfig.target2,
+    });
+
+    // Round 2 (Right): SART
+    drawCard(ctx, cx + gap / 2, cardY, cardW, cardH, {
+      badge: "ROUND 2 · SART",
+      badgeColor: "#22d3ee",
+      type: "FOLLOWING ROUND",
+      title: sartCardConfig.title,
+      isStarting: false,
+      target1: sartCardConfig.target1,
+      target2: sartCardConfig.target2,
+    });
+  } else {
+    // Round 1 (Left): SART
+    drawCard(ctx, cx - cardW - gap / 2, cardY, cardW, cardH, {
+      badge: "● ROUND 1 · SART",
+      badgeColor: "#22d3ee",
+      type: "STARTING ROUND",
+      title: sartCardConfig.title,
+      isStarting: true,
+      target1: sartCardConfig.target1,
+      target2: sartCardConfig.target2,
+    });
+
+    // Round 2 (Right): CPT
+    drawCard(ctx, cx + gap / 2, cardY, cardW, cardH, {
+      badge: "ROUND 2 · CPT",
+      badgeColor: "#fbbf24",
+      type: "FOLLOWING ROUND",
+      title: cptCardConfig.title,
+      isStarting: false,
+      target1: cptCardConfig.target1,
+      target2: cptCardConfig.target2,
+    });
+  }
 
   // Subtext info
   ctx.font = "16px monospace";
@@ -89,8 +128,8 @@ export function renderReadyModal(
   ctx.fillText("Back", backX + backW / 2, btnY + 42);
   hitAreas.push({ id: "exit", type: "exit", x: backX, y: btnY, width: backW, height: btnH });
 
-  // Start Assessment Button
-  const startW = 340;
+  // Play Now Button
+  const startW = 280;
   const startX = cx + 20;
   const isStartHover = state.hoverId === "start-game";
   ctx.fillStyle = isStartHover ? "#4f46e5" : "#4338ca";
@@ -102,7 +141,7 @@ export function renderReadyModal(
 
   ctx.font = "bold 20px monospace";
   ctx.fillStyle = "#ffffff";
-  ctx.fillText("Start Assessment →", startX + startW / 2, btnY + 42);
+  ctx.fillText("Play Now →", startX + startW / 2, btnY + 42);
   hitAreas.push({ id: "start-game", type: "start-game", x: startX, y: btnY, width: startW, height: btnH });
 }
 
@@ -115,9 +154,9 @@ function drawCard(
   cfg: any
 ): void {
   ctx.save();
-  ctx.fillStyle = "rgba(15, 23, 42, 0.75)";
-  ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
-  ctx.lineWidth = 1.5;
+  ctx.fillStyle = cfg.isStarting ? "rgba(15, 23, 42, 0.95)" : "rgba(15, 23, 42, 0.6)";
+  ctx.strokeStyle = cfg.isStarting ? cfg.badgeColor : "rgba(51, 65, 85, 0.5)";
+  ctx.lineWidth = cfg.isStarting ? 2.5 : 1.5;
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, 20);
   ctx.fill();
@@ -128,9 +167,9 @@ function drawCard(
   ctx.textAlign = "left";
   ctx.fillText(cfg.badge, x + 24, y + 40);
 
-  ctx.fillStyle = "#64748b";
+  ctx.fillStyle = cfg.isStarting ? cfg.badgeColor : "#64748b";
   ctx.textAlign = "right";
-  ctx.font = "14px monospace";
+  ctx.font = "bold 14px monospace";
   ctx.fillText(cfg.type, x + w - 24, y + 40);
 
   ctx.fillStyle = "#94a3b8";

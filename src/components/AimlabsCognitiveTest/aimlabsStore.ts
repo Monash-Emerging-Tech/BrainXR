@@ -37,6 +37,7 @@ export interface AimlabsState {
   round2Metrics: RoundMetrics | null;
   lastReactionTime: number | null;
   recentFeedback: { text: string; color: string } | null;
+  isPaused: boolean;
 }
 
 class AimlabsStore {
@@ -58,6 +59,7 @@ class AimlabsStore {
     round2Metrics: null,
     lastReactionTime: null,
     recentFeedback: null,
+    isPaused: false,
   };
 
   private listeners = new Set<() => void>();
@@ -99,12 +101,15 @@ class AimlabsStore {
     if (this.countdownTimer) clearInterval(this.countdownTimer);
     this.sequence = [];
 
+    // Randomize initial starting round (1: CPT or 2: SART)
+    const initialRound: CognitiveRoundType = Math.random() < 0.5 ? 1 : 2;
+
     this.setState({
       isActive: true,
       isXR,
       status: "ready",
       countdown: 3,
-      round: 1,
+      round: initialRound,
       score: 0,
       accuracy: 100,
       trialIndex: 0,
@@ -117,6 +122,7 @@ class AimlabsStore {
       round2Metrics: null,
       lastReactionTime: null,
       recentFeedback: null,
+      isPaused: false,
     });
   }
 
@@ -126,11 +132,13 @@ class AimlabsStore {
   }
 
   startGame() {
-    this.startRound(1);
+    this.startRound(this.state.round);
   }
 
   startRound2() {
-    this.startRound(2);
+    // If round 1 was played, move to round 2, otherwise move to round 1
+    const nextRound: CognitiveRoundType = this.state.round === 1 ? 2 : 1;
+    this.startRound(nextRound);
   }
 
   restart() {
@@ -140,7 +148,8 @@ class AimlabsStore {
       round1Metrics: null,
       round2Metrics: null,
     });
-    this.startRound(1);
+    const nextRound: CognitiveRoundType = Math.random() < 0.5 ? 1 : 2;
+    this.startRound(nextRound);
   }
 
   private startRound(targetRound: CognitiveRoundType) {
@@ -306,6 +315,18 @@ class AimlabsStore {
     this.beginTrial(nextIndex);
   }
 
+  togglePause() {
+    if (this.state.status === "round1" || this.state.status === "round2") {
+      this.setState({ isPaused: !this.state.isPaused });
+    }
+  }
+
+  skipRound() {
+    if (this.state.status === "round1" || this.state.status === "round2") {
+      this.finishRound();
+    }
+  }
+
   private finishRound() {
     const isRound1 = this.state.round === 1;
     const m = this.metrics;
@@ -330,24 +351,46 @@ class AimlabsStore {
 
     aimlabsAudio.playRoundComplete();
 
-    if (isRound1) {
-      this.setState({
-        round1Metrics: roundData,
-        status: "intermission",
-        isTargetVisible: false,
-      });
+    // Check if this is the first played round or the second played round
+    const hasExistingMetrics = Boolean(this.state.round1Metrics || this.state.round2Metrics);
+
+    if (!hasExistingMetrics) {
+      // First round complete -> go to intermission
+      if (isRound1) {
+        this.setState({
+          round1Metrics: roundData,
+          status: "intermission",
+          isTargetVisible: false,
+        });
+      } else {
+        this.setState({
+          round2Metrics: roundData,
+          status: "intermission",
+          isTargetVisible: false,
+        });
+      }
     } else {
-      this.setState({
-        round2Metrics: roundData,
-        status: "finished",
-        isTargetVisible: false,
-      });
+      // Both rounds complete -> go to finished report
+      if (isRound1) {
+        this.setState({
+          round1Metrics: roundData,
+          status: "finished",
+          isTargetVisible: false,
+        });
+      } else {
+        this.setState({
+          round2Metrics: roundData,
+          status: "finished",
+          isTargetVisible: false,
+        });
+      }
     }
   }
 
   tick(delta: number) {
-    const { status, trialPhaseTime, isTargetVisible } = this.state;
+    const { status, trialPhaseTime, isTargetVisible, isPaused } = this.state;
     if (status !== "round1" && status !== "round2") return;
+    if (isPaused) return;
 
     const newPhaseTime = trialPhaseTime + delta;
 

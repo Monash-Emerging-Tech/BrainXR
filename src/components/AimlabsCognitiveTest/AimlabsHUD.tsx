@@ -6,7 +6,11 @@ interface AimlabsHUDProps {
   accuracy: number;
   round: CognitiveRoundType;
   recentFeedback: { text: string; color: string } | null;
+  isPaused?: boolean;
   onExit: () => void;
+  onSkipRound?: () => void;
+  onTogglePause?: () => void;
+  onMenu?: () => void;
 }
 
 export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
@@ -14,7 +18,11 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
   accuracy,
   round,
   recentFeedback,
+  isPaused = false,
   onExit,
+  onSkipRound,
+  onTogglePause,
+  onMenu,
 }) => {
   const isRound1 = round === 1;
 
@@ -22,15 +30,68 @@ export const AimlabsHUD: React.FC<AimlabsHUDProps> = ({
     <div className="absolute inset-0 pointer-events-none select-none z-40 overflow-hidden font-sans">
       {/* Top Header Bar */}
       <div className="absolute top-5 left-6 right-6 flex items-center justify-between">
-        {/* BrainXR Style Back Button */}
-        <button
-          onClick={onExit}
-          className="pointer-events-auto flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white border border-slate-700/60 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500 active:scale-95 cursor-pointer text-xs font-mono uppercase tracking-wider"
-          title="Exit to EEG Dashboard"
-        >
-          <span className="text-slate-400">←</span>
-          <span>Exit to EEG</span>
-        </button>
+        {/* Left Actions: Back, Pause, Skip, Menu */}
+        <div className="flex items-center gap-2 pointer-events-auto">
+          {/* Back Button */}
+          <button
+            onClick={onExit}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white border border-slate-700/60 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500 active:scale-95 cursor-pointer text-xs font-mono uppercase tracking-wider"
+            title="Back"
+          >
+            <span className="text-slate-400">←</span>
+            <span>Back</span>
+          </button>
+
+          {/* Pause Button [SVG only] */}
+          {onTogglePause && (
+            <button
+              onClick={onTogglePause}
+              className={`p-2.5 rounded-full border backdrop-blur-md transition-all duration-200 shadow-sm active:scale-95 cursor-pointer flex items-center justify-center ${
+                isPaused
+                  ? "bg-amber-500/20 text-amber-300 border-amber-500/50 hover:bg-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.25)]"
+                  : "bg-slate-900/80 text-slate-300 hover:text-white border-slate-700/60 hover:bg-slate-800 hover:border-slate-500"
+              }`}
+              title={isPaused ? "Resume" : "Pause"}
+              aria-label={isPaused ? "Resume" : "Pause"}
+            >
+              {isPaused ? (
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                </svg>
+              )}
+            </button>
+          )}
+
+          {/* Skip Button */}
+          {onSkipRound && (
+            <button
+              onClick={onSkipRound}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-amber-500/50 active:scale-95 cursor-pointer text-xs font-mono uppercase tracking-wider"
+              title="Skip"
+            >
+              <span>Skip</span>
+              <span className="text-amber-400">⇥</span>
+            </button>
+          )}
+
+          {/* Menu Button [Hamburger SVG] */}
+          <button
+            onClick={onMenu || onExit}
+            className="p-2.5 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 backdrop-blur-md transition-all duration-200 shadow-sm hover:border-slate-500 active:scale-95 cursor-pointer flex items-center justify-center"
+            title="Menu"
+            aria-label="Menu"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <line x1="4" y1="6" x2="20" y2="6" />
+              <line x1="4" y1="12" x2="20" y2="12" />
+              <line x1="4" y1="18" x2="20" y2="18" />
+            </svg>
+          </button>
+        </div>
 
         {/* Compact Telemetry Readout (No trials completed/remaining) */}
         <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-slate-900/80 border border-slate-700/60 backdrop-blur-md shadow-lg text-xs font-mono">

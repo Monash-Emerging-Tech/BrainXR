@@ -7,15 +7,21 @@ export function renderIntermissionModal(
   state: CanvasScreenRenderState,
   hitAreas: InteractiveHitArea[]
 ): void {
-  const m = state.round1Metrics;
+  const m = state.round1Metrics || state.round2Metrics;
   if (!m) return;
   const cx = width / 2;
+
+  // Did we just finish Round 1 or Round 2?
+  const isNextRound2 = !state.round2Metrics;
+  const completedLabel = isNextRound2 ? "ROUND 1 COMPLETE" : "ROUND 2 COMPLETE";
+  const ruleReversalTitle = isNextRound2 ? "RULE REVERSAL FOR ROUND 2 (SART)" : "RULE REVERSAL FOR ROUND 1 (CPT)";
+  const nextButtonLabel = isNextRound2 ? "Start Round 2 (SART) →" : "Start Round 1 (CPT) →";
 
   // Eyebrow badge
   ctx.font = "bold 16px monospace";
   ctx.fillStyle = "#fbbf24";
   ctx.textAlign = "center";
-  ctx.fillText("ROUND 1 COMPLETE", cx, 140);
+  ctx.fillText(completedLabel, cx, 140);
 
   // Spanned Title
   ctx.font = "bold 56px 'OffBit', monospace";
@@ -77,12 +83,17 @@ export function renderIntermissionModal(
   ctx.letterSpacing = "2px";
   ctx.fillStyle = "#fb7185";
   ctx.textAlign = "center";
-  ctx.fillText("RULE REVERSAL FOR ROUND 2 (SART)", cx, revY + 42);
+  ctx.fillText(ruleReversalTitle, cx, revY + 42);
 
-  // Left card: Red Box -> PRESS
-  drawRuleSubcard(ctx, revX + 40, revY + 70, 440, 100, "Red Box", "PRESS", "#f43f5e", true);
-  // Right card: Cyan Sphere -> DO NOT PRESS
-  drawRuleSubcard(ctx, revX + 520, revY + 70, 440, 100, "Cyan Sphere", "DO NOT PRESS", "#00f0ff", false);
+  if (isNextRound2) {
+    // Round 2 SART rules: Red Box -> PRESS, Cyan Sphere -> DO NOT PRESS
+    drawRuleSubcard(ctx, revX + 40, revY + 70, 440, 100, "Red Box", "PRESS", "#f43f5e", true);
+    drawRuleSubcard(ctx, revX + 520, revY + 70, 440, 100, "Cyan Sphere", "DO NOT PRESS", "#00f0ff", false);
+  } else {
+    // Round 1 CPT rules: Cyan Sphere -> PRESS, Red Box -> DO NOT PRESS
+    drawRuleSubcard(ctx, revX + 40, revY + 70, 440, 100, "Cyan Sphere", "PRESS", "#00f0ff", true);
+    drawRuleSubcard(ctx, revX + 520, revY + 70, 440, 100, "Red Box", "DO NOT PRESS", "#f43f5e", false);
+  }
 
   // Continue Button
   const btnW = 420;
@@ -103,7 +114,7 @@ export function renderIntermissionModal(
   ctx.letterSpacing = "1px";
   ctx.fillStyle = "#ffffff";
   ctx.textAlign = "center";
-  ctx.fillText("Start Round 2 (SART) →", cx, btnY + 44);
+  ctx.fillText(nextButtonLabel, cx, btnY + 44);
 
   hitAreas.push({ id: "start-round2", type: "start-round2", x: btnX, y: btnY, width: btnW, height: btnH });
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import type { GameStatus, RoundMetrics } from "./types";
+import type { GameStatus, RoundMetrics, CognitiveRoundType } from "./types";
 
 interface SpannedTextProps {
   text: string;
@@ -152,6 +152,7 @@ const ModalDecorativeField: React.FC = () => {
 interface AimlabsModalsProps {
   status: GameStatus;
   countdown: number;
+  currentRound: CognitiveRoundType;
   round1Metrics: RoundMetrics | null;
   round2Metrics: RoundMetrics | null;
   onStartGame: () => void;
@@ -163,6 +164,7 @@ interface AimlabsModalsProps {
 export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
   status,
   countdown,
+  currentRound,
   round1Metrics,
   round2Metrics,
   onStartGame,
@@ -231,82 +233,161 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
 
           {/* Direction of Focus Description */}
           <p className="text-xs sm:text-sm text-slate-300 font-mono whitespace-nowrap mb-6">
-            A cognitive game to measure the <span className="text-cyan-300 font-semibold">direction of focus</span>.
+            a cognitive game to track the <span className="text-cyan-300 font-semibold">direction of focus</span>.
           </p>
 
-          {/* Side-by-Side Dual Round Cards Layout */}
+          {/* Side-by-Side Dual Round Cards Layout: First card is always Round 1 (whichever starts first) */}
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-2 text-left font-mono">
-            {/* Round 1 Card */}
-            <div className="p-4 rounded-2xl border border-cyan-500/20 bg-slate-950/85 backdrop-blur-md flex flex-col justify-between shadow-2xl transition-transform hover:scale-[1.01] duration-200">
+            {/* Card Position 1: The starting round (labeled Round 1) */}
+            <div className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col justify-between shadow-2xl ${
+              currentRound === 1
+                ? "border-amber-400/80 bg-slate-950/95 ring-2 ring-amber-400/30 scale-[1.01]"
+                : "border-cyan-400/80 bg-slate-950/95 ring-2 ring-cyan-400/30 scale-[1.01]"
+            }`}>
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-amber-400 uppercase font-bold tracking-wider">
-                    Round 1 · CPT
+                  <span className={`text-[11px] uppercase font-bold tracking-wider flex items-center gap-1.5 ${
+                    currentRound === 1 ? "text-amber-400" : "text-cyan-400"
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full animate-pulse ${
+                      currentRound === 1 ? "bg-amber-400" : "bg-cyan-400"
+                    }`} />
+                    {currentRound === 1 ? "Round 1 · CPT" : "Round 1 · SART"}
                   </span>
-                  <span className="text-[9px] text-slate-500 uppercase">Response</span>
+                  <span className={`text-[9px] uppercase px-2 py-0.5 rounded-full font-bold border ${
+                    currentRound === 1
+                      ? "bg-amber-400/20 text-amber-300 border-amber-400/40"
+                      : "bg-cyan-400/20 text-cyan-300 border-cyan-400/40"
+                  }`}>
+                    First Round
+                  </span>
                 </div>
-                <div className="text-xs text-slate-300 mt-1">Continuous Performance</div>
+                <div className="text-xs text-slate-300 mt-1">
+                  {currentRound === 1 ? "Continuous Performance Test" : "Sustained Attention to Response Task"}
+                </div>
               </div>
 
               <div className="space-y-2.5 mt-4 pt-3 border-t border-slate-800 text-xs">
-                {/* Cyan Sphere -> Press */}
-                <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 shadow-sm">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
-                    <span className="text-slate-200">Cyan Sphere</span>
-                  </div>
-                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
-                    PRESS
-                  </span>
-                </div>
+                {currentRound === 1 ? (
+                  <>
+                    {/* Cyan Sphere -> Press */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
+                        <span className="text-slate-200">Cyan Sphere</span>
+                      </div>
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
+                        PRESS
+                      </span>
+                    </div>
 
-                {/* Red Box -> Avoid */}
-                <div className="flex items-center justify-between p-2 rounded-xl bg-rose-950/30 border border-rose-500/25 shadow-sm">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-3.5 h-3.5 rounded-xs bg-rose-600 shadow-[0_0_5px_rgba(225,29,72,0.5)]" />
-                    <span className="text-slate-300">Red Box</span>
-                  </div>
-                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/40 font-bold tracking-wider">
-                    DO NOT PRESS
-                  </span>
-                </div>
+                    {/* Red Box -> Avoid */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-rose-950/30 border border-rose-500/25 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-3.5 h-3.5 rounded-xs bg-rose-600 shadow-[0_0_5px_rgba(225,29,72,0.5)]" />
+                        <span className="text-slate-300">Red Box</span>
+                      </div>
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/40 font-bold tracking-wider">
+                        DO NOT PRESS
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Red Box -> Press */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-rose-950/40 border border-rose-500/30 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-3.5 h-3.5 rounded-xs bg-rose-600 shadow-[0_0_6px_rgba(225,29,72,0.6)]" />
+                        <span className="text-slate-200">Red Box</span>
+                      </div>
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/40 font-bold tracking-wider">
+                        PRESS
+                      </span>
+                    </div>
+
+                    {/* Cyan Sphere -> Avoid */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/25 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_5px_rgba(6,182,212,0.5)]" />
+                        <span className="text-slate-300">Cyan Sphere</span>
+                      </div>
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
+                        DO NOT PRESS
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Round 2 Card */}
-            <div className="p-4 rounded-2xl border border-violet-500/20 bg-slate-950/85 backdrop-blur-md flex flex-col justify-between shadow-2xl transition-transform hover:scale-[1.01] duration-200">
+            {/* Card Position 2: The following round (labeled Round 2) */}
+            <div className="p-4 rounded-2xl border border-slate-800/80 bg-slate-950/60 opacity-60 hover:opacity-90 transition-all duration-300 flex flex-col justify-between shadow-2xl">
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-cyan-400 uppercase font-bold tracking-wider">
-                    Round 2 · SART
+                  <span className={`text-[11px] uppercase font-bold tracking-wider ${
+                    currentRound === 1 ? "text-cyan-400" : "text-amber-400"
+                  }`}>
+                    {currentRound === 1 ? "Round 2 · SART" : "Round 2 · CPT"}
                   </span>
-                  <span className="text-[9px] text-slate-500 uppercase">Inversion</span>
+                  <span className="text-[9px] uppercase px-2 py-0.5 rounded-full font-bold text-slate-500">
+                    Following Round
+                  </span>
                 </div>
-                <div className="text-xs text-slate-300 mt-1">Sustained Attention to Response</div>
+                <div className="text-xs text-slate-300 mt-1">
+                  {currentRound === 1 ? "Sustained Attention to Response Task" : "Continuous Performance Test"}
+                </div>
               </div>
 
               <div className="space-y-2.5 mt-4 pt-3 border-t border-slate-800 text-xs">
-                {/* Red Box -> Press */}
-                <div className="flex items-center justify-between p-2 rounded-xl bg-rose-950/40 border border-rose-500/30 shadow-sm">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-3.5 h-3.5 rounded-xs bg-rose-600 shadow-[0_0_6px_rgba(225,29,72,0.6)]" />
-                    <span className="text-slate-200">Red Box</span>
-                  </div>
-                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/40 font-bold tracking-wider">
-                    PRESS
-                  </span>
-                </div>
+                {currentRound === 1 ? (
+                  <>
+                    {/* Red Box -> Press */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-rose-950/40 border border-rose-500/30 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-3.5 h-3.5 rounded-xs bg-rose-600 shadow-[0_0_6px_rgba(225,29,72,0.6)]" />
+                        <span className="text-slate-200">Red Box</span>
+                      </div>
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/40 font-bold tracking-wider">
+                        PRESS
+                      </span>
+                    </div>
 
-                {/* Cyan Sphere -> Avoid */}
-                <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/25 shadow-sm">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_5px_rgba(6,182,212,0.5)]" />
-                    <span className="text-slate-300">Cyan Sphere</span>
-                  </div>
-                  <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
-                    DO NOT PRESS
-                  </span>
-                </div>
+                    {/* Cyan Sphere -> Avoid */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/30 border border-cyan-500/25 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_5px_rgba(6,182,212,0.5)]" />
+                        <span className="text-slate-300">Cyan Sphere</span>
+                      </div>
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
+                        DO NOT PRESS
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Cyan Sphere -> Press */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-cyan-950/40 border border-cyan-500/30 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-3.5 h-3.5 rounded-full bg-cyan-500 shadow-[0_0_6px_rgba(6,182,212,0.6)]" />
+                        <span className="text-slate-200">Cyan Sphere</span>
+                      </div>
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 font-bold tracking-wider">
+                        PRESS
+                      </span>
+                    </div>
+
+                    {/* Red Box -> Avoid */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-rose-950/30 border border-rose-500/25 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-3.5 h-3.5 rounded-xs bg-rose-600 shadow-[0_0_5px_rgba(225,29,72,0.5)]" />
+                        <span className="text-slate-300">Red Box</span>
+                      </div>
+                      <span className="font-offbit text-xs uppercase px-2.5 py-0.5 rounded-full bg-rose-950/80 text-rose-300 border border-rose-500/40 font-bold tracking-wider">
+                        DO NOT PRESS
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -335,7 +416,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
               onClick={() => handleAction(onStartGame)}
               className="flex-2 py-3 px-6 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs font-mono uppercase tracking-wider shadow-lg hover:shadow-indigo-500/30 active:scale-95 transition-all cursor-pointer border border-indigo-400/40"
             >
-              Start Assessment →
+              Play Now →
             </button>
           </div>
         </div>
@@ -344,7 +425,13 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
   }
 
   // Intermission Screen
-  if (status === "intermission" && round1Metrics) {
+  if (status === "intermission" && (round1Metrics || round2Metrics)) {
+    const prevMetrics = round1Metrics || round2Metrics!;
+    const isNextRound2 = !round2Metrics; // if round2 hasn't run, next is round 2; otherwise next is round 1
+    const nextRoundName = isNextRound2 ? "Round 2 (SART)" : "Round 1 (CPT)";
+    const nextRoundTag = isNextRound2 ? "ROUND 2 · SART" : "ROUND 1 · CPT";
+    const completedRoundName = isNextRound2 ? "ROUND 1 COMPLETE" : "ROUND 2 COMPLETE";
+
     return (
       <div
         className={`absolute inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xl px-4 font-sans select-none overflow-hidden transition-all duration-300 ease-out ${mounted && !isFadingOut
@@ -356,7 +443,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
 
         <div className="relative z-10 max-w-xl w-full flex flex-col items-center text-center px-4 py-8">
           <div className="inline-flex items-center gap-2 rounded-full bg-amber-950/70 px-3.5 py-1.5 text-xs font-mono tracking-wider text-amber-300 border border-amber-500/40 backdrop-blur-md mb-3 uppercase font-semibold">
-            ROUND 1 COMPLETE
+            {completedRoundName}
           </div>
 
           <div className="w-full px-4 mb-2">
@@ -370,27 +457,27 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
           <div className="w-full grid grid-cols-2 sm:grid-cols-4 gap-2 my-5 text-center font-mono">
             <div className="bg-slate-950/70 p-3 rounded-2xl border border-slate-800 backdrop-blur-md">
               <div className="text-[10px] text-slate-500 uppercase font-semibold">Hits (Go)</div>
-              <div className="text-lg font-bold text-cyan-400 mt-0.5">{round1Metrics.goHits}</div>
+              <div className="text-lg font-bold text-cyan-400 mt-0.5">{prevMetrics.goHits}</div>
             </div>
             <div className="bg-slate-950/70 p-3 rounded-2xl border border-slate-800 backdrop-blur-md">
               <div className="text-[10px] text-slate-500 uppercase font-semibold">False Alarms</div>
-              <div className="text-lg font-bold text-rose-400 mt-0.5">{round1Metrics.commissions}</div>
+              <div className="text-lg font-bold text-rose-400 mt-0.5">{prevMetrics.commissions}</div>
             </div>
             <div className="bg-slate-950/70 p-3 rounded-2xl border border-slate-800 backdrop-blur-md">
               <div className="text-[10px] text-slate-500 uppercase font-semibold">Mean RT</div>
-              <div className="text-lg font-bold text-amber-400 mt-0.5">{Math.round(round1Metrics.meanReactionTime)} ms</div>
+              <div className="text-lg font-bold text-amber-400 mt-0.5">{Math.round(prevMetrics.meanReactionTime)} ms</div>
             </div>
             <div className="bg-slate-950/70 p-3 rounded-2xl border border-slate-800 backdrop-blur-md">
               <div className="text-[10px] text-slate-500 uppercase font-semibold">Accuracy</div>
-              <div className="text-lg font-bold text-emerald-400 mt-0.5">{Math.round(round1Metrics.accuracy)}%</div>
+              <div className="text-lg font-bold text-emerald-400 mt-0.5">{Math.round(prevMetrics.accuracy)}%</div>
             </div>
           </div>
 
-          {/* Rule Reversal Notice for Round 2 */}
+          {/* Rule Reversal Notice */}
           <div className="w-full bg-slate-950/70 border border-rose-500/40 p-4 rounded-2xl text-left my-2 font-mono backdrop-blur-md">
             <div className="flex items-center gap-2 text-rose-400 text-xs font-bold uppercase tracking-wider mb-2">
               <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
-              RULE REVERSAL FOR ROUND 2 (SART)
+              RULE REVERSAL FOR {nextRoundTag}
             </div>
 
             <div className="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-slate-800 text-xs">
@@ -398,7 +485,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
                 <span className="w-3.5 h-3.5 rounded-xs bg-rose-500 shadow-[0_0_6px_#f43f5e]" />
                 <div>
                   <div className="text-[9px] text-rose-300 uppercase">RED BOX</div>
-                  <div className="font-offbit font-bold text-white text-xs">PRESS</div>
+                  <div className="font-offbit font-bold text-white text-xs">{isNextRound2 ? "PRESS" : "DO NOT PRESS"}</div>
                 </div>
               </div>
 
@@ -406,7 +493,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
                 <span className="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#00f0ff]" />
                 <div>
                   <div className="text-[9px] text-cyan-300 uppercase">CYAN SPHERE</div>
-                  <div className="font-offbit font-bold text-cyan-300 text-xs">DO NOT PRESS</div>
+                  <div className="font-offbit font-bold text-cyan-300 text-xs">{isNextRound2 ? "DO NOT PRESS" : "PRESS"}</div>
                 </div>
               </div>
             </div>
@@ -416,7 +503,7 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
             onClick={() => handleAction(onStartRound2)}
             className="w-full mt-4 py-3.5 px-6 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-rose-500/30 active:scale-95 transition-all cursor-pointer border border-rose-400/40"
           >
-            Start Round 2 (SART) →
+            Start {nextRoundName} →
           </button>
         </div>
       </div>
