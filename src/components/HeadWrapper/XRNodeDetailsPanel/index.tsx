@@ -77,10 +77,12 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
       }
     }
 
-    // Smoothly anchor the floating pills centered around the physical head
+    // Smoothly anchor the floating pills relative to the physical head.
+    // Raising the UI plane relative to the headset positions the headset ~5 rems (0.08m)
+    // lower relative to the top components, creating generous breathing room.
     if (headPositionRef?.current && groupRef.current) {
       const headPos = headPositionRef.current;
-      groupRef.current.position.set(headPos.x, headPos.y - 0.12, headPos.z - 0.02);
+      groupRef.current.position.set(headPos.x, headPos.y + 0.08, headPos.z - 0.04);
     }
   });
 
