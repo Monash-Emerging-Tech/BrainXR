@@ -37,17 +37,29 @@ export function useAudioSync({ mode, isPaused, speed, timeRef, sourceRef }: Para
   const toggleMute = useCallback(() => {
     setIsMuted((prev) => {
       const next = !prev;
-      if (audioRef.current) {
-        audioRef.current.muted = next || speed === 10;
-        if (!next && !isPaused && audioRef.current.paused) {
-          audioRef.current.play().catch((err) => {
-            console.log("Audio autoplay / play failed or was blocked by browser:", err);
-          });
+      const audio = audioRef.current;
+      if (audio) {
+        audio.muted = next || speed === 10;
+        if (!next && !isPaused) {
+          // If unmuting while playing, ensure audio currentTime is locked to the visual stimulus elapsed time
+          const currentTotalTime = timeRef.current;
+          const trialElapsed = currentTotalTime % TRIAL_SECONDS;
+          if (trialElapsed >= 3.0) {
+            const expectedAudioTime = trialElapsed - 3.0;
+            if (Math.abs(audio.currentTime - expectedAudioTime) > 0.15) {
+              audio.currentTime = expectedAudioTime;
+            }
+          }
+          if (audio.paused) {
+            audio.play().catch((err) => {
+              console.log("Audio autoplay / play failed or was blocked by browser:", err);
+            });
+          }
         }
       }
       return next;
     });
-  }, [speed, isPaused]);
+  }, [speed, isPaused, timeRef]);
 
   // Load or switch audio track for the given trial
   const loadTrack = useCallback((trialIndex: number) => {
@@ -74,6 +86,8 @@ export function useAudioSync({ mode, isPaused, speed, timeRef, sourceRef }: Para
       audioHasErrorRef.current = false;
       setAudioError(false);
       audioRef.current.load();
+    } else if (audioRef.current) {
+      audioRef.current.muted = isMutedRef.current || speed === 10;
     }
     currentTrialIndexRef.current = trialIndex;
   }, [mode.kind, speed, sourceRef]);
