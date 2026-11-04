@@ -247,10 +247,10 @@ export const AimlabsModals: React.FC<AimlabsModalsProps> = ({
         <ModalDecorativeField />
 
         <div className="relative z-10 max-w-3xl lg:max-w-4xl w-full flex flex-col items-center text-center px-6 sm:px-10 py-8 bg-[#0d0d10]/90 border border-white/15 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-xl">
-          {/* Top Tag: an MNET experience */}
+          {/* Top Tag: Focus as a Vector Quantity */}
           <div className="w-full px-4 sm:px-12 mb-1">
             <SpannedText
-              text="an MNET experience"
+              text="Focus as a Vector Quantity"
               className="text-slate-400 text-xs sm:text-sm font-semibold tracking-wider"
             />
           </div>

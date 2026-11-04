@@ -14,7 +14,7 @@ export function renderReadyModal(
   ctx.fillStyle = "#94a3b8";
   ctx.textAlign = "center";
   ctx.letterSpacing = "6px";
-  ctx.fillText("AN MNET EXPERIENCE", cx, 140);
+  ctx.fillText("FOCUS AS A VECTOR QUANTITY", cx, 140);
 
   // Title: BrainXR
   ctx.font = "bold 64px 'OffBit', monospace";

@@ -14,7 +14,7 @@ export function renderHUD(
   const barH = 52; // Compact, clean 52px height
 
   // 1. Back Button (Top Left)
-  const backW = 114;
+  const backW = 126;
   const backH = barH;
   const backX = 40;
   const isBackHover = state.hoverId === "exit";
@@ -27,7 +27,7 @@ export function renderHUD(
   ctx.fill();
   ctx.stroke();
 
-  ctx.font = "bold 18px monospace";
+  ctx.font = "bold 20px monospace";
   ctx.fillStyle = isBackHover ? "#ffffff" : "#cbd5e1";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -75,10 +75,10 @@ export function renderHUD(
   }
   hitAreas.push({ id: "toggle-pause", type: "toggle-pause", x: pauseX, y: topY, width: pauseW, height: pauseH });
 
-  // Center Top Rule Badge Card (width=460, x=570, generous 370px gap from left and 30px gap to telemetry)
-  const ruleW = 460;
+  // Center Top Rule Badge Card (expanded to 500px, x=530: leaves 348px gap to left, 30px gap to telemetry)
+  const ruleW = 500;
   const ruleH = barH + 2; // 54px
-  const ruleX = 570;
+  const ruleX = 530;
 
   ctx.fillStyle = "rgba(2, 6, 23, 0.88)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
@@ -88,7 +88,7 @@ export function renderHUD(
   ctx.fill();
   ctx.stroke();
 
-  const badgeW = (ruleW - 20) / 2; // 220px each
+  const badgeW = (ruleW - 20) / 2; // 240px each
   const badgeH = 46;
   const badgeY = topY + 3;
 
@@ -106,7 +106,7 @@ export function renderHUD(
   const m = state.liveFocusMetrics;
   const telW = 500;
   const telH = barH;
-  const telX = width - telW - 40; // x = 1060
+  const telX = width - telW - 30; // x = 1070
 
   ctx.fillStyle = "rgba(15, 23, 42, 0.88)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
@@ -144,22 +144,22 @@ export function renderHUD(
   telemetrySegments.forEach((seg, i) => {
     const segX = telX + i * segW;
 
-    // Segment label: anchored to the left of the slot
-    ctx.font = "13px monospace";
+    // Segment label: anchored to the left of the slot (crisp 13px bold)
+    ctx.font = "bold 13px monospace";
     ctx.fillStyle = "#94a3b8";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillText(seg.label, segX + 12, topY + telH / 2);
+    ctx.fillText(seg.label, segX + 10, topY + telH / 2);
 
-    // Segment value: anchored to the right of the slot to guarantee no overlap with label
-    ctx.font = "bold 16px monospace";
+    // Segment value: anchored to the right of the slot (large, high-contrast 18px bold)
+    ctx.font = "bold 18px monospace";
     ctx.fillStyle = seg.color;
     ctx.textAlign = "right";
-    ctx.fillText(seg.value, segX + segW - 12, topY + telH / 2);
+    ctx.fillText(seg.value, segX + segW - 10, topY + telH / 2);
 
     // Vertical divider between segments
     if (i < 3) {
-      ctx.font = "13px monospace";
+      ctx.font = "14px monospace";
       ctx.fillStyle = "#334155";
       ctx.textAlign = "center";
       ctx.fillText("|", segX + segW, topY + telH / 2);
@@ -174,11 +174,13 @@ export function renderHUD(
     ctx.fillText(state.recentFeedback.text, width / 2, height / 2 + 140);
   }
 
-  // Bottom Pause Quick Tip Badge in XR: safely padded inside canvas boundary so it never gets clipped
+  // Bottom Pause Quick Tip Badge in XR: vertically symmetrical with top HUD bar (topY = 40)
   const hintW = 380;
   const hintH = 42;
   const hintX = (width - hintW) / 2;
-  const hintY = height - 56;
+  // Top HUD bar center is at topY + barH / 2 = 66. Symmetrical bottom center is at height - 66:
+  // hintY = (height - 66) - hintH / 2 = height - topY - (barH + hintH) / 2 = height - 87
+  const hintY = height - topY - (barH + hintH) / 2;
 
   ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
   ctx.strokeStyle = "rgba(51, 65, 85, 0.6)";
@@ -215,7 +217,8 @@ function drawMiniRuleBadge(
   }
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.roundRect(x, y, w, h, 10);
+  // Scaled corner radius to 16px to match the outer capsule card curvature
+  ctx.roundRect(x, y, w, h, 16);
   ctx.fill();
   ctx.stroke();
 
@@ -223,10 +226,11 @@ function drawMiniRuleBadge(
   ctx.fillStyle = color;
   ctx.beginPath();
   if (name.includes("SPHERE")) {
-    ctx.arc(x + 19, y + h / 2, 7.5, 0, Math.PI * 2);
+    ctx.arc(x + 19, y + h / 2, 8, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    ctx.roundRect(x + 13, y + h / 2 - 6.5, 13, 13, 3);
+    // Red box target icon with proportional 4px corner radius
+    ctx.roundRect(x + 12, y + h / 2 - 7, 14, 14, 4);
     ctx.fill();
   }
 
@@ -234,15 +238,15 @@ function drawMiniRuleBadge(
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
 
-  // Top line: stimulus name
-  ctx.font = "bold 11px monospace";
+  // Top line: stimulus name (enlarged to 12.5px)
+  ctx.font = "bold 12.5px monospace";
   ctx.letterSpacing = "0.5px";
   ctx.fillStyle = isGreen ? "#86efac" : "#fda4af";
   ctx.fillText(name, x + 36, y + 15);
 
-  // Bottom line: stimulus action
-  ctx.font = "bold 15px 'OffBit', monospace";
-  ctx.letterSpacing = "1px";
+  // Bottom line: stimulus action (enlarged to 17.5px OffBit)
+  ctx.font = "bold 17.5px 'OffBit', monospace";
+  ctx.letterSpacing = "1.2px";
   ctx.fillStyle = isPress ? "#ffffff" : isGreen ? "#4ade80" : "#fb7185";
   ctx.fillText(action, x + 36, y + 31);
 
