@@ -19,6 +19,8 @@ interface XRNodeDetailsPanelProps {
   onSelectChannel: (name: ElectrodeName | null) => void;
   position?: [number, number, number];
   headPositionRef?: React.RefObject<THREE.Vector3>;
+  isMuted?: boolean;
+  onToggleMute?: () => void;
 }
 
 export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
@@ -27,6 +29,8 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
   onSelectChannel,
   position = [0, 0.76, -0.95],
   headPositionRef,
+  isMuted = true,
+  onToggleMute,
 }) => {
   const hitAreasRef = useRef<NodePanelHitArea[]>([]);
   const [hoverId, setHoverId] = useState<string | null>(null);
@@ -87,7 +91,8 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
           frameRef.current,
           hoverId,
           hitAreasRef.current,
-          showSimulatedRecording
+          showSimulatedRecording,
+          isMuted
         );
         texture.needsUpdate = true;
       }
@@ -142,6 +147,12 @@ export const XRNodeDetailsPanel: React.FC<XRNodeDetailsPanelProps> = ({
     // Toggle simulated recording component on clicking Intensity of Focus pill
     if (match.id === "toggle-recording") {
       setShowSimulatedRecording((prev) => !prev);
+      return;
+    }
+
+    // Toggle audio mute / unmute
+    if (match.id === "toggle-mute") {
+      onToggleMute?.();
       return;
     }
 

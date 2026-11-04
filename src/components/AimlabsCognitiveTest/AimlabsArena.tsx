@@ -1,6 +1,7 @@
-import React, { useRef, useMemo, useEffect } from "react";
+import React, { useRef, useMemo, useEffect, useSyncExternalStore } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { xrStore } from "../../utils/xrStore";
 
 /**
  * Palette for the white-themed portal experience.
@@ -286,32 +287,169 @@ function RoomSegment({
   );
 }
 
+interface TunnelEndWallProps {
+  z: number;
+  width: number;
+  height: number;
+  wallWidthMultiplier?: number;
+  wallHeightMultiplier?: number;
+  isFarWall?: boolean;
+}
+
+/**
+ * End wall capping the corridor in solid black to guarantee WebXR sensory occlusion,
+ * while continuing the tunnel's 16:9 orthogonal wireframe lines seamlessly across the wall in white.
+ */
+function TunnelEndWall({
+  z,
+  width,
+  height,
+  wallWidthMultiplier = 2.5,
+  wallHeightMultiplier = 2.5,
+  isFarWall = true,
+}: TunnelEndWallProps) {
+  const wallW = width * wallWidthMultiplier;
+  const wallH = height * wallHeightMultiplier;
+  const halfWallW = wallW / 2;
+  const halfWallH = wallH / 2;
+
+  const halfW = width / 2;
+  const halfH = height / 2;
+
+  const Nx = 16;
+  const Ny = 9;
+  const w = width / Nx;
+  const h = height / Ny;
+
+  const gridPositions = useMemo(() => {
+    const vertices: number[] = [];
+
+    // Range of vertical lines across the black wall
+    const iMin = Math.floor((-halfWallW - (-halfW)) / w);
+    const iMax = Math.ceil((halfWallW - (-halfW)) / w);
+
+    // Range of horizontal lines across the black wall
+    const jMin = Math.floor((-halfWallH - (-halfH)) / h);
+    const jMax = Math.ceil((halfWallH - (-halfH)) / h);
+
+    // Vertical grid lines (continue floor & ceiling longitudinal lines onto the black wall)
+    for (let i = iMin; i <= iMax; i++) {
+      const x = -halfW + i * w;
+      vertices.push(x, -halfWallH, 0, x, halfWallH, 0);
+    }
+
+    // Horizontal grid lines (continue left & right wall longitudinal lines onto the black wall)
+    for (let j = jMin; j <= jMax; j++) {
+      const y = -halfH + j * h;
+      vertices.push(-halfWallW, y, 0, halfWallW, y, 0);
+    }
+
+    return new Float32Array(vertices);
+  }, [halfW, halfH, halfWallW, halfWallH, w, h]);
+
+  const borderPositions = useMemo(() => {
+    // 4 edges framing the corridor aperture
+    return new Float32Array([
+      -halfW, -halfH, 0,  halfW, -halfH, 0,
+       halfW, -halfH, 0,  halfW,  halfH, 0,
+       halfW,  halfH, 0, -halfW,  halfH, 0,
+      -halfW,  halfH, 0, -halfW, -halfH, 0,
+    ]);
+  }, [halfW, halfH]);
+
+  // Offset lines 0.1m in front of the black plane towards the viewer at z = 0
+  const lineZ = isFarWall ? z + 0.1 : z - 0.1;
+
+  return (
+    <group>
+      {/* Solid Black Opaque Backing Wall */}
+      <mesh position={[0, 0, z]} renderOrder={-999}>
+        <planeGeometry args={[wallW, wallH]} />
+        <meshBasicMaterial color="#000000" side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* White Wireframe Grid continuing from corridor walls onto the black wall */}
+      <lineSegments position={[0, 0, lineZ]} renderOrder={-998} raycast={() => null}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[gridPositions, 3]}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial
+          color="#ffffff"
+          transparent
+          opacity={0.55}
+          linewidth={1}
+          fog={false}
+          polygonOffset
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-1}
+        />
+      </lineSegments>
+
+      {/* Prominent White Corridor Aperture Frame */}
+      <lineSegments position={[0, 0, lineZ + (isFarWall ? 0.01 : -0.01)]} renderOrder={-997} raycast={() => null}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[borderPositions, 3]}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial
+          color="#ffffff"
+          transparent
+          opacity={0.85}
+          linewidth={1}
+          fog={false}
+          polygonOffset
+          polygonOffsetFactor={-2}
+          polygonOffsetUnits={-2}
+        />
+      </lineSegments>
+    </group>
+  );
+}
+
 interface AimlabsArenaProps {
   speed?: number;
   width?: number;
   height?: number;
+  isXR?: boolean;
 }
 
 export const AimlabsArena: React.FC<AimlabsArenaProps> = ({
   speed = 3.5,
   height = 14,
   width = (14 * 16) / 9, // Exact 16:9 aspect ratio (~24.89 for height 14)
+  isXR: isXRProp,
 }) => {
   const { scene } = useThree();
 
-  // Set dark background & deep space fog while the portal experience is active
+  const isXRPresenting = useSyncExternalStore(
+    xrStore.subscribe,
+    () => xrStore.getState().session != null,
+    () => false
+  );
+  const isXR = isXRProp ?? isXRPresenting;
+
+  // Set dark background & deep space fog while the portal experience is active.
+  // In the web version (desktop), linear fog (#000000, 20..85) creates a clean, infinite vanishing corridor.
+  // In WebXR, exponential fog (#000000, 0.024) is used alongside the 360° cosmic void enclosure for sensory occlusion.
   useEffect(() => {
     const prevBackground = scene.background;
     const prevFog = scene.fog;
 
     scene.background = new THREE.Color("#000000");
-    scene.fog = new THREE.FogExp2("#000000", 0.024);
+    scene.fog = isXR
+      ? new THREE.FogExp2("#000000", 0.024)
+      : new THREE.Fog("#000000", 20, 85);
 
     return () => {
       scene.background = prevBackground;
       scene.fog = prevFog;
     };
-  }, [scene]);
+  }, [scene, isXR]);
 
   return (
     <group name="brainxr-portal-arena">
@@ -351,12 +489,69 @@ export const AimlabsArena: React.FC<AimlabsArenaProps> = ({
       />
 
       {/*
+        360° Cosmic Void Enclosure for WebXR:
+        In WebXR (especially when passthrough / alpha-blend is active), the clear color is transparent.
+        An inverted opaque black sphere ensures complete sensory occlusion in all directions,
+        rendering pitch black (#000000) with alpha = 1.0 behind the tunnel and surrounding space.
+        Only rendered in WebXR mode.
+      */}
+      {isXR && (
+        <mesh position={[0, 1.6, 0]} renderOrder={-1000}>
+          <sphereGeometry args={[180, 32, 16]} />
+          <meshBasicMaterial
+            color="#000000"
+            side={THREE.BackSide}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+
+      {/*
         4-Segment Continuous Zooming Corridor Tunnel.
         Centered at y = 1.6 so the vanishing point converges directly behind the central target.
         Rectangle cross-section: 16:9 Aspect Ratio (Width: 24.89, Height: 14).
         Extends 120m in length with seamless wrapping behind the viewer.
       */}
       <group position={[0, 1.6, 0]}>
+        {/*
+          WebXR Tunnel End Caps:
+          In WebXR, end caps close the corridor tunnel to ensure full sensory occlusion in the HMD.
+          In the web version, the tunnel remains open with an infinite vanishing point into the distance fog.
+        */}
+        {isXR && (
+          <>
+            {/*
+              Far Tunnel End Cap (-Z):
+              Caps the far end of the corridor tunnel beyond the furthest segment wrap point (z = -105).
+              Guarantees that looking down the tunnel in WebXR displays an opaque solid black vanishing point,
+              with the 16:9 corridor wireframe lines continuing across the wall in crisp white.
+            */}
+            <TunnelEndWall
+              z={-108}
+              width={width}
+              height={height}
+              wallWidthMultiplier={2.5}
+              wallHeightMultiplier={2.5}
+              isFarWall={true}
+            />
+
+            {/*
+              Near Tunnel End Cap (+Z):
+              Caps the rear end of the corridor tunnel behind the viewer beyond the nearest wrap point (z = +45).
+              Guarantees that looking backward in WebXR displays an opaque solid black void,
+              with the 16:9 corridor wireframe lines continuing across the wall in crisp white.
+            */}
+            <TunnelEndWall
+              z={48}
+              width={width}
+              height={height}
+              wallWidthMultiplier={3}
+              wallHeightMultiplier={3}
+              isFarWall={false}
+            />
+          </>
+        )}
+
         <RoomSegment initialZ={15} depthSegment={30} totalLength={120} speed={speed} width={width} height={height} />
         <RoomSegment initialZ={-15} depthSegment={30} totalLength={120} speed={speed} width={width} height={height} />
         <RoomSegment initialZ={-45} depthSegment={30} totalLength={120} speed={speed} width={width} height={height} />

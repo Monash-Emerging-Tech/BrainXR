@@ -327,6 +327,8 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
               onSetSpeed={engine.setSpeed}
               speed={engine.speed}
               isPaused={engine.isPaused}
+              isMuted={engine.isMuted}
+              onToggleMute={engine.toggleMute}
               audioError={engine.audioError}
             />
           </Suspense>

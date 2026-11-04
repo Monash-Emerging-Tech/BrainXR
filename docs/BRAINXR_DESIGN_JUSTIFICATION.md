@@ -628,8 +628,8 @@ BrainXR extends traditional 2D web-based cognitive testing into room-scale WebXR
 ┌────────────────────────────────────────────────────────────────────────┐
 │                      SPATIAL WEBXR PASSTHROUGH                         │
 │                                                                        │
-│                 [ (•) INTENSITY OF FOCUS | 78% ] ◄── Top HUD Pill      │
-│                                (Y = +0.20m)                            │
+│   [ (•) INTENSITY OF FOCUS | 78% ]     [ 🔇 UNMUTE ] ◄── Top Crown     │
+│                 (Y = +0.20m)                                           │
 │                                                                        │
 │      [← PREV]       ╭───────────────────────╮       [NEXT →]           │
 │   (X = -0.38m)      │   3D EEG HEAD TWIN    │     (X = +0.38m)         │
@@ -674,6 +674,15 @@ To prevent visual crowding in the spatial environment, BrainXR applies **progres
 - The **"Track Your Focus"** launch button on the 2D `/intensity` screen renders conditionally—appearing solely when an XR-capable runtime or headset browser is detected, while desktop users retain clean, uninterrupted access to playback scrubbers and trial timelines.
 - When clicked in WebXR, the button invokes `aimlabsStore.launch(true)` to transition seamlessly into the cognitive testing arena within VR itself, eliminating jarring browser exits or reload cycles.
 
+### 9.5 Spatial Audio Decoupling: Dedicated XR Unmute Control
+In desktop browsers, the 2D `TopHudBar` houses a speaker button that toggles trial soundtrack playback for the DEAP simulated recording. In immersive WebXR sessions, all standard 2D DOM elements are outside the stereoscopic viewport.
+- **Autoplay Restriction & Acoustic Immersion**: Because browsers mandate user gesture activation before playing audio tracks and default playback engine audio to muted (`isMuted = true`), immersive visitors previously lacked an in-VR mechanism to unmute stimulus audio.
+- **Ergonomic Separate Button Architecture**:
+  - Rather than overloading the text or telemetry pills, BrainXR implements a dedicated, standalone **`[ 🔇 UNMUTE ]` / `[ 🔊 MUTE ]`** pill button ($W = 124\text{ px}, H = 46\text{ px}$).
+  - **Horizontal Anchoring ($X = 816\text{ px}$)**: Positioned with a $16\text{ px}$ safety gutter to the right of the centered `Simulated Recording` component ($X = 300\text{ to } 800\text{ px}$), aligning seamlessly above the right shoulder of the node telemetry pill in inspection mode ($X = 930\text{ px}$).
+  - **Spatial Visual Stability**: Anchoring the button at a consistent $X = 816\text{ px}$ across both State A (Idle / Home) and State B (Electrode Inspection) prevents disorienting UI jumping when toggling telemetry, preserving spatial muscle memory in room-scale VR.
+  - **Multimodal Feedback**: Delivers immediate controller haptics (`triggerXRHaptic`), stateful color shifting (from muted slate to radiant indigo/cyan), and programmatic audio pipeline unmuting and playback resumption on user gesture.
+
 ---
 
 ## 10. Summary Audit Matrix: Design Choices vs. Scientific Verdict
@@ -695,6 +704,7 @@ To prevent visual crowding in the spatial environment, BrainXR applies **progres
 | **Round Order Pseudo-Randomization** | 50/50 starting round counterbalancing | **CONFIRMED** | Monsell (2003); Allport et al. (1994) |
 | **Domain Expansion & Spatial Pills** | Decompose monolithic UI into floating pills balanced around 3D head twin with 5-rem crown clearance | **CONFIRMED & IMPLEMENTED** (Zero Occlusion & Ecological Immersion) | Gibson (1979); Wickens (2002); Sweller (1988) |
 | **Device-Gated WebXR Action Button** | Conditional rendering of "Track Your Focus" based on WebXR session support | **CONFIRMED & IMPLEMENTED** (Prevents Interface Dead Ends) | Fitts (1954); ISO 9241-210 |
+| **Spatial Audio Decoupling** | Dedicated, stationary XR Unmute button ($X=816\text{px}$) with gesture-unlocked playback and haptics | **CONFIRMED & IMPLEMENTED** (Eliminates VR Sensory Occlusion) | Wickens (2002); Fitts (1954) |
 
 ---
 
@@ -775,4 +785,5 @@ To prevent visual crowding in the spatial environment, BrainXR applies **progres
 | **2.6** | Nov 2026 | Sec 4.3, Sec 9, Sec 11 | **Canonical Yellow Palette Harmonization**: Replaced the harsh orange-amber shade across the Direction of Focus games (Round 2 SART theme, Variable Focus status indicators, paused state buttons/badges, and the dual-band Tukey $\pm 1.0\times SD$ response pacing corridor) with canonical `#F3DA66` across all 2D WebXR Canvas renderers, React overlays, and SVG telemetry graphs. |
 | **2.7** | Nov 2026 | Sec 5.3, Sec 7, Sec 9, Sec 11 | **Dead-Center Target Presentation Justification (EEG Interference Prevention)**: Documented neurophysiological justification for spawning targets strictly at the dead center ($x=0, y=0$). Prevents electro-oculographic (EOG) corneo-retinal saccade spikes across frontal channels ($Fp1, Fp2, Fz$), suppresses head/neck electromyographic (EMG) high-frequency muscle noise, and maintains bilateral visual evoked potential (VEP) and alpha ($8\text{–}12\text{ Hz}$) symmetry across parieto-occipital sites. |
 | **2.8** | Nov 2026 | Sec 8.5, Sec 9, Sec 10, Sec 11 | **Spatial WebXR Neuroergonomics & Headset Inspection Architecture**: Grounded Domain Expansion forward depth animation ($Z=-0.9\text{m}$), decomposing monolithic slates into discrete floating HUD pills balanced around the EEG twin with 5-rem crown clearance to prevent occlusive overlap, in-place progressive disclosure state swapping (`Intensity of Focus` $\leftrightarrow$ `Simulated Recording`), device-contingent WebXR action button gating, and resolving top-right telemetry pill collision in the `/direction` HUD. |
+| **2.9** | Nov 2026 | Sec 9.5, Sec 10, Sec 11 | **Spatial Audio Decoupling in Immersive XR**: Integrated dedicated, stationary `[ 🔇 UNMUTE ]` / `[ 🔊 MUTE ]` floating pill control ($X=816\text{px}$) into the XR headset inspection interface, resolving audio occlusion caused by 2D DOM suppression in WebXR and unlocking browser-restricted playback via explicit user gesture and controller haptics. |
 

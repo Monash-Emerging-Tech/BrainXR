@@ -145,7 +145,7 @@ export const AimlabsScene: React.FC<AimlabsSceneProps> = ({
   return (
     <group name="brainxr-cognitive-scene">
       {/* Clean minimal spatial void */}
-      <AimlabsArena />
+      <AimlabsArena isXR={isXR} />
 
       {/* Central Hairline Fixation Cross in 3D (active during test countdown and rounds) */}
       {(state.status === "countdown" ||

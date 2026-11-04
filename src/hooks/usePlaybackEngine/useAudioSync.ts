@@ -39,10 +39,15 @@ export function useAudioSync({ mode, isPaused, speed, timeRef, sourceRef }: Para
       const next = !prev;
       if (audioRef.current) {
         audioRef.current.muted = next || speed === 10;
+        if (!next && !isPaused && audioRef.current.paused) {
+          audioRef.current.play().catch((err) => {
+            console.log("Audio autoplay / play failed or was blocked by browser:", err);
+          });
+        }
       }
       return next;
     });
-  }, [speed]);
+  }, [speed, isPaused]);
 
   // Load or switch audio track for the given trial
   const loadTrack = useCallback((trialIndex: number) => {

@@ -45,6 +45,8 @@ interface SceneProps {
   onSetSpeed?: (speed: number) => void;
   speed?: number;
   isPaused?: boolean;
+  isMuted?: boolean;
+  onToggleMute?: () => void;
   audioError?: boolean;
 }
 
@@ -128,6 +130,8 @@ const Scene: React.FC<SceneProps> = ({
   onSetSpeed,
   speed,
   isPaused,
+  isMuted,
+  onToggleMute,
   audioError = false,
 }) => {
   const isXRPresenting = useIsXRPresenting();
@@ -184,6 +188,8 @@ const Scene: React.FC<SceneProps> = ({
             onSetSpeed={onSetSpeed}
             speed={speed}
             isPaused={isPaused}
+            isMuted={isMuted}
+            onToggleMute={onToggleMute}
             audioError={audioError}
           />
         )}

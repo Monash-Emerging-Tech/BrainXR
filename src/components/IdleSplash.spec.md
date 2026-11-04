@@ -3,7 +3,7 @@
 Idle-mode marketing splash, only ever shown while `engine.mode.kind === "idle"`
 (see [[r3f/index|R3F]]).
 
-- `IdleHeadline({ variant })` — the "an MNET experience / BrainXR" headline.
+- `IdleHeadline({ variant })` — the "BrainXR" headline and origin story link (with MNET branding hidden).
   Rendered twice by the caller: once `variant="solid"` behind the headset,
   once `variant="outline"` in front of it, so the 3D model appears to sit
   between the two text layers.

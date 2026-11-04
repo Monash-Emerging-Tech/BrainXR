@@ -31,6 +31,8 @@ interface HeadWrapperProps {
   onSetSpeed?: (speed: number) => void;
   speed?: number;
   isPaused?: boolean;
+  isMuted?: boolean;
+  onToggleMute?: () => void;
   audioError?: boolean;
 }
 
@@ -43,6 +45,8 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
   onChannelSelect,
   onChannelHover,
   onClearSelection,
+  isMuted,
+  onToggleMute,
 }) => {
   const { gl } = useThree();
   const groupRef = useRef<THREE.Group>(null);
@@ -110,6 +114,8 @@ const HeadWrapper: React.FC<HeadWrapperProps> = ({
           frameRef={frameRef}
           onSelectChannel={(ch) => ch ? onChannelSelect(ch) : onClearSelection?.()}
           headPositionRef={xrPositionRef}
+          isMuted={isMuted}
+          onToggleMute={onToggleMute}
         />
       )}
     </group>

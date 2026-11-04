@@ -5,7 +5,7 @@ import { NODE_INSIGHTS } from "../../../utils/nodeInsights";
 import { ELECTRODE_DISPLAY_ORDER } from "../../../utils/electrodeDisplayOrder";
 
 export interface NodePanelHitArea {
-  id: "prev" | "next" | "close" | "direction" | "toggle-recording";
+  id: "prev" | "next" | "close" | "direction" | "toggle-recording" | "toggle-mute";
   x: number;
   y: number;
   width: number;
@@ -112,7 +112,7 @@ function drawSimulatedRecordingPill(
   hitAreas: NodePanelHitArea[]
 ) {
   const trialNum = String((frame.trialIndex ?? 0) + 1).padStart(2, "0");
-  const pillW = 540;
+  const pillW = 500;
   const pillH = 46;
   const pillX = centerX - pillW / 2;
   const isHovered = hoverId === "toggle-recording";
@@ -138,15 +138,107 @@ function drawSimulatedRecordingPill(
   ctx.fillText("SIMULATED RECORDING", pillX + 36, y + pillH / 2);
 
   ctx.fillStyle = "#475569";
-  ctx.fillText("|", pillX + 196, y + pillH / 2);
+  ctx.fillText("|", pillX + 192, y + pillH / 2);
 
   ctx.font = "13px monospace";
   ctx.fillStyle = "#e2e8f0";
-  ctx.fillText(`Participant #7 · video-${trialNum}.m4a`, pillX + 212, y + pillH / 2);
+  ctx.fillText(`Participant #7 · video-${trialNum}.m4a`, pillX + 208, y + pillH / 2);
 
   hitAreas.push({
     id: "toggle-recording",
     x: pillX,
+    y,
+    width: pillW,
+    height: pillH,
+  });
+}
+
+/**
+ * Draws the separate "Unmute / Mute" audio toggle pill button in XR:
+ * [ (speaker icon) UNMUTE ] (when muted)
+ * [ (speaker sound waves) MUTE ] (when unmuted)
+ * Registers hit area "toggle-mute" so users can click/pinch to toggle DEAP trial playback audio.
+ */
+function drawUnmuteButton(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  isMuted: boolean,
+  hoverId: string | null,
+  hitAreas: NodePanelHitArea[]
+): void {
+  const pillW = 124;
+  const pillH = 46;
+  const isHovered = hoverId === "toggle-mute";
+
+  if (isMuted) {
+    ctx.fillStyle = isHovered ? "rgba(30, 41, 59, 0.96)" : "rgba(11, 15, 23, 0.92)";
+    ctx.strokeStyle = isHovered ? "#38bdf8" : "rgba(51, 65, 85, 0.75)";
+  } else {
+    ctx.fillStyle = isHovered ? "#4338ca" : "rgba(49, 46, 129, 0.85)";
+    ctx.strokeStyle = isHovered ? "#a5b4fc" : "rgba(129, 140, 248, 0.75)";
+  }
+
+  ctx.lineWidth = isHovered ? 2 : 1.5;
+  ctx.beginPath();
+  ctx.roundRect(x, y, pillW, pillH, pillH / 2);
+  ctx.fill();
+  ctx.stroke();
+
+  const iconColor = isMuted
+    ? isHovered ? "#ffffff" : "#94a3b8"
+    : isHovered ? "#ffffff" : "#c7d2fe";
+
+  const textColor = iconColor;
+
+  // Draw Speaker Cone
+  const iconCenterX = x + 25;
+  const iconCenterY = y + pillH / 2;
+
+  ctx.fillStyle = iconColor;
+  ctx.beginPath();
+  ctx.moveTo(iconCenterX - 7, iconCenterY - 3.5);
+  ctx.lineTo(iconCenterX - 3, iconCenterY - 3.5);
+  ctx.lineTo(iconCenterX + 2, iconCenterY - 7.5);
+  ctx.lineTo(iconCenterX + 2, iconCenterY + 7.5);
+  ctx.lineTo(iconCenterX - 3, iconCenterY + 3.5);
+  ctx.lineTo(iconCenterX - 7, iconCenterY + 3.5);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.strokeStyle = iconColor;
+  ctx.lineWidth = 1.8;
+  ctx.lineCap = "round";
+
+  if (isMuted) {
+    // Diagonal "X" muted mark
+    ctx.beginPath();
+    ctx.moveTo(iconCenterX + 5, iconCenterY - 4);
+    ctx.lineTo(iconCenterX + 11, iconCenterY + 4);
+    ctx.moveTo(iconCenterX + 11, iconCenterY - 4);
+    ctx.lineTo(iconCenterX + 5, iconCenterY + 4);
+    ctx.stroke();
+  } else {
+    // Sound wave arcs
+    ctx.beginPath();
+    ctx.arc(iconCenterX + 1, iconCenterY, 5.5, -Math.PI / 3, Math.PI / 3);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(iconCenterX + 1, iconCenterY, 9.5, -Math.PI / 3, Math.PI / 3);
+    ctx.stroke();
+  }
+
+  // Label text
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 12px monospace";
+  ctx.fillStyle = textColor;
+  ctx.fillText(isMuted ? "UNMUTE" : "MUTE", x + 44, y + pillH / 2);
+
+  hitAreas.push({
+    id: "toggle-mute",
+    x,
     y,
     width: pillW,
     height: pillH,
@@ -159,7 +251,8 @@ export function renderNodeDetailsCanvas(
   frame: Frame,
   hoverId: string | null,
   hitAreas: NodePanelHitArea[],
-  showSimulatedRecording = false
+  showSimulatedRecording = false,
+  isMuted = true
 ): void {
   hitAreas.length = 0;
   // Clear full canvas so there is NO big bounding card - only floating pills!
@@ -172,6 +265,7 @@ export function renderNodeDetailsCanvas(
   // Top pill toggles in-place between Intensity of Focus and Simulated Recording!
   // When toggled on, Simulated Recording REPLACES Intensity of Focus at top.
   // 1. TOP OF HEADSET (Y: 28): [ INTENSITY OF FOCUS | XX% ] <--> [ SIMULATED RECORDING | ... ]
+  //    plus separate audio toggle [ UNMUTE ]
   // 2. BELOW HEADSET (Y: 580): XR Interaction Prompt [ PINCH NODE TO INSPECT | HOLD GRIP TO MOVE ]
   // 3. BELOW HEADSET (Y: 654): Primary Action CTA Pill [ Track Your Focus ✦ ]
   // =========================================================================
@@ -184,6 +278,9 @@ export function renderNodeDetailsCanvas(
     } else {
       drawIntensityOfFocusPill(ctx, centerX, 28, frame, hoverId, hitAreas);
     }
+
+    // Unmute / Mute audio button (Y: 28)
+    drawUnmuteButton(ctx, 816, 28, isMuted, hoverId, hitAreas);
 
     // 2. BELOW HEADSET: XR Interaction Prompt Pill (Y: 580)
     const promptW = 560;
@@ -284,6 +381,9 @@ export function renderNodeDetailsCanvas(
 
   // 1. TOP OF HEADSET: Intensity of Focus Value Component (Y: 18)
   drawIntensityOfFocusPill(ctx, centerX, 18, frame, hoverId, hitAreas);
+
+  // Unmute / Mute audio button (Y: 18)
+  drawUnmuteButton(ctx, 816, 18, isMuted, hoverId, hitAreas);
 
   // -------------------------------------------------------------------------
   // 2. Selected Node Telemetry Header Pill (Y: 76)

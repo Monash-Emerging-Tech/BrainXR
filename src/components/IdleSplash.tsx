@@ -25,13 +25,6 @@ export const IdleHeadline: React.FC<IdleHeadlineProps> = ({ variant, onStartStor
   const textClass = variant === "solid" ? "text-slate-900" : "text-transparent text-stroke-slate";
   const zClass = variant === "solid" ? "z-0" : "z-20";
 
-  const fullText = "an MNET experience";
-  // Prefix: "an " (indices 0..2)
-  // MNET: "MNET" (indices 3..6)
-  // Suffix: " experience" (indices 7..17)
-  const mnetStart = fullText.indexOf("MNET");
-  const mnetEnd = mnetStart + "MNET".length;
-
   return (
     <div className={`absolute top-6 md:top-8 left-0 right-0 ${zClass} pointer-events-none select-none px-6 md:px-12 lg:px-16`}>
       <div className="flex flex-col items-center w-full">
@@ -58,75 +51,8 @@ export const IdleHeadline: React.FC<IdleHeadlineProps> = ({ variant, onStartStor
           <div className="h-[34px] mb-3 invisible" aria-hidden="true" />
         )}
 
-        {/* The entire headline track: MNET Logo, AN, MNET, and EXPERIENCE spread evenly edge-to-edge */}
-        {variant === "solid" ? (
-          <div className="invisible flex items-center justify-between w-full font-offbit uppercase select-none text-sm sm:text-base md:text-lg lg:text-xl font-bold" aria-hidden="true">
-            <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 shrink-0" />
-            <span>A</span>
-            <span>N</span>
-            <span className="invisible">&nbsp;</span>
-            <div className="flex justify-between flex-1 max-w-[14rem]">
-              <span>M</span><span>N</span><span>E</span><span>T</span>
-            </div>
-            <span className="invisible">&nbsp;</span>
-            {"EXPERIENCE".split("").map((c, i) => (
-              <span key={i}>{c}</span>
-            ))}
-          </div>
-        ) : (
-          <div className="flex items-center justify-between w-full font-offbit uppercase select-none text-slate-900 text-sm sm:text-base md:text-lg lg:text-xl font-bold">
-            {/* 1. MNET Logo */}
-            <a
-              href="https://monashemerging.tech/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="pointer-events-auto inline-flex items-center shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-              title="Visit Monash Nexus for Emerging Technologies (MNET)"
-            >
-              <img
-                src="/mnet-logo.png"
-                alt="MNET Logo"
-                className="w-4 h-4 sm:w-5 sm:h-5 md:w-5.5 md:h-5.5 object-contain"
-              />
-            </a>
-
-            {/* 2. 'A', 'N' */}
-            <span>A</span>
-            <span>N</span>
-
-            {/* Space between AN and MNET */}
-            <span className="invisible select-none" aria-hidden="true">&nbsp;</span>
-
-            {/* 3. Whole hoverable & clickable container for MNET with letters spread evenly */}
-            <a
-              href="https://monashemerging.tech/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group pointer-events-auto cursor-pointer no-underline text-slate-900 inline-flex items-center justify-between flex-1 max-w-[14rem] py-1 px-1 -my-1 hover:text-indigo-600 transition-colors"
-              title="Visit Monash Nexus for Emerging Technologies (MNET)"
-            >
-              {"MNET".split("").map((c, i) => (
-                <span
-                  key={i}
-                  className="underline decoration-2 underline-offset-4 group-hover:text-indigo-600 transition-colors"
-                >
-                  {c}
-                </span>
-              ))}
-            </a>
-
-            {/* Space between MNET and EXPERIENCE */}
-            <span className="invisible select-none" aria-hidden="true">&nbsp;</span>
-
-            {/* 4. 'EXPERIENCE' */}
-            {"EXPERIENCE".split("").map((c, i) => (
-              <span key={i}>{c}</span>
-            ))}
-          </div>
-        )}
-
-        {/* BrainXR Title - negative top margin to tighten line spacing with the line above */}
-        <h1 className={`flex justify-between w-full text-[13vw] font-black uppercase leading-none -mt-1 sm:-mt-2 md:-mt-3 lg:-mt-4 ${textClass}`}>
+        {/* BrainXR Title */}
+        <h1 className={`flex justify-between w-full text-[13vw] font-black uppercase leading-none ${textClass}`}>
           {"BrainXR".split("").map((char, index) => (
             <span key={index}>{char}</span>
           ))}
