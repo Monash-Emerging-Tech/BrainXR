@@ -18,7 +18,6 @@ import { xrStore } from "../../utils/xrStore";
 import { aimlabsStore, AimlabsOverlay } from "../AimlabsCognitiveTest";
 
 const StoryIntroV2 = lazy(() => import("../story-v2/StoryIntroV2"));
-const StoryIntro = lazy(() => import("../story/StoryIntro"));
 
 const Scene = lazy(() => import("../Scene"));
 
@@ -29,10 +28,11 @@ const Scene = lazy(() => import("../Scene"));
 const STORY_SEEN_KEY = "brainxr:story-seen";
 const CONNECT_HEADSET_KEY = "brainxr:connect-headset";
 
-function resolveLegacyStoryVersion(): "v1" | "v2" | null {
-  if (typeof window === "undefined") return null;
-  const asked = new URLSearchParams(window.location.search).get("story");
-  return asked === "v1" || asked === "v2" ? asked : null;
+// Debug-only escape hatch to preview the old scroll-driven story intro
+// (superseded by OnboardingFlow) via ?story=v2.
+function resolveStoryV2Debug(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("story") === "v2";
 }
 
 interface R3FProps {
@@ -49,7 +49,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const lastRewindRef = useRef<{ trial: number; time: number } | null>(null);
   const isIdle = engine.mode.kind === "idle";
-  const [legacyStoryVersion] = useState(resolveLegacyStoryVersion);
+  const [showStoryV2Debug] = useState(resolveStoryV2Debug);
   const [isHeadsetConnected, setIsHeadsetConnected] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem(CONNECT_HEADSET_KEY) === "1";
@@ -252,13 +252,11 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
 
   useSpacebarToggle(engine.togglePlayPause, !aimlabsState.isActive);
 
-  if (showStory && legacyStoryVersion) {
-    return legacyStoryVersion === "v2" ? (
+  if (showStory && showStoryV2Debug) {
+    return (
       <Suspense fallback={<div className="w-full h-full bg-white" />}>
         <StoryIntroV2 onComplete={handleStoryDone} />
       </Suspense>
-    ) : (
-      <StoryIntro onComplete={handleStoryDone} />
     );
   }
 
@@ -369,7 +367,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
         )}
 
         {/* Unified Continuous Onboarding Flow */}
-        {showStory && !legacyStoryVersion && !aimlabsState.isActive && (
+        {showStory && !showStoryV2Debug && !aimlabsState.isActive && (
           <OnboardingFlow
             onComplete={cancelOnboarding}
             onRouteToOnboarding={handleRouteToOnboarding}

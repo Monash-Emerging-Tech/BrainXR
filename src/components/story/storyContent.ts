@@ -6,111 +6,7 @@
 // Nothing below this block is hardcoded in the components.
 // =====================================================================
 
-/**
- * DEV FLAG -- set true to scroll straight through without any enforced
- * pauses. Handy when you are iterating on a later beat and do not want to
- * sit through the checkpoints each reload.
- */
-export const DISABLE_CHECKPOINTS = false;
-
-export interface StoryCheckpoint {
-  id: string;
-  /** The lock fires at the END of this segment. */
-  afterSegment: string;
-  /** How long to hold once the guarded beat is ready. */
-  dwellMs: number;
-  /**
-   * The beat whose completion releases the lock. Omit when there is nothing
-   * to wait for and the dwell alone is the pause.
-   */
-  waitsFor?: string;
-}
-
-/**
- * Enforced reading pauses. Each entry locks scrolling the FIRST time the
- * reader crosses the end of `afterSegment` going forward, and holds until the
- * guarded beat has finished playing plus `dwellMs`. Backwards scrolling and
- * every later pass are never locked.
- */
-export const STORY_CHECKPOINTS: readonly StoryCheckpoint[] = [
-  { id: "line1", afterSegment: "line1Form", dwellMs: 3000, waitsFor: "line1" },
-  { id: "focus", afterSegment: "focusForm", dwellMs: 3000, waitsFor: "focus" },
-  { id: "landed", afterSegment: "zoom", dwellMs: 3000 },
-  { id: "brain", afterSegment: "reveal", dwellMs: 3000 },
-  // the two prefrontal finale beats each get a pause to be read
-  { id: "finaleA", afterSegment: "finaleA", dwellMs: 3000 },
-  { id: "finaleB", afterSegment: "finaleB", dwellMs: 3000 },
-];
-
 export const STORY_PACING = {
-
-  /**
-   * Segment lengths, in vh. One unit of 100vh costs the reader roughly one
-   * viewport of scrolling. HOLD segments are scroll distance where nothing
-   * changes -- they are what makes the story feel paced rather than rushed.
-   * These are summed to size the scroll track.
-   */
-  lengths: {
-    // --- Act 1, in scroll order ---
-    /** (a) empty white screen. */
-    hold1Vh: 70,
-    /** (b) grey mist gathers at centre. */
-    mistGatherVh: 110,
-    /** (c) mist drifts apart to left and right, making way. */
-    mistPartVh: 110,
-    /** (d) line 1 forms from pixels out of the parting mist. */
-    line1FormVh: 160,
-    /** (e) HOLD -- line 1 sits on screen. */
-    hold2Vh: 80,
-    /** (f1) the black highlight block wipes in. */
-    blockInVh: 70,
-    /** (f2) white "FOCUS??" pixels assemble inside the block. */
-    focusFormVh: 150,
-    /** (g) HOLD -- both parts sit fully formed before the dive. */
-    hold3Vh: 120,
-    /** (h) the blink-step zoom into the "U". */
-    zoomVh: 500,
-
-    // --- Act 2 ---
-    /** Smoke delay + rise are time-based; this is the scroll-driven clear. */
-    smokeRevealVh: 250,
-    /** Per brain region. */
-    regionVh: 100,
-    /** Each prefrontal finale beat. */
-    finaleVh: 110,
-    /** The closing line. */
-    closingVh: 110,
-  },
-
-  /** Act 1 mist behaviour. */
-  mist: {
-    /** How far the outer mist layers slide apart, in vw, during (c). */
-    partDistanceVw: 42,
-    /** Mist opacity once it has gathered, before parting. */
-    gatheredOpacity: 1,
-    /** Mist opacity it thins to after the text has formed. */
-    partedOpacity: 0.45,
-  },
-
-  /** Act 1 pixel formation: PLAY (swarm) then FORM (converge). */
-  form: {
-    /**
-     * (a) PLAY -- pixels drift, swirl and wander loosely around their target
-     * area like a small swarm. Time-based: once scroll triggers it, it keeps
-     * living even if the reader stops scrolling.
-     */
-    playMs: 2500,
-    /** (b) FORM -- they converge onto their letter positions. */
-    formMs: 2000,
-    /** Spread of the per-pixel stagger during FORM, as a fraction of it. */
-    staggerSpan: 0.35,
-    /** How far the swarm wanders from its target, in px. */
-    swarmRadius: 58,
-    /** Swarm churn rate. Higher is more agitated. */
-    swarmSpeed: 0.85,
-    /** How long the un-form runs when the reader scrolls back past a beat. */
-    unformMs: 1100,
-  },
 
   /**
    * INVERSE SWELL-BLUR reveal, used on both hook parts.
@@ -160,103 +56,9 @@ export const STORY_PACING = {
     fallbackGain: 2.6,
   },
 
-  /** Act 1 highlight block: black smoke gathering into a glass rectangle. */
-  block: {
-    /** Smoke blur at the start, tightening to 0 as the rectangle sharpens. */
-    smokeBlurPx: 26,
-    /** How much wider the smoke cloud starts than the final rectangle. */
-    smokeScale: 1.75,
-    /** Corner radius of the resolved rectangle, in px. */
-    cornerRadius: 16,
-  },
-
-  /** Act 1 dive into the "U". One smooth, continuous, scrubbed zoom. */
-  zoom: {
-    /**
-     * Scroll smoothing. The damped value chases the raw scroll value with
-     * this time constant, in seconds, so wheel and trackpad steps do not
-     * show up as jitter. Larger is smoother and laggier.
-     */
-    dampingTau: 0.14,
-    /**
-     * Dive easing exponent, applied to progress before it drives the scale.
-     * Above 1 means it starts gently and accelerates -- the "entering this
-     * world" feel. 1 would be a constant exponential rate.
-     */
-    easeExponent: 2.1,
-    /**
-     * How quickly the viewBox centre travels to the counter relative to the
-     * scale. Below 1 locks onto the U early instead of drifting in late.
-     */
-    centreExponent: 0.55,
-    /**
-     * Extra margin on the computed dive box, so no white stroke survives.
-     * The counter itself is found from the sampled pixel grid at runtime.
-     */
-    finalScaleSafety: 1.2,
-    /**
-     * Screen-space gloss. The specular sheen must NOT scale with the rect or
-     * it smears, so it rides above the zooming SVG as a fixed overlay.
-     */
-    sheenFrom: 0.3,
-    sheenTo: 0.6,
-    /**
-     * The final frame of the dive crossfades to the exact same glass panel
-     * Act 2 uses, so the handoff matches base colour and sheen precisely.
-     */
-    glassBaseFrom: 0.74,
-    glassBaseTo: 0.94,
-  },
-
-  /** Act 2 smoke. Delay and rise are TIME-based; the clear is scroll-driven. */
-  smoke: {
-    /** How long the smoke takes to rise and fill the lower screen. */
-    riseMs: 4200,
-    /**
-     * If the reader scrolls past this much of the reveal segment before the
-     * rise has finished, it is fast-forwarded to its end state rather than
-     * blocking or rewinding. Scroll is never hijacked.
-     */
-    fastForwardAt: 0.04,
-    /** Number of sprite puffs. Raise for denser smoke, at a GPU cost. */
-    puffCount: 22,
-    /** World-space Y the puffs start below the frame, and rise to. */
-    startY: -2.4,
-    /** Top of the risen smoke. ~0.35 fills roughly the lower two thirds. */
-    riseTopY: 0.35,
-    /** Horizontal spread of the smoke column, in world units. */
-    columnWidth: 3.2,
-    /** Sprite size at the start of the rise, and how much it grows. */
-    startScale: 1.1,
-    growth: 1.4,
-    /** Peak sprite opacity. */
-    maxOpacity: 0.8,
-    /** Gentle continuous churn, independent of scroll. */
-    churnSpeed: 0.12,
-    /**
-     * Scroll-driven clear. The smoke splits evenly into two mirrored flows
-     * that stream toward the vertical centre of the left and right screen
-     * edges. Targets are derived from the live viewport in world units, so
-     * this holds on any aspect ratio.
-     */
-    /** Fraction past the edge the flows aim for, so they fully exit frame. */
-    exitOvershoot: 1.18,
-    /** Amplitude of the per-particle curl across the direction of travel. */
-    curlAmount: 0.55,
-    /** How fast the curl oscillates. */
-    curlSpeed: 0.75,
-    /** Turbulence amplitude, in world units. */
-    turbulence: 0.22,
-    /** How much a puff stretches along its direction of travel as it flows. */
-    stretch: 1.5,
-    /** Brain reveal: where it starts before easing to 1 / to 0. */
-    brainStartScale: 0.82,
-    brainStartBlur: 14,
-  },
-
-  /** Act 2 brain sizing. */
+  /** Brain sizing. */
   brain: {
-    /** Served from public/. Preloaded during Act 1. */
+    /** Served from public/. */
     modelUrl: "/models/human_brain.glb",
     /**
      * The GLB is a Sketchfab export in large, off-centre units, so it is
@@ -303,24 +105,6 @@ export const STORY_PACING = {
     /** Inactive region marker opacity on black. */
     inactiveMarkerOpacity: 0.36,
   },
-} as const;
-
-// ---- Act 1: the question ----
-
-export const ACT1 = {
-  /** Escape hatch, visible for the whole act. */
-  skipLabel: "Skip intro ->",
-  /** Nudge shown on the opening white hold, before the mist arrives. */
-  scrollHint: "scroll",
-  lead: "Have you wondered what makes you",
-  /** Two question marks is deliberate. Split per character for measurement. */
-  emphasis: "FOCUS??",
-  /**
-   * Index of the character whose counter the zoom dives into. The hollow is
-   * located in the sampled pixel grid at runtime -- nothing about it is
-   * hardcoded beyond which glyph to look at.
-   */
-  zoomCharIndex: 3, // the "U"
 } as const;
 
 // ---- Act 2: the tour ----
