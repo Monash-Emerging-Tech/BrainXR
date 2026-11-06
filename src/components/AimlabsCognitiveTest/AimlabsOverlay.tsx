@@ -40,7 +40,6 @@ export const AimlabsOverlay: React.FC<AimlabsOverlayProps> = ({
           round1Metrics={state.round1Metrics}
           round2Metrics={state.round2Metrics}
           isPaused={state.isPaused}
-          score={state.score}
           accuracy={state.accuracy}
           soundEnabled={state.soundEnabled}
           liveFocusMetrics={state.liveFocusMetrics}
