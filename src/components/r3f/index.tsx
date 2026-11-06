@@ -6,12 +6,12 @@ import { PREFRONTAL_ELECTRODES, type ElectrodeName } from "../../utils/signalSou
 import { IdleHeadline, IdleActions } from "../IdleSplash";
 import BackgroundOscilloscopes from "../BackgroundOscilloscopes";
 import { useSpacebarToggle } from "./useSpacebarToggle";
+import { useOnboardingFlow } from "./useOnboardingFlow";
 import AudioErrorToast from "./AudioErrorToast";
 import TopHudBar from "./TopHudBar";
 import LoadingOverlay from "./LoadingOverlay";
 import DemoBottomControls from "./DemoBottomControls";
 import NodeDetailsBanner from "./NodeDetailsBanner";
-import { headsetPresentation } from "../../utils/headsetPresentation";
 import OnboardingFlow from "../onboarding/OnboardingFlow";
 import { launchExperience } from "../../utils/webxrDetector";
 import { xrStore } from "../../utils/xrStore";
@@ -21,19 +21,7 @@ const StoryIntroV2 = lazy(() => import("../story-v2/StoryIntroV2"));
 
 const Scene = lazy(() => import("../Scene"));
 
-// sessionStorage flag so the story only plays once per browser session --
-// skipping or finishing it keeps you on the idle screen on refresh/back-nav
-// within the same tab session. Clear sessionStorage (or open a new tab) to
-// see it again.
-const STORY_SEEN_KEY = "brainxr:story-seen";
 const CONNECT_HEADSET_KEY = "brainxr:connect-headset";
-
-// Debug-only escape hatch to preview the old scroll-driven story intro
-// (superseded by OnboardingFlow) via ?story=v2.
-function resolveStoryV2Debug(): boolean {
-  if (typeof window === "undefined") return false;
-  return new URLSearchParams(window.location.search).get("story") === "v2";
-}
 
 interface R3FProps {
   initialMode?: "idle" | "demo";
@@ -43,94 +31,37 @@ interface R3FProps {
 const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
   const engine = usePlaybackEngine({ kind: initialMode });
   const [hoveredChannel, setHoveredChannel] = useState<ElectrodeName | null>(null);
-  const [highlightPrefrontal, setHighlightPrefrontal] = useState(false);
-  const [headsetOpacity, setHeadsetOpacity] = useState(1);
-  const [homeFadeOpacity, setHomeFadeOpacity] = useState(1);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
   const lastRewindRef = useRef<{ trial: number; time: number } | null>(null);
   const isIdle = engine.mode.kind === "idle";
-  const [showStoryV2Debug] = useState(resolveStoryV2Debug);
   const [isHeadsetConnected, setIsHeadsetConnected] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem(CONNECT_HEADSET_KEY) === "1";
   });
-  const [showStory, setShowStory] = useState(() => {
-    if (forcePage === "onboarding") return true;
-    if (forcePage === "home" || forcePage === "demo" || forcePage === "intensity" || forcePage === "direction") return false;
-    if (typeof window === "undefined") return false;
-    if (window.location.pathname.startsWith("/onboarding")) return true;
-    if (window.location.pathname.startsWith("/intensity") || window.location.pathname.startsWith("/direction") || window.location.pathname.startsWith("/demo")) return false;
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("story") === "0" || urlParams.get("skipStory") === "1") return false;
-    const seen = sessionStorage.getItem(STORY_SEEN_KEY);
-    return !seen;
-  });
 
-  const [hasRoutedToOnboarding, setHasRoutedToOnboarding] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.location.pathname.startsWith("/onboarding");
-  });
-
-  // Keep story visibility synchronized with browser history back/forward
-  useEffect(() => {
-    const onPopState = () => {
-      const isStory = window.location.pathname.startsWith("/onboarding");
-      setShowStory(isStory);
-      setHasRoutedToOnboarding(isStory);
-      if (isStory) setHeadsetOpacity(1);
-    };
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, []);
-
-  const storyStage = useSyncExternalStore(
-    headsetPresentation.subscribe,
-    headsetPresentation.getSnapshot,
-    headsetPresentation.getServerSnapshot
-  );
-  const presentationStage = isIdle ? storyStage : "interactive";
+  const {
+    showStory,
+    hasRoutedToOnboarding,
+    headsetOpacity,
+    setHeadsetOpacity,
+    homeFadeOpacity,
+    setHomeFadeOpacity,
+    theme,
+    setTheme,
+    highlightPrefrontal,
+    setHighlightPrefrontal,
+    showStoryV2Debug,
+    presentationStage,
+    setPresentationStage,
+    cancelOnboarding,
+    handleRouteToOnboarding,
+    startStory,
+  } = useOnboardingFlow(forcePage, isIdle);
 
   const aimlabsState = useSyncExternalStore(
     aimlabsStore.subscribe,
     aimlabsStore.getSnapshot,
     aimlabsStore.getServerSnapshot
   );
-
-  const cancelOnboarding = useCallback(() => {
-    sessionStorage.setItem(STORY_SEEN_KEY, "1");
-    setShowStory(false);
-    setHasRoutedToOnboarding(false);
-    setTheme("light");
-    setHeadsetOpacity(1);
-    setHomeFadeOpacity(1);
-    headsetPresentation.setStage("showcase");
-    headsetPresentation.setStoryProgress(null);
-    setHighlightPrefrontal(false);
-    if (typeof window !== "undefined") {
-      if (window.location.pathname.startsWith("/onboarding")) {
-        window.history.replaceState(null, "", "/");
-      }
-    }
-  }, []);
-
-  const handleRouteToOnboarding = useCallback(() => {
-    setHasRoutedToOnboarding(true);
-    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/onboarding")) {
-      window.history.pushState(null, "", "/onboarding");
-    }
-  }, []);
-
-  // Global Escape key cancels onboarding before (or during) routing to /onboarding
-  useEffect(() => {
-    if (!showStory) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" || e.code === "Escape") {
-        cancelOnboarding();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showStory, cancelOnboarding]);
 
   const handleEnterVR = useCallback(() => {
     if (showStory) cancelOnboarding();
@@ -238,17 +169,6 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
   }, [engine.selectChannel]);
 
   const handleStoryDone = cancelOnboarding;
-
-  const startStory = useCallback(() => {
-    setHeadsetOpacity(1);
-    setTheme("light");
-    setHomeFadeOpacity(1);
-    setHasRoutedToOnboarding(false);
-    headsetPresentation.setStage("showcase");
-    headsetPresentation.setStoryProgress(null);
-    setHighlightPrefrontal(false);
-    setShowStory(true);
-  }, []);
 
   useSpacebarToggle(engine.togglePlayPause, !aimlabsState.isActive);
 
@@ -376,7 +296,7 @@ const R3F: React.FC<R3FProps> = ({ initialMode = "idle", forcePage }) => {
             onHomeFade={setHomeFadeOpacity}
             onHeadsetOpacity={setHeadsetOpacity}
             onHighlightPrefrontal={setHighlightPrefrontal}
-            onSetPresentationStage={headsetPresentation.setStage}
+            onSetPresentationStage={setPresentationStage}
             onThemeChange={setTheme}
           />
         )}
