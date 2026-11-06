@@ -37,7 +37,8 @@ import {
  * SCENE 2 RUNS IN FOUR STAGES, and the brain emerges from INSIDE the smoke
  * rather than beside it -- see the brainStage effect below.
  *
- * v1 is untouched and still reachable with ?story=v1.
+ * Reachable only via the debug ?story=v2 param -- see resolveStoryV2Debug
+ * in ../r3f/useOnboardingFlow. The old v1 scroll-driven intro was removed.
  */
 
 const TB = STORY_V2.toBlack;
