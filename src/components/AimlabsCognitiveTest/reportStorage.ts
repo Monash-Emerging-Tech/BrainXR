@@ -53,6 +53,8 @@ export const FOCUS_CLASSIFICATION_INFO = {
   },
 };
 
+export type FocusClassificationInfo = (typeof FOCUS_CLASSIFICATION_INFO)[keyof typeof FOCUS_CLASSIFICATION_INFO];
+
 export const REPORT_STORAGE_KEY = "brainxr:last-run-report";
 export const REPORT_HISTORY_KEY = "brainxr:report-history";
 
